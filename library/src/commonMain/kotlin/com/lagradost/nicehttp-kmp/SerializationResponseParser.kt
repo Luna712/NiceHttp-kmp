@@ -30,15 +30,15 @@ class SerializationResponseParser(
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : Any> parse(text: String, kClass: KClass<T>): T =
-        json.decodeFromString(json.serializersModule.serializer(kClass), text) as T
+        json.decodeFromString(json.serializersModule.serializer(kClass.createType()), text) as T
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : Any> parseSafe(text: String, kClass: KClass<T>): T? = try {
-        json.decodeFromString(json.serializersModule.serializer(kClass), text) as T
+        json.decodeFromString(json.serializersModule.serializer(kClass.createType()), text) as T
     } catch (_: Exception) {
         null
     }
 
     override fun writeValueAsString(obj: Any): String =
-        json.encodeToString(json.serializersModule.serializer(obj::class), obj)
+        json.encodeToString(json.serializersModule.serializer(obj::class.createType()), obj)
 }
