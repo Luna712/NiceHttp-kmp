@@ -78,17 +78,14 @@ open class Requests(
         )
         val body = buildBody(method, data, files, json, requestBody, responseParser)
 
-        val httpMethod = HttpMethod(method.uppercase())
+        val clientToUse = if (!allowRedirects) {
+            baseClient.config { followRedirects = false }
+        } else baseClient
 
-        val response = baseClient.request(finalUrl) {
-            this.method = httpMethod
+        val response = clientToUse.request(finalUrl) {
+            this.method = HttpMethod(method.uppercase())
             finalHeaders.forEach { k, values -> values.forEach { v -> header(k, v) } }
             body?.let { setBody(it) }
-
-            if (!allowRedirects) {
-                // Ktor 3.x: disable follow-redirects per-request
-                followRedirects = false
-            }
 
             if (timeout > Duration.ZERO) {
                 timeout {
@@ -260,18 +257,17 @@ internal fun buildBody(
                 formData {
                     files.forEach { file ->
                         if (file.bytes != null) {
-                            appendInput(
+                            append(
                                 key = file.name,
+                                value = file.bytes,
                                 headers = Headers.build {
                                     append(
                                         HttpHeaders.ContentDisposition,
-                                        "filename=\"${file.fileName}\""
+                                        "form-data; name=\"${file.name}\"; filename=\"${file.fileName}\""
                                     )
                                     file.fileType?.let { append(HttpHeaders.ContentType, it) }
-                                },
-                            ) {
-                                buildPacket { writeFully(file.bytes) }
-                            }
+                                }
+                            )
                         } else {
                             append(file.name, file.fileName)
                         }
