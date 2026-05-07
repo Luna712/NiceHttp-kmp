@@ -4,7 +4,8 @@ import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.android.lint)
+    alias(libs.plugins.android.multiplatform.library)
     alias(libs.plugins.kotlin.serialization)
     id("maven-publish")
 }
@@ -17,11 +18,12 @@ kotlin {
     jvm()
 
     // ── Android ───────────────────────────────────────────────────────────────
-    androidTarget {
+    android {
         publishLibraryVariants("release")
-        compilations.all {
-            compilerOptions { jvmTarget.set(JvmTarget.JVM_1_8) }
-        }
+        namespace = "com.lagradost.nicehttp.kmp"
+        compileSdk = 35
+        minSdk = 21
+        compilerOptions { jvmTarget.set(JvmTarget.JVM_1_8) }
     }
 
     // ── JS (browser + Node.js) ───────────────────────────────────────────────
@@ -135,18 +137,6 @@ kotlin {
                 api(libs.ktor.client.winhttp)
             }
         }
-    }
-}
-
-android {
-    namespace = "com.lagradost.nicehttp.kmp"
-    compileSdk = 35
-    defaultConfig {
-        minSdk = 21
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
     }
 }
 
