@@ -19,7 +19,6 @@ kotlin {
 
     // ── Android ───────────────────────────────────────────────────────────────
     android {
-        publishLibraryVariants("release")
         namespace = "com.lagradost.nicehttp.kmp"
         compileSdk = 35
         minSdk = 21
