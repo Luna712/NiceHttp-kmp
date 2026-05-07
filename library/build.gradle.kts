@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
@@ -19,7 +20,7 @@ kotlin {
     androidTarget {
         publishLibraryVariants("release")
         compilations.all {
-            kotlinOptions { jvmTarget = "1.8" }
+            compilerOptions { jvmTarget.set(JvmTarget.JVM_1_8) }
         }
     }
 
@@ -48,7 +49,6 @@ kotlin {
     iosArm64()
     iosX64()
     iosSimulatorArm64()
-    macosX64()
     macosArm64()
     tvosArm64()
     tvosSimulatorArm64()
