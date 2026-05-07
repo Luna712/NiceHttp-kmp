@@ -1,6 +1,7 @@
 package com.lagradost.nicehttp.kmp
 
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
 
@@ -29,16 +30,22 @@ class SerializationResponseParser(
 ) : ResponseParser {
 
     @Suppress("UNCHECKED_CAST")
-    override fun <T : Any> parse(text: String, kClass: KClass<T>): T =
-        json.decodeFromString(json.serializersModule.serializer(kClass.createType()), text) as T
+    override fun <T : Any> parse(text: String, kClass: KClass<T>): T {
+        val serializer = json.serializersModule.getContextual(kClass)
+            ?: throw IllegalArgumentException(
+                "No serializer found for $kClass. Make sure it is @Serializable."
+            )
+        return json.decodeFromString(serializer, text)
+    }
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : Any> parseSafe(text: String, kClass: KClass<T>): T? = try {
-        json.decodeFromString(json.serializersModule.serializer(kClass.createType()), text) as T
+        val serializer = json.serializersModule.getContextual(kClass) ?: return null
+        json.decodeFromString(serializer, text)
     } catch (_: Exception) {
         null
     }
 
     override fun writeValueAsString(obj: Any): String =
-        json.encodeToString(json.serializersModule.serializer(obj::class.createType()), obj)
+        json.encodeToString(JsonElement.serializer(), json.parseToJsonElement(obj.toString()))
 }
