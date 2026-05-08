@@ -3,6 +3,7 @@ package com.lagradost.nicehttp.kmp
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.client.request.forms.*
 import kotlinx.coroutines.runBlocking
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -93,8 +94,9 @@ internal fun HttpRequestBuilder.toOkHttpRequest(): okhttp3.Request {
                 b.text.toRequestBody(b.contentType.toString().toMediaTypeOrNull())
             is FormDataContent -> {
                 val form = okhttp3.FormBody.Builder()
-                b.formData.entries().forEach { (k, values) ->
-                    values.forEach { v -> form.addEncoded(k, v) }
+                c.formData.entries().forEach { entry ->
+                    val key = entry.key
+                    entry.value.forEach { v -> form.addEncoded(key, v) }
                 }
                 form.build()
             }
