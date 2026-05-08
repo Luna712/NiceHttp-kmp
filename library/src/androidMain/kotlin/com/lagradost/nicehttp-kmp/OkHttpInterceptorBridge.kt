@@ -13,7 +13,7 @@ import okio.Buffer
 /**
  * Full bidirectional bridge between OkHttp and NiceHttp KMP interceptors.
  *
- * [okhttp3.Interceptor.toInterceptor]:
+ * [okhttp3.Interceptor.toNiceInterceptor]:
  *   Converts an OkHttp interceptor to a NiceHttp KMP [Interceptor].
  *   Preserves the full OkHttp interceptor contract:
  *   - chain.request()    returns the current OkHttp Request
@@ -29,7 +29,7 @@ import okio.Buffer
  *   The suspend chain is bridged via runBlocking.
  */
 
-fun okhttp3.Interceptor.toInterceptor(): Interceptor = Interceptor { chain ->
+fun okhttp3.Interceptor.toNiceInterceptor(): Interceptor = Interceptor { chain ->
     val okRequest = chain.request.toOkHttpRequest()
 
     val okChain = object : okhttp3.Interceptor.Chain {
@@ -56,7 +56,7 @@ fun okhttp3.Interceptor.toInterceptor(): Interceptor = Interceptor { chain ->
         override fun withWriteTimeout(timeout: Int, unit: java.util.concurrent.TimeUnit) = this
     }
 
-    this@toInterceptor.intercept(okChain).toNiceResponse()
+    this@toNiceInterceptor.intercept(okChain).toNiceResponse()
 }
 
 fun Interceptor.toOkHttpInterceptor(): okhttp3.Interceptor = okhttp3.Interceptor { chain ->
