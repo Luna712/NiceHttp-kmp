@@ -6,4 +6,6 @@ import io.ktor.client.plugins.*
 
 actual fun defaultHttpClient(): HttpClient = HttpClient(OkHttp) {
     install(HttpRequestRetry) { noRetry() }
+    // OkHttp engine exposes the raw builder via `engine { preconfigured = ... }`
+    // so callers can still attach DNS-over-HTTPS, custom interceptors, etc.
 }
