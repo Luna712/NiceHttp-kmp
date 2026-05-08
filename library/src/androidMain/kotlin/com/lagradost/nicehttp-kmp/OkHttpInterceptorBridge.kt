@@ -94,7 +94,7 @@ internal fun HttpRequestBuilder.toOkHttpRequest(): okhttp3.Request {
                 b.text.toRequestBody(b.contentType.toString().toMediaTypeOrNull())
             is FormDataContent -> {
                 val form = okhttp3.FormBody.Builder()
-                c.formData.entries().forEach { entry ->
+                b.formData.entries().forEach { entry ->
                     val key = entry.key
                     entry.value.forEach { v -> form.addEncoded(key, v) }
                 }
