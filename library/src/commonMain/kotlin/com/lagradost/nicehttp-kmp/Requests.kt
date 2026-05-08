@@ -1,12 +1,15 @@
 package com.lagradost.nicehttp.kmp
 
 import io.ktor.client.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Multiplatform HTTP client modelled after the original NiceHttp `Requests` class.
@@ -93,10 +96,11 @@ open class Requests(
             finalHeaders.forEach { k, values -> values.forEach { v -> header(k, v) } }
             body?.let { setBody(it.content) }
             if (timeout > Duration.ZERO) {
+                val ms = timeout.inWholeMilliseconds
                 timeout {
-                    requestTimeoutMillis = timeout.inWholeMilliseconds
-                    connectTimeoutMillis = timeout.inWholeMilliseconds
-                    socketTimeoutMillis  = timeout.inWholeMilliseconds
+                    requestTimeoutMillis = ms
+                    connectTimeoutMillis = ms
+                    socketTimeoutMillis  = ms
                 }
             }
         }
@@ -244,7 +248,7 @@ suspend fun Requests.get(
     responseParser: ResponseParser? = this.responseParser,
 ) = custom("GET", url, headers, referer, params, cookies,
     null, null, null, null, allowRedirects,
-    if (timeout > 0) timeout.toDuration(DurationUnit.SECONDS) else Duration.ZERO,
+    if (timeout > 0) timeout.seconds else Duration.ZERO,
     interceptor, responseParser)
 
 suspend fun Requests.post(
@@ -266,7 +270,7 @@ suspend fun Requests.post(
     responseParser: ResponseParser? = this.responseParser,
 ) = custom("POST", url, headers, referer, params, cookies,
     data, files, json, requestBody, allowRedirects,
-    if (timeout > 0) timeout.toDuration(DurationUnit.SECONDS) else Duration.ZERO,
+    if (timeout > 0) timeout.seconds else Duration.ZERO,
     interceptor, responseParser)
 
 suspend fun Requests.put(
@@ -288,7 +292,7 @@ suspend fun Requests.put(
     responseParser: ResponseParser? = this.responseParser,
 ) = custom("PUT", url, headers, referer, params, cookies,
     data, files, json, requestBody, allowRedirects,
-    if (timeout > 0) timeout.toDuration(DurationUnit.SECONDS) else Duration.ZERO,
+    if (timeout > 0) timeout.seconds else Duration.ZERO,
     interceptor, responseParser)
 
 suspend fun Requests.delete(
@@ -310,7 +314,7 @@ suspend fun Requests.delete(
     responseParser: ResponseParser? = this.responseParser,
 ) = custom("DELETE", url, headers, referer, params, cookies,
     data, files, json, requestBody, allowRedirects,
-    if (timeout > 0) timeout.toDuration(DurationUnit.SECONDS) else Duration.ZERO,
+    if (timeout > 0) timeout.seconds else Duration.ZERO,
     interceptor, responseParser)
 
 suspend fun Requests.head(
@@ -328,7 +332,7 @@ suspend fun Requests.head(
     responseParser: ResponseParser? = this.responseParser,
 ) = custom("HEAD", url, headers, referer, params, cookies,
     null, null, null, null, allowRedirects,
-    if (timeout > 0) timeout.toDuration(DurationUnit.SECONDS) else Duration.ZERO,
+    if (timeout > 0) timeout.seconds else Duration.ZERO,
     interceptor, responseParser)
 
 suspend fun Requests.patch(
@@ -350,7 +354,7 @@ suspend fun Requests.patch(
     responseParser: ResponseParser? = this.responseParser,
 ) = custom("PATCH", url, headers, referer, params, cookies,
     data, files, json, requestBody, allowRedirects,
-    if (timeout > 0) timeout.toDuration(DurationUnit.SECONDS) else Duration.ZERO,
+    if (timeout > 0) timeout.seconds else Duration.ZERO,
     interceptor, responseParser)
 
 suspend fun Requests.options(
@@ -372,7 +376,7 @@ suspend fun Requests.options(
     responseParser: ResponseParser? = this.responseParser,
 ) = custom("OPTIONS", url, headers, referer, params, cookies,
     data, files, json, requestBody, allowRedirects,
-    if (timeout > 0) timeout.toDuration(DurationUnit.SECONDS) else Duration.ZERO,
+    if (timeout > 0) timeout.seconds else Duration.ZERO,
     interceptor, responseParser)
 
 // ── Body builder ──────────────────────────────────────────────────────────────
