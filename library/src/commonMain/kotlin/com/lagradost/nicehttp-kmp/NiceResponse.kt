@@ -38,6 +38,25 @@ class NiceResponse(
     /** All cookies sent by the server for this response */
     val cookies: Map<String, String> get() = response.headers.getSetCookies()
 
+    // ── Compatibility layers for old NiceHttp ─────────────────────────────────────
+
+    /** Reads the body as a string. Cached after first call. */
+    val text: String by lazy { runBlockingCompat {
+        val raw = response.bodyAsText()
+        if (raw.length.toLong() > MAX_TEXT_BYTES) {
+            throw IllegalStateException(
+                "Called .text on a response exceeding $MAX_TEXT_BYTES bytes. Use .textLarge instead."
+            )
+        }
+        raw
+    }}
+
+    /** Same as [text] but without the size guard. Cached after first call. */
+    val textLarge: String by lazy { runBlockingCompat { response.bodyAsText() } }
+
+    val document: Document by lazy { Ksoup.parse(text) }
+    val documentLarge: Document by lazy { Ksoup.parse(textLarge) }
+
     // ── Body helpers ─────────────────────────────────────────────────────────
 
     /**
