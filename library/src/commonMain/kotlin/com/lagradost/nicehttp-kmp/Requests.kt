@@ -81,7 +81,7 @@ open class Requests(
         timeout: Duration = defaultTimeout,
         interceptor: Interceptor? = null,
         responseParser: ResponseParser? = this.responseParser,
-    ): NiceResponse {
+    ): INiceResponse {
         val finalUrl = addParamsToUrl(url, params)
         val finalHeaders = buildHeaders(
             defaultHeaders + headers,
