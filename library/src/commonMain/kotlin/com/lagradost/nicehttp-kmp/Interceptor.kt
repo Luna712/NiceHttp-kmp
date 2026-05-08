@@ -34,11 +34,14 @@ object PassThroughInterceptor : Interceptor {
  * Interceptor that adds headers to every request.
  */
 class HeadersInterceptor(
-    private val headers: Map<String, String>
+    private val headers: Map<String, String>,
 ) : Interceptor {
     override suspend fun intercept(chain: Interceptor.Chain): INiceResponse {
         val req = chain.request
-        headers.forEach { (k, v) -> req.headers.append(k, v) }
+        headers.forEach { (k, v) ->
+            req.headers.remove(k)  // remove existing value first
+            req.headers.append(k, v)
+        }
         return chain.proceed(req)
     }
 }
