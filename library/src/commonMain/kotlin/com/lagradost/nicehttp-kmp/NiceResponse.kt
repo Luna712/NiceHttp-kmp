@@ -66,30 +66,6 @@ interface INiceResponse {
 
     /** Same as [document] but without the size guard. */
     suspend fun documentLarge(): Document
-
-    /** Parses the body as [T] using the configured [ResponseParser]. */
-    suspend inline fun <reified T : Any> parsed(): T =
-        parser!!.parse(text(), T::class)
-
-    /** Same as [parsed] but returns null on failure. */
-    suspend inline fun <reified T : Any> parsedSafe(): T? = try {
-        parser?.parseSafe(text(), T::class)
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
-    }
-
-    /** Like [parsed] but without the size guard. */
-    suspend inline fun <reified T : Any> parsedLarge(): T =
-        parser!!.parse(textLarge(), T::class)
-
-    /** Like [parsedSafe] but without the size guard. */
-    suspend inline fun <reified T : Any> parsedSafeLarge(): T? = try {
-        parser?.parseSafe(textLarge(), T::class)
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
-    }
 }
 
 /**
@@ -181,30 +157,6 @@ class NiceResponse(
     /** Same as [document] but without the size guard. */
     override suspend fun documentLarge(): Document = Ksoup.parse(textLarge())
 
-    /** Parses the body as [T] using the configured [ResponseParser]. */
-    override suspend inline fun <reified T : Any> parsed(): T =
-        parser!!.parse(text(), T::class)
-
-    /** Same as [parsed] but returns null on failure. */
-    override suspend inline fun <reified T : Any> parsedSafe(): T? = try {
-        parser?.parseSafe(text(), T::class)
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
-    }
-
-    /** Like [parsed] but without the size guard. */
-    override suspend inline fun <reified T : Any> parsedLarge(): T =
-        parser!!.parse(textLarge(), T::class)
-
-    /** Like [parsedSafe] but without the size guard. */
-    override suspend inline fun <reified T : Any> parsedSafeLarge(): T? = try {
-        parser?.parseSafe(textLarge(), T::class)
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
-    }
-
     override fun toString(): String =
         "NiceResponse(code=$code, url=$url)"
 }
@@ -242,26 +194,6 @@ internal class SyntheticNiceResponse(
     override suspend fun textLarge(): String = textLarge
     override suspend fun document(): Document = document()
     override suspend fun documentLarge(): Document = documentLarge()
-
-    override suspend inline fun <reified T : Any> parsed(): T =
-        parser!!.parse(text(), T::class)
-
-    override suspend inline fun <reified T : Any> parsedSafe(): T? = try {
-        parser?.parseSafe(text(), T::class)
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
-    }
-
-    override suspend inline fun <reified T : Any> parsedLarge(): T =
-        parser!!.parse(textLarge(), T::class)
-
-    override suspend inline fun <reified T : Any> parsedSafeLarge(): T? = try {
-        parser?.parseSafe(textLarge(), T::class)
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
-    }
 
     override fun toString(): String =
         "SyntheticNiceResponse(code=$code, url=$url)"
@@ -301,3 +233,29 @@ fun Headers.toMap(): Map<String, String> =
 /** Converts Ktor [Headers] to a Map with all values per key. */
 fun Headers.toMultiMap(): Map<String, List<String>> =
     entries().associate { (key, values) -> key to values }
+
+// ── Parsed helpers as extensions (inline reified can't live in interfaces) ────
+
+/** Parses the body as [T] using the configured [ResponseParser]. */
+suspend inline fun <reified T : Any> INiceResponse.parsed(): T =
+    parser!!.parse(text(), T::class)
+
+/** Same as [parsed] but returns null on failure. */
+suspend inline fun <reified T : Any> INiceResponse.parsedSafe(): T? = try {
+    parser?.parseSafe(text(), T::class)
+} catch (e: Exception) {
+    e.printStackTrace()
+    null
+}
+
+/** Like [parsed] but without the size guard. */
+suspend inline fun <reified T : Any> INiceResponse.parsedLarge(): T =
+    parser!!.parse(textLarge(), T::class)
+
+/** Like [parsedSafe] but without the size guard. */
+suspend inline fun <reified T : Any> INiceResponse.parsedSafeLarge(): T? = try {
+    parser?.parseSafe(textLarge(), T::class)
+} catch (e: Exception) {
+    e.printStackTrace()
+    null
+}
