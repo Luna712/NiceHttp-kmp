@@ -1,14 +1,12 @@
 package com.lagradost.nicehttp.kmp
 
 import io.ktor.client.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.DurationUnit
 
 /**
  * Multiplatform HTTP client modelled after the original NiceHttp `Requests` class.
@@ -28,6 +26,7 @@ import kotlin.time.Duration.Companion.seconds
  * @param defaultCookies    Cookies merged into every request.
  * @param defaultTimeout    Global call timeout; [Duration.ZERO] means no timeout.
  * @param responseParser    JSON parser used by [NiceResponse.parsed].
+ * @param interceptors      List of [Interceptor]s applied to every request in order.
  */
 open class Requests(
     var baseClient: HttpClient = defaultHttpClient(),
@@ -37,7 +36,15 @@ open class Requests(
     var defaultCookies: Map<String, String> = emptyMap(),
     var defaultTimeout: Duration = Duration.ZERO,
     var responseParser: ResponseParser? = null,
+    var interceptors: MutableList<Interceptor> = mutableListOf(),
 ) {
+    fun addInterceptor(interceptor: Interceptor) = interceptors.add(interceptor)
+    fun removeInterceptor(interceptor: Interceptor) = interceptors.remove(interceptor)
+
+    private val noRedirectClient: HttpClient by lazy {
+        baseClient.config { followRedirects = false }
+    }
+
     /**
      * Generic request method – all verb shortcuts delegate here.
      *
@@ -50,9 +57,10 @@ open class Requests(
      * @param data           URL-encoded form body (mutually exclusive with [json]/[requestBody]).
      * @param files          Multipart form parts.
      * @param json           Object serialised to JSON, or a raw [JsonAsString].
-     * @param requestBody    Fully pre-built [OutgoingContent] (highest priority body).
+     * @param requestBody    Fully pre-built [RequestBody] (highest priority body).
      * @param allowRedirects Whether to follow HTTP redirects.
      * @param timeout        Overrides [defaultTimeout] for this call.
+     * @param interceptor    Per-call [Interceptor], appended after [interceptors].
      * @param responseParser Overrides [this.responseParser] for this call.
      */
     open suspend fun custom(
@@ -65,9 +73,10 @@ open class Requests(
         data: Map<String, String>? = defaultData,
         files: List<NiceFile>? = null,
         json: Any? = null,
-        requestBody: OutgoingContent? = null,
+        requestBody: RequestBody? = null,
         allowRedirects: Boolean = true,
         timeout: Duration = defaultTimeout,
+        interceptor: Interceptor? = null,
         responseParser: ResponseParser? = this.responseParser,
     ): NiceResponse {
         val finalUrl = addParamsToUrl(url, params)
@@ -78,25 +87,26 @@ open class Requests(
         )
         val body = buildBody(method, data, files, json, requestBody, responseParser)
 
-        val clientToUse = if (!allowRedirects) {
-            baseClient.config { followRedirects = false }
-        } else baseClient
-
-        val response = clientToUse.request(finalUrl) {
+        val requestBuilder = HttpRequestBuilder().apply {
             this.method = HttpMethod(method.uppercase())
+            url(finalUrl)
             finalHeaders.forEach { k, values -> values.forEach { v -> header(k, v) } }
-            body?.let { setBody(it) }
-
+            body?.let { setBody(it.content) }
             if (timeout > Duration.ZERO) {
                 timeout {
                     requestTimeoutMillis = timeout.inWholeMilliseconds
                     connectTimeoutMillis = timeout.inWholeMilliseconds
-                    socketTimeoutMillis = timeout.inWholeMilliseconds
+                    socketTimeoutMillis  = timeout.inWholeMilliseconds
                 }
             }
         }
 
-        return NiceResponse(response, responseParser)
+        // Merge instance-level interceptors with the per-call interceptor
+        val allInterceptors = interceptors.toMutableList()
+        if (interceptor != null) allInterceptors.add(interceptor)
+
+        val clientToUse = if (!allowRedirects) noRedirectClient else baseClient
+        return executeWithInterceptors(allInterceptors, requestBuilder, clientToUse, responseParser)
     }
 
     // ── Verb shortcuts ────────────────────────────────────────────────────────
@@ -109,9 +119,10 @@ open class Requests(
         cookies: Map<String, String> = emptyMap(),
         allowRedirects: Boolean = true,
         timeout: Duration = defaultTimeout,
+        interceptor: Interceptor? = null,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom("GET", url, headers, referer, params, cookies,
-        null, null, null, null, allowRedirects, timeout, responseParser)
+        null, null, null, null, allowRedirects, timeout, interceptor, responseParser)
 
     suspend fun post(
         url: String,
@@ -122,12 +133,13 @@ open class Requests(
         data: Map<String, String>? = defaultData,
         files: List<NiceFile>? = null,
         json: Any? = null,
-        requestBody: OutgoingContent? = null,
+        requestBody: RequestBody? = null,
         allowRedirects: Boolean = true,
         timeout: Duration = defaultTimeout,
+        interceptor: Interceptor? = null,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom("POST", url, headers, referer, params, cookies,
-        data, files, json, requestBody, allowRedirects, timeout, responseParser)
+        data, files, json, requestBody, allowRedirects, timeout, interceptor, responseParser)
 
     suspend fun put(
         url: String,
@@ -138,12 +150,13 @@ open class Requests(
         data: Map<String, String>? = defaultData,
         files: List<NiceFile>? = null,
         json: Any? = null,
-        requestBody: OutgoingContent? = null,
+        requestBody: RequestBody? = null,
         allowRedirects: Boolean = true,
         timeout: Duration = defaultTimeout,
+        interceptor: Interceptor? = null,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom("PUT", url, headers, referer, params, cookies,
-        data, files, json, requestBody, allowRedirects, timeout, responseParser)
+        data, files, json, requestBody, allowRedirects, timeout, interceptor, responseParser)
 
     suspend fun delete(
         url: String,
@@ -154,12 +167,13 @@ open class Requests(
         data: Map<String, String>? = defaultData,
         files: List<NiceFile>? = null,
         json: Any? = null,
-        requestBody: OutgoingContent? = null,
+        requestBody: RequestBody? = null,
         allowRedirects: Boolean = true,
         timeout: Duration = defaultTimeout,
+        interceptor: Interceptor? = null,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom("DELETE", url, headers, referer, params, cookies,
-        data, files, json, requestBody, allowRedirects, timeout, responseParser)
+        data, files, json, requestBody, allowRedirects, timeout, interceptor, responseParser)
 
     suspend fun head(
         url: String,
@@ -169,9 +183,10 @@ open class Requests(
         cookies: Map<String, String> = emptyMap(),
         allowRedirects: Boolean = true,
         timeout: Duration = defaultTimeout,
+        interceptor: Interceptor? = null,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom("HEAD", url, headers, referer, params, cookies,
-        null, null, null, null, allowRedirects, timeout, responseParser)
+        null, null, null, null, allowRedirects, timeout, interceptor, responseParser)
 
     suspend fun patch(
         url: String,
@@ -182,12 +197,13 @@ open class Requests(
         data: Map<String, String>? = defaultData,
         files: List<NiceFile>? = null,
         json: Any? = null,
-        requestBody: OutgoingContent? = null,
+        requestBody: RequestBody? = null,
         allowRedirects: Boolean = true,
         timeout: Duration = defaultTimeout,
+        interceptor: Interceptor? = null,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom("PATCH", url, headers, referer, params, cookies,
-        data, files, json, requestBody, allowRedirects, timeout, responseParser)
+        data, files, json, requestBody, allowRedirects, timeout, interceptor, responseParser)
 
     suspend fun options(
         url: String,
@@ -198,13 +214,166 @@ open class Requests(
         data: Map<String, String>? = defaultData,
         files: List<NiceFile>? = null,
         json: Any? = null,
-        requestBody: OutgoingContent? = null,
+        requestBody: RequestBody? = null,
         allowRedirects: Boolean = true,
         timeout: Duration = defaultTimeout,
+        interceptor: Interceptor? = null,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom("OPTIONS", url, headers, referer, params, cookies,
-        data, files, json, requestBody, allowRedirects, timeout, responseParser)
+        data, files, json, requestBody, allowRedirects, timeout, interceptor, responseParser)
 }
+
+// ── Back-compat overloads (Long timeout, cacheTime, verify) ──────────────────
+// These mirror the original NiceHttp API exactly so existing call sites compile
+// without changes. cacheTime/cacheUnit are accepted but ignored - caching is
+// OkHttp-specific and not available cross-platform. verify=false should be set
+// once at construction time via ignoreAllSSLErrors() on JVM/Android instead.
+
+suspend fun Requests.get(
+    url: String,
+    headers: Map<String, String> = emptyMap(),
+    referer: String? = null,
+    params: Map<String, String> = emptyMap(),
+    cookies: Map<String, String> = emptyMap(),
+    allowRedirects: Boolean = true,
+    cacheTime: Int = 0,
+    cacheUnit: DurationUnit = DurationUnit.MINUTES,
+    timeout: Long = 0L,
+    interceptor: Interceptor? = null,
+    verify: Boolean = true,
+    responseParser: ResponseParser? = this.responseParser,
+) = custom("GET", url, headers, referer, params, cookies,
+    null, null, null, null, allowRedirects,
+    if (timeout > 0) timeout.toDuration(DurationUnit.SECONDS) else Duration.ZERO,
+    interceptor, responseParser)
+
+suspend fun Requests.post(
+    url: String,
+    headers: Map<String, String> = emptyMap(),
+    referer: String? = null,
+    params: Map<String, String> = emptyMap(),
+    cookies: Map<String, String> = emptyMap(),
+    data: Map<String, String>? = this.defaultData,
+    files: List<NiceFile>? = null,
+    json: Any? = null,
+    requestBody: RequestBody? = null,
+    allowRedirects: Boolean = true,
+    cacheTime: Int = 0,
+    cacheUnit: DurationUnit = DurationUnit.MINUTES,
+    timeout: Long = 0L,
+    interceptor: Interceptor? = null,
+    verify: Boolean = true,
+    responseParser: ResponseParser? = this.responseParser,
+) = custom("POST", url, headers, referer, params, cookies,
+    data, files, json, requestBody, allowRedirects,
+    if (timeout > 0) timeout.toDuration(DurationUnit.SECONDS) else Duration.ZERO,
+    interceptor, responseParser)
+
+suspend fun Requests.put(
+    url: String,
+    headers: Map<String, String> = emptyMap(),
+    referer: String? = null,
+    params: Map<String, String> = emptyMap(),
+    cookies: Map<String, String> = emptyMap(),
+    data: Map<String, String>? = this.defaultData,
+    files: List<NiceFile>? = null,
+    json: Any? = null,
+    requestBody: RequestBody? = null,
+    allowRedirects: Boolean = true,
+    cacheTime: Int = 0,
+    cacheUnit: DurationUnit = DurationUnit.MINUTES,
+    timeout: Long = 0L,
+    interceptor: Interceptor? = null,
+    verify: Boolean = true,
+    responseParser: ResponseParser? = this.responseParser,
+) = custom("PUT", url, headers, referer, params, cookies,
+    data, files, json, requestBody, allowRedirects,
+    if (timeout > 0) timeout.toDuration(DurationUnit.SECONDS) else Duration.ZERO,
+    interceptor, responseParser)
+
+suspend fun Requests.delete(
+    url: String,
+    headers: Map<String, String> = emptyMap(),
+    referer: String? = null,
+    params: Map<String, String> = emptyMap(),
+    cookies: Map<String, String> = emptyMap(),
+    data: Map<String, String>? = this.defaultData,
+    files: List<NiceFile>? = null,
+    json: Any? = null,
+    requestBody: RequestBody? = null,
+    allowRedirects: Boolean = true,
+    cacheTime: Int = 0,
+    cacheUnit: DurationUnit = DurationUnit.MINUTES,
+    timeout: Long = 0L,
+    interceptor: Interceptor? = null,
+    verify: Boolean = true,
+    responseParser: ResponseParser? = this.responseParser,
+) = custom("DELETE", url, headers, referer, params, cookies,
+    data, files, json, requestBody, allowRedirects,
+    if (timeout > 0) timeout.toDuration(DurationUnit.SECONDS) else Duration.ZERO,
+    interceptor, responseParser)
+
+suspend fun Requests.head(
+    url: String,
+    headers: Map<String, String> = emptyMap(),
+    referer: String? = null,
+    params: Map<String, String> = emptyMap(),
+    cookies: Map<String, String> = emptyMap(),
+    allowRedirects: Boolean = true,
+    cacheTime: Int = 0,
+    cacheUnit: DurationUnit = DurationUnit.MINUTES,
+    timeout: Long = 0L,
+    interceptor: Interceptor? = null,
+    verify: Boolean = true,
+    responseParser: ResponseParser? = this.responseParser,
+) = custom("HEAD", url, headers, referer, params, cookies,
+    null, null, null, null, allowRedirects,
+    if (timeout > 0) timeout.toDuration(DurationUnit.SECONDS) else Duration.ZERO,
+    interceptor, responseParser)
+
+suspend fun Requests.patch(
+    url: String,
+    headers: Map<String, String> = emptyMap(),
+    referer: String? = null,
+    params: Map<String, String> = emptyMap(),
+    cookies: Map<String, String> = emptyMap(),
+    data: Map<String, String>? = this.defaultData,
+    files: List<NiceFile>? = null,
+    json: Any? = null,
+    requestBody: RequestBody? = null,
+    allowRedirects: Boolean = true,
+    cacheTime: Int = 0,
+    cacheUnit: DurationUnit = DurationUnit.MINUTES,
+    timeout: Long = 0L,
+    interceptor: Interceptor? = null,
+    verify: Boolean = true,
+    responseParser: ResponseParser? = this.responseParser,
+) = custom("PATCH", url, headers, referer, params, cookies,
+    data, files, json, requestBody, allowRedirects,
+    if (timeout > 0) timeout.toDuration(DurationUnit.SECONDS) else Duration.ZERO,
+    interceptor, responseParser)
+
+suspend fun Requests.options(
+    url: String,
+    headers: Map<String, String> = emptyMap(),
+    referer: String? = null,
+    params: Map<String, String> = emptyMap(),
+    cookies: Map<String, String> = emptyMap(),
+    data: Map<String, String>? = this.defaultData,
+    files: List<NiceFile>? = null,
+    json: Any? = null,
+    requestBody: RequestBody? = null,
+    allowRedirects: Boolean = true,
+    cacheTime: Int = 0,
+    cacheUnit: DurationUnit = DurationUnit.MINUTES,
+    timeout: Long = 0L,
+    interceptor: Interceptor? = null,
+    verify: Boolean = true,
+    responseParser: ResponseParser? = this.responseParser,
+) = custom("OPTIONS", url, headers, referer, params, cookies,
+    data, files, json, requestBody, allowRedirects,
+    if (timeout > 0) timeout.toDuration(DurationUnit.SECONDS) else Duration.ZERO,
+    interceptor, responseParser)
 
 // ── Body builder ──────────────────────────────────────────────────────────────
 
@@ -212,10 +381,10 @@ private val NO_BODY_METHODS = setOf("GET", "HEAD")
 private val MUST_HAVE_BODY  = setOf("POST", "PUT")
 
 /**
- * Constructs the [OutgoingContent] for the request body, following the same priority rules
+ * Constructs the [RequestBody] for the request, following the same priority rules
  * as the original NiceHttp:
  *
- * 1. [requestBody] (pre-built)
+ * 1. [requestBody] (pre-built, highest priority)
  * 2. [data] (URL-encoded form)
  * 3. [json] (JSON body)
  * 4. [files] (multipart)
@@ -227,56 +396,55 @@ internal fun buildBody(
     data: Map<String, String>?,
     files: List<NiceFile>?,
     json: Any?,
-    requestBody: OutgoingContent?,
+    requestBody: RequestBody?,
     responseParser: ResponseParser?,
-): OutgoingContent? {
+): RequestBody? {
     val upper = method.uppercase()
     if (upper in NO_BODY_METHODS) return null
     if (requestBody != null) return requestBody
 
     return when {
-        !data.isNullOrEmpty() -> {
-            FormDataContent(Parameters.build {
-                data.forEach { (k, v) -> append(k, v) }
-            })
-        }
+        !data.isNullOrEmpty() -> RequestBody.form(data)
 
         json != null -> {
             val jsonString = when {
-                json is JsonAsString -> json.string
-                json is String -> json
+                json is JsonAsString   -> json.string
+                json is String         -> json
                 responseParser != null -> responseParser.writeValueAsString(json)
-                else -> json.toString()
+                else                   -> json.toString()
             }
-            val contentType = if (json is String) RequestBodyTypes.TEXT else RequestBodyTypes.JSON
-            TextContent(jsonString, ContentType.parse(contentType))
+            val ct = if (json is String) RequestBodyTypes.TEXT else RequestBodyTypes.JSON
+            RequestBody.text(jsonString, ct)
         }
 
         !files.isNullOrEmpty() -> {
-            MultiPartFormDataContent(
-                formData {
-                    files.forEach { file ->
-                        if (file.bytes != null) {
-                            append(
-                                key = file.name,
-                                value = file.bytes,
-                                headers = Headers.build {
-                                    append(
-                                        HttpHeaders.ContentDisposition,
-                                        "form-data; name=\"${file.name}\"; filename=\"${file.fileName}\""
-                                    )
-                                    file.fileType?.let { append(HttpHeaders.ContentType, it) }
-                                }
-                            )
-                        } else {
-                            append(file.name, file.fileName)
+            RequestBody(
+                MultiPartFormDataContent(
+                    formData {
+                        files.forEach { file ->
+                            if (file.bytes != null) {
+                                append(
+                                    key = file.name,
+                                    value = file.bytes,
+                                    headers = Headers.build {
+                                        append(
+                                            HttpHeaders.ContentDisposition,
+                                            "form-data; name=\"${file.name}\"; filename=\"${file.fileName}\""
+                                        )
+                                        file.fileType?.let { append(HttpHeaders.ContentType, it) }
+                                    }
+                                )
+                            } else {
+                                append(file.name, file.fileName)
+                            }
                         }
                     }
-                }
+                )
             )
         }
 
-        upper in MUST_HAVE_BODY -> FormDataContent(Parameters.Empty)
+        // POST/PUT must always have a body even if empty
+        upper in MUST_HAVE_BODY -> RequestBody.form(emptyMap())
 
         else -> null
     }
