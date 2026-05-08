@@ -58,7 +58,12 @@ class NiceResponse(
     val documentLarge: Document by lazy { Ksoup.parse(textLarge) }
 
     /** Raw response body bytes. Cached after first call. */
-    val body: ByteArray by lazy { runBlockingCompat { response.readRawBytes() } }
+    val bodyBytes: ByteArray by lazy { runBlockingCompat { response.readRawBytes() } }
+
+    /** Response body. Call .bytes() or .string() to read. Call .close() when done (no-op here). */
+    val body: ResponseBody by lazy {
+        ResponseBody(runBlockingCompat { response.readRawBytes() }) 
+    }
 
     /** Alias for [response] for source compatibility with original NiceHttp */
     val okhttpResponse: HttpResponse get() = response
