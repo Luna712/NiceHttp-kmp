@@ -7,6 +7,7 @@ import io.ktor.client.request.forms.*
 import kotlinx.coroutines.runBlocking
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.ResponseBody.Companion.toResponseBody
 import okhttp3.Response
 import okio.Buffer
 
@@ -28,7 +29,6 @@ import okio.Buffer
  *   Use when passing a KMP interceptor into raw OkHttp client config.
  *   The suspend chain is bridged via runBlocking.
  */
-
 fun okhttp3.Interceptor.toNiceInterceptor(): Interceptor = Interceptor { chain ->
     val okRequest = chain.request.toOkHttpRequest()
 
@@ -135,9 +135,8 @@ internal fun INiceResponse.toOkHttpResponse(request: okhttp3.Request): okhttp3.R
         .code(code)
         .message("")
         .body(
-            okhttp3.ResponseBody.create(
-                headers["content-type"]?.toMediaTypeOrNull(),
-                body.bytes()
+            body.bytes().toResponseBody(
+                headers["content-type"]?.toMediaTypeOrNull()
             )
         )
         .also { builder ->
