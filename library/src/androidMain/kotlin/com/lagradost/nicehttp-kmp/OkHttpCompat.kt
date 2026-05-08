@@ -6,6 +6,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody as OkRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
 
 fun requestCreator(
@@ -77,11 +78,6 @@ fun requestCreator(
         }
         .build()
 }
-
-private fun ByteArray.toRequestBody(mediaType: okhttp3.MediaType?) =
-    OkRequestBody.create(mediaType, this)
-private fun String.toRequestBody(mediaType: okhttp3.MediaType?) =
-    OkRequestBody.create(mediaType, this)
 
 /** Restores verify=false SSL bypass for back-compat */
 fun OkHttpClient.Builder.applyVerify(verify: Boolean): OkHttpClient.Builder {
