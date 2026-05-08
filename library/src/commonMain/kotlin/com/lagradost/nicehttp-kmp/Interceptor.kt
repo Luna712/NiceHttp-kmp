@@ -9,15 +9,15 @@ import io.ktor.http.Headers
  * On JS/WASM/Native, implement this interface directly.
  */
 fun interface Interceptor {
-    suspend fun intercept(chain: Chain): NiceResponse
+    suspend fun intercept(chain: Chain): INiceResponse
 
     interface Chain {
         val request: HttpRequestBuilder
         val url: String get() = request.url.buildString()
         val headers: Headers get() = request.headers.build()
         val method: String get() = request.method.value
-        suspend fun proceed(request: HttpRequestBuilder): NiceResponse
-        suspend fun proceed(): NiceResponse = proceed(request)
+        suspend fun proceed(request: HttpRequestBuilder): INiceResponse
+        suspend fun proceed(): INiceResponse = proceed(request)
     }
 }
 
@@ -26,7 +26,7 @@ fun interface Interceptor {
  * Useful as a base/no-op.
  */
 object PassThroughInterceptor : Interceptor {
-    override suspend fun intercept(chain: Interceptor.Chain): NiceResponse =
+    override suspend fun intercept(chain: Interceptor.Chain): INiceResponse =
         chain.proceed()
 }
 
@@ -36,7 +36,7 @@ object PassThroughInterceptor : Interceptor {
 class HeadersInterceptor(
     private val headers: Map<String, String>
 ) : Interceptor {
-    override suspend fun intercept(chain: Interceptor.Chain): NiceResponse {
+    override suspend fun intercept(chain: Interceptor.Chain): INiceResponse {
         val req = chain.request
         headers.forEach { (k, v) -> req.headers.append(k, v) }
         return chain.proceed(req)
@@ -48,9 +48,9 @@ class HeadersInterceptor(
  */
 class RetryInterceptor(
     private val maxRetries: Int = 3,
-    private val shouldRetry: (NiceResponse) -> Boolean = { !it.isSuccessful },
+    private val shouldRetry: (INiceResponse) -> Boolean = { !it.isSuccessful },
 ) : Interceptor {
-    override suspend fun intercept(chain: Interceptor.Chain): NiceResponse {
+    override suspend fun intercept(chain: Interceptor.Chain): INiceResponse {
         var response = chain.proceed()
         var retries = 0
         while (shouldRetry(response) && retries < maxRetries) {
@@ -67,7 +67,7 @@ class RetryInterceptor(
 class LoggingInterceptor(
     private val log: (String) -> Unit = ::println
 ) : Interceptor {
-    override suspend fun intercept(chain: Interceptor.Chain): NiceResponse {
+    override suspend fun intercept(chain: Interceptor.Chain): INiceResponse {
         log("--> ${chain.method} ${chain.url}")
         chain.headers.forEach { k, values ->
             values.forEach { v -> log("$k: $v") }
