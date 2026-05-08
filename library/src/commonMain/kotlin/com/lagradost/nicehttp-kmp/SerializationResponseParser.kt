@@ -1,5 +1,6 @@
 package com.lagradost.nicehttp.kmp
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.serializer
@@ -25,6 +26,7 @@ import kotlin.reflect.KClass
  * SerializationResponseParser(Json { ignoreUnknownKeys = true })
  * ```
  */
+@ExperimentalSerializationApi
 class SerializationResponseParser(
     val json: Json = Json { ignoreUnknownKeys = true }
 ) : ResponseParser {
