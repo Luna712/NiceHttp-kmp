@@ -5,7 +5,7 @@ import io.ktor.http.Headers
 
 /**
  * KMP replacement for okhttp3.Interceptor.
- * On JVM/Android, okhttp3.Interceptor can be converted via .toInterceptor().
+ * On JVM/Android, okhttp3.Interceptor can be converted via .toNiceInterceptor().
  * On JS/WASM/Native, implement this interface directly.
  */
 fun interface Interceptor {
