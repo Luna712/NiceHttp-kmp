@@ -2,6 +2,7 @@ package com.lagradost.nicehttp.kmp
 
 import io.ktor.http.Headers
 import okhttp3.CacheControl
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody as OkRequestBody
@@ -77,7 +78,6 @@ fun requestCreator(
         .build()
 }
 
-private fun String.toMediaTypeOrNull() = okhttp3.MediaType.parse(this)
 private fun ByteArray.toRequestBody(mediaType: okhttp3.MediaType?) =
     OkRequestBody.create(mediaType, this)
 private fun String.toRequestBody(mediaType: okhttp3.MediaType?) =
