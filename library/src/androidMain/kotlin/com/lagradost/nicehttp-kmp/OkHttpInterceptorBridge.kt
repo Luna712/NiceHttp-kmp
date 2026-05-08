@@ -154,7 +154,7 @@ internal fun INiceResponse.toOkHttpResponse(request: okhttp3.Request): okhttp3.R
 internal fun okhttp3.Response.toNiceResponse(
     parser: ResponseParser? = null,
 ): INiceResponse {
-    val bytes = body?.bytes() ?: ByteArray(0)
+    val bytes = body.bytes()
     val url = request.url.toString()
     val ktorHeaders = Headers.build {
         headers.forEach { (k, v) -> append(k, v) }
