@@ -52,6 +52,9 @@ interface INiceResponse {
     /** Response body. Call .bytes() or .string() to read. Call .close() when done (no-op). */
     val body: ResponseBody
 
+    /** Alias for [response] for source compatibility with original NiceHttp */
+    val okhttpResponse: HttpResponse
+
     /**
      * Reads the response body as a string. Throws [IllegalStateException] if the body exceeds
      * [MAX_TEXT_BYTES] (use [textLarge] to bypass that guard).
@@ -123,7 +126,7 @@ class NiceResponse(
     }
 
     /** Alias for [response] for source compatibility with original NiceHttp */
-    val okhttpResponse: HttpResponse get() = response
+    override val okhttpResponse: HttpResponse get() = response
 
     // ── Body helpers ─────────────────────────────────────────────────────────
 
@@ -189,6 +192,11 @@ internal class SyntheticNiceResponse(
     override val documentLarge: Document by lazy { Ksoup.parse(textLarge) }
     override val bodyBytes: ByteArray by lazy { rawBytes }
     override val body: ResponseBody by lazy { ResponseBody(rawBytes) }
+
+    override val okhttpResponse: HttpResponse
+        get() = throw UnsupportedOperationException(
+            "okhttpResponse is not available on a SyntheticNiceResponse"
+        )
 
     override suspend fun text(): String = text
     override suspend fun textLarge(): String = textLarge
