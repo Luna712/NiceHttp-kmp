@@ -9,7 +9,7 @@ internal class RealChain(
     private val client: HttpClient,
     private val responseParser: ResponseParser?,
 ) : Interceptor.Chain {
-    override suspend fun proceed(request: HttpRequestBuilder): NiceResponse {
+    override suspend fun proceed(request: HttpRequestBuilder): INiceResponse {
         val response = client.request(request)
         return NiceResponse(response, responseParser)
     }
@@ -25,14 +25,14 @@ internal suspend fun executeWithInterceptors(
     request: HttpRequestBuilder,
     client: HttpClient,
     responseParser: ResponseParser?,
-): NiceResponse {
+): INiceResponse {
     if (interceptors.isEmpty()) {
         return RealChain(request, client, responseParser).proceed(request)
     }
 
     fun chainAt(index: Int): Interceptor.Chain = object : Interceptor.Chain {
         override val request: HttpRequestBuilder = request
-        override suspend fun proceed(request: HttpRequestBuilder): NiceResponse {
+        override suspend fun proceed(request: HttpRequestBuilder): INiceResponse {
             return if (index + 1 < interceptors.size) {
                 interceptors[index + 1].intercept(chainAt(index + 1))
             } else {
