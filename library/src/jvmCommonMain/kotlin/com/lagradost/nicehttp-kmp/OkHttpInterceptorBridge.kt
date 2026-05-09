@@ -29,140 +29,83 @@ import okio.Buffer
  *   Use when passing a KMP interceptor into raw OkHttp client config.
  *   The suspend chain is bridged via runBlocking.
  */
-fun okhttp3.Interceptor.toNiceInterceptor(): Interceptor = Interceptor { chain ->
-    val okRequest = chain.request.toOkHttpRequest()
+fun okhttp3.Interceptor.toNiceInterceptor(): Interceptor = Interceptor { ctx ->
+    val okRequest = ctx.request.toOkHttpRequest()
 
     val okChain = object : okhttp3.Interceptor.Chain {
-        override fun request(): okhttp3.Request = okRequest
+        override fun request() = okRequest
 
-        override fun proceed(request: okhttp3.Request): Response {
+        override fun proceed(request: okhttp3.Request): okhttp3.Response {
             val updatedBuilder = request.toKtorRequestBuilder()
             return runBlocking {
-                val niceResponse = chain.proceed(updatedBuilder)
-                niceResponse.toOkHttpResponse(request)
+                val call = ctx.execute(updatedBuilder)
+                call.toOkHttpResponse(request)
             }
         }
 
-        override fun connection(): okhttp3.Connection? = null
-
+        override fun connection() = null
         override fun call(): okhttp3.Call =
             throw UnsupportedOperationException("call() not available in KMP bridge")
-
-        override fun connectTimeoutMillis(): Int = 0
+        override fun connectTimeoutMillis() = 0
         override fun withConnectTimeout(timeout: Int, unit: java.util.concurrent.TimeUnit) = this
-        override fun readTimeoutMillis(): Int = 0
+        override fun readTimeoutMillis() = 0
         override fun withReadTimeout(timeout: Int, unit: java.util.concurrent.TimeUnit) = this
-        override fun writeTimeoutMillis(): Int = 0
+        override fun writeTimeoutMillis() = 0
         override fun withWriteTimeout(timeout: Int, unit: java.util.concurrent.TimeUnit) = this
     }
 
-    this@toNiceInterceptor.intercept(okChain).toNiceResponse()
+    val okResponse = this@toInterceptor.intercept(okChain)
+    okResponse.toKtorCall(ctx.request)
 }
 
 fun Interceptor.toOkHttpInterceptor(): okhttp3.Interceptor = okhttp3.Interceptor { chain ->
     val ktorBuilder = chain.request().toKtorRequestBuilder()
-
-    val kmpChain = object : Interceptor.Chain {
-        override val request: HttpRequestBuilder = ktorBuilder
-
-        override suspend fun proceed(request: HttpRequestBuilder): INiceResponse {
-            val updatedOkRequest = request.toOkHttpRequest()
-            val okResponse = chain.proceed(updatedOkRequest)
-            return okResponse.toNiceResponse()
+    val call = runBlocking {
+        val ctx = HttpSendInterceptorContext(ktorBuilder) { req ->
+            // Can't execute via Ktor here since we're in OkHttp's sync chain
+            // so just build a synthetic call from the OkHttp proceed result
+            chain.proceed(req.toOkHttpRequest()).toKtorCall(req)
         }
+        this@toOkHttpInterceptor.intercept(ctx)
     }
-
-    val niceResponse = runBlocking { this@toOkHttpInterceptor.intercept(kmpChain) }
-    niceResponse.toOkHttpResponse(chain.request())
+    call.toOkHttpResponse(chain.request())
 }
 
-internal fun HttpRequestBuilder.toOkHttpRequest(): okhttp3.Request {
-    val url = this.url.buildString()
-    val method = this.method.value
-    val okHeaders = okhttp3.Headers.Builder().also { h ->
-        this.headers.build().forEach { k, values ->
-            values.forEach { v -> h.add(k, v) }
-        }
-    }.build()
-
-    val okBody: okhttp3.RequestBody? = when {
-        method == "GET" || method == "HEAD" -> null
-        else -> when (val b = this.body) {
-            is ByteArrayContent ->
-                b.bytes().toRequestBody(b.contentType?.toString()?.toMediaTypeOrNull())
-            is TextContent ->
-                b.text.toRequestBody(b.contentType.toString().toMediaTypeOrNull())
-            is FormDataContent -> {
-                val form = okhttp3.FormBody.Builder()
-                b.formData.entries().forEach { entry ->
-                    val key = entry.key
-                    entry.value.forEach { v -> form.addEncoded(key, v) }
-                }
-                form.build()
-            }
-            else -> null
-        }
+internal suspend fun okhttp3.Response.toKtorCall(
+    request: HttpRequestBuilder,
+    parser: ResponseParser? = null,
+): HttpClientCall {
+    // HttpClientCall can't be constructed directly from outside Ktor internals.
+    // Use a MockEngine to produce a real HttpClientCall from our bytes.
+    val bytes = body?.bytes() ?: ByteArray(0)
+    val code = code
+    val url = this.request.url.toString()
+    val ktorHeaders = Headers.build {
+        headers.forEach { (k, v) -> append(k, v) }
     }
-
-    return okhttp3.Request.Builder()
-        .url(url)
-        .headers(okHeaders)
-        .method(method, okBody)
-        .build()
+    val mockEngine = io.ktor.client.engine.mock.MockEngine {
+        io.ktor.client.engine.mock.respond(
+            content = bytes,
+            status = HttpStatusCode.fromValue(code),
+            headers = ktorHeaders,
+        )
+    }
+    val client = HttpClient(mockEngine)
+    return client.call(url)
 }
 
-internal fun okhttp3.Request.toKtorRequestBuilder(): HttpRequestBuilder =
-    HttpRequestBuilder().apply {
-        method = HttpMethod(this@toKtorRequestBuilder.method)
-        url(this@toKtorRequestBuilder.url.toString())
-        this@toKtorRequestBuilder.headers.forEach { (k, v) -> header(k, v) }
-        val okBody = this@toKtorRequestBuilder.body
-        if (okBody != null) {
-            val buffer = Buffer()
-            okBody.writeTo(buffer)
-            val bytes = buffer.readByteArray()
-            val ct = okBody.contentType()?.toString()
-                ?.let { ContentType.parse(it) }
-                ?: ContentType.Application.OctetStream
-            setBody(ByteArrayContent(bytes, ct))
-        }
-    }
-
-internal fun INiceResponse.toOkHttpResponse(request: okhttp3.Request): okhttp3.Response =
-    okhttp3.Response.Builder()
+internal suspend fun HttpClientCall.toOkHttpResponse(request: okhttp3.Request): okhttp3.Response {
+    val bytes = response.readRawBytes()
+    return okhttp3.Response.Builder()
         .request(request)
         .protocol(okhttp3.Protocol.HTTP_1_1)
-        .code(code)
+        .code(response.status.value)
         .message("")
-        .body(
-            body.bytes().toResponseBody(
-                headers["content-type"]?.toMediaTypeOrNull()
-            )
-        )
+        .body(bytes.toResponseBody(response.headers["content-type"]?.toMediaTypeOrNull()))
         .also { builder ->
-            headers.forEach { k, values ->
+            response.headers.forEach { k, values ->
                 values.forEach { v -> builder.addHeader(k, v) }
             }
         }
         .build()
-
-/**
- * Converts an [okhttp3.Response] to a [SyntheticNiceResponse].
- * Uses the real request URL so [INiceResponse.url] is always accurate.
- */
-internal fun okhttp3.Response.toNiceResponse(
-    parser: ResponseParser? = null,
-): INiceResponse {
-    val bytes = body.bytes()
-    val url = request.url.toString()
-    val ktorHeaders = Headers.build {
-        headers.forEach { (k, v) -> append(k, v) }
-    }
-    return SyntheticNiceResponse(
-        rawBytes = bytes,
-        code = code,
-        headers = ktorHeaders,
-        url = url,
-        parser = parser,
-    )
 }
