@@ -9,6 +9,7 @@ import kotlinx.cinterop.convert
 import platform.Foundation.NSURLCredential
 import platform.Foundation.NSURLSessionAuthChallengePerformDefaultHandling
 import platform.Foundation.NSURLSessionAuthChallengeUseCredential
+import platform.Foundation.credentialForTrust
 import platform.Foundation.serverTrust
 
 actual fun defaultHttpClient(): HttpClient = HttpClient(Darwin) {
