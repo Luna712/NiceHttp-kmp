@@ -1,4 +1,3 @@
-@file:JvmName("HeadersExt")
 package io.ktor.http
 
 /** Converts Ktor [Headers] to a plain Map, keeping the last value for duplicate keys. */
