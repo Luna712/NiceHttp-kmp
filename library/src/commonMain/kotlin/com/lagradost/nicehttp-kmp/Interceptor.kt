@@ -80,9 +80,11 @@ class FallbackUrlInterceptor(
         } catch (_: Exception) {
         }
 
-        val fallbackRequest = HttpRequestBuilder().takeFrom(chain.request).apply {
-            val newUrl = url.buildString().replaceFirst(primaryUrl, fallbackUrl)
-            url.takeFrom(newUrl)
+        val newUrl = chain.request.url.buildString().replaceFirst(primaryUrl, fallbackUrl)
+
+        val fallbackRequest = HttpRequestBuilder().apply {
+            takeFrom(chain.request)
+            url(io.ktor.http.Url(newUrl))
         }
 
         return chain.proceed(fallbackRequest)
