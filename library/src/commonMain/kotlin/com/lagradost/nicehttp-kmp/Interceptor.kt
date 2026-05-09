@@ -88,7 +88,7 @@ class FallbackUrlInterceptor(
             url.protocol = parsed.protocol
             url.host = parsed.host
             url.port = parsed.port
-            url.pathSegments = parsed.pathSegments
+            url.segments = parsed.segments
             url.parameters.clear()
             parsed.parameters.forEach { key, values ->
                 values.forEach { url.parameters.append(key, it) }
