@@ -68,7 +68,7 @@ class RetryInterceptor(
  * Interceptor that retries a failed request against a fallback URL.
  * Replaces the first occurrence of [primaryUrl] with [fallbackUrl] in the request URL.
  */
-class FallbackUrlInterceptor(
+/*class FallbackUrlInterceptor(
     private val primaryUrl: String,
     private val fallbackUrl: String,
     private val shouldFallback: (INiceResponse) -> Boolean = { !it.isSuccessful },
@@ -97,7 +97,7 @@ class FallbackUrlInterceptor(
 
         return chain.proceed(fallbackRequest)
     }
-}
+}*/
 
 /**
  * Interceptor that logs requests and responses.
