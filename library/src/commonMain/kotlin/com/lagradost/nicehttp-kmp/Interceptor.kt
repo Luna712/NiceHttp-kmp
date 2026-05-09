@@ -82,7 +82,7 @@ class FallbackUrlInterceptor(
 
         val fallbackRequest = HttpRequestBuilder().takeFrom(chain.request).apply {
             val newUrl = url.buildString().replaceFirst(primaryUrl, fallbackUrl)
-            url(newUrl)
+            url.takeFrom(newUrl)
         }
 
         return chain.proceed(fallbackRequest)
