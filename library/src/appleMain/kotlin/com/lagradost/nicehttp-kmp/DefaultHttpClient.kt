@@ -20,6 +20,7 @@ actual fun insecureHttpClient(): HttpClient = HttpClient(Darwin) {
     install(HttpTimeout)
     install(HttpCache)
     install(HttpRequestRetry) { noRetry() }
+
     @OptIn(ExperimentalForeignApi::class)
     engine {
         handleChallenge { _, _, challenge, completionHandler ->
