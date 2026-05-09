@@ -88,11 +88,10 @@ class FallbackUrlInterceptor(
             url.protocol = parsed.protocol
             url.host = parsed.host
             url.port = parsed.port
-            url.encodedPath = parsed.encodedPath
-            url.encodedParameters = io.ktor.http.ParametersBuilder().apply {
-                parsed.parameters.forEach { key, values ->
-                    values.forEach { append(key, it) }
-                }
+            url.pathSegments = parsed.pathSegments
+            url.parameters.clear()
+            parsed.parameters.forEach { key, values ->
+                values.forEach { url.parameters.append(key, it) }
             }
         }
 
