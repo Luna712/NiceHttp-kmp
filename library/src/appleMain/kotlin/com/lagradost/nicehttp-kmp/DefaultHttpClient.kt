@@ -4,6 +4,10 @@ import io.ktor.client.*
 import io.ktor.client.engine.darwin.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.cache.*
+import platform.Foundation.NSURLCredential
+import platform.Foundation.NSURLSessionAuthChallengeUseCredential
+import platform.Foundation.credentialForTrust
+import platform.Security.SecTrustRef
 
 actual fun defaultHttpClient(): HttpClient = HttpClient(Darwin) {
     install(HttpTimeout)
@@ -16,6 +20,12 @@ actual fun insecureHttpClient(): HttpClient = HttpClient(Darwin) {
     install(HttpCache)
     install(HttpRequestRetry) { noRetry() }
     engine {
-        peerAuthentication = PeerAuthentication.None
+        handleChallenge { _, _, challenge, completionHandler ->
+            val trust = challenge.protectionSpace.serverTrust
+            completionHandler(
+                NSURLSessionAuthChallengeUseCredential,
+                NSURLCredential.credentialForTrust(trust)
+            )
+        }
     }
 }
