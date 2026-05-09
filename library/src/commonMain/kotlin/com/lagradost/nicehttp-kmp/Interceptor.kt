@@ -101,10 +101,11 @@ class RetryInterceptor(
 
 object CacheInterceptor : Interceptor {
     override suspend fun intercept(chain: Interceptor.Chain): INiceResponse {
-        val req = chain.request
-        req.headers.remove("Cache-Control") // Remove site cache
-        req.headers.remove("Pragma") // Remove site cache
-        req.headers.append("Cache-Control", "only-if-cached, max-stale=${Int.MAX_VALUE}")
+        chain.request.headers.apply {
+            remove("Cache-Control") // Remove site cache
+            remove("Pragma") // Remove site cache
+            append("Cache-Control", "only-if-cached, max-stale=${Int.MAX_VALUE}")
+        }
         return chain.proceed(req)
     }
 }
