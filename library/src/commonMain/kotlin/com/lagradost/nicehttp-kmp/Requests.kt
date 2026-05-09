@@ -37,6 +37,8 @@ open class Requests(
     var defaultReferer: String? = null,
     var defaultData: Map<String, String> = emptyMap(),
     var defaultCookies: Map<String, String> = emptyMap(),
+    var defaultCacheTime: Int = 0,
+    var defaultCacheTimeUnit: DurationUnit = DurationUnit.MINUTES,
     var defaultTimeout: Duration = Duration.ZERO,
     var responseParser: ResponseParser? = null,
     var interceptors: MutableList<Interceptor> = mutableListOf(),
@@ -46,6 +48,14 @@ open class Requests(
 
     private val noRedirectClient: HttpClient by lazy {
         baseClient.config { followRedirects = false }
+    }
+
+    private val insecureClient: HttpClient by lazy {
+        insecureHttpClient()
+    }
+
+    private val insecureNoRedirectClient: HttpClient by lazy {
+        insecureHttpClient().config { followRedirects = false }
     }
 
     /**
@@ -78,8 +88,11 @@ open class Requests(
         json: Any? = null,
         requestBody: RequestBody? = null,
         allowRedirects: Boolean = true,
+        cacheTime: Int = defaultCacheTime,
+        cacheUnit: DurationUnit = defaultCacheTimeUnit,
         timeout: Duration = defaultTimeout,
         interceptor: Interceptor? = null,
+        verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
     ): INiceResponse {
         val finalUrl = addParamsToUrl(url, params)
@@ -107,9 +120,28 @@ open class Requests(
 
         // Merge instance-level interceptors with the per-call interceptor
         val allInterceptors = interceptors.toMutableList()
+        allInterceptors.add(0, CacheInterceptor)
+
+        if (cacheTime > 0) {
+            val seconds = when (cacheUnit) {
+                DurationUnit.SECONDS -> cacheTime
+                DurationUnit.MINUTES -> cacheTime * 60
+                DurationUnit.HOURS   -> cacheTime * 3600
+                DurationUnit.DAYS    -> cacheTime * 86400
+                else                 -> cacheTime * 60
+            }
+            allInterceptors.add(0, HeadersInterceptor(mapOf("Cache-Control" to "max-age=$seconds")))
+        }
+
         if (interceptor != null) allInterceptors.add(interceptor)
 
-        val clientToUse = if (!allowRedirects) noRedirectClient else baseClient
+        val clientToUse = when {
+            !verify && !allowRedirects -> insecureNoRedirectClient
+            !verify                    -> insecureClient
+            !allowRedirects            -> noRedirectClient
+            else                       -> baseClient
+        }
+
         return executeWithInterceptors(allInterceptors, requestBuilder, clientToUse, responseParser)
     }
 
@@ -122,11 +154,16 @@ open class Requests(
         params: Map<String, String> = emptyMap(),
         cookies: Map<String, String> = emptyMap(),
         allowRedirects: Boolean = true,
+        cacheTime: Int = defaultCacheTime,
+        cacheUnit: DurationUnit = defaultCacheTimeUnit,
         timeout: Duration = defaultTimeout,
         interceptor: Interceptor? = null,
+        verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ) = custom("GET", url, headers, referer, params, cookies,
-        null, null, null, null, allowRedirects, timeout, interceptor, responseParser)
+    ) = custom(
+        "GET", url, headers, referer, params, cookies, null, null, null, null,
+        allowRedirects, cacheTime, cacheUnit, timeout, interceptor, verify, responseParser
+    )
 
     suspend fun post(
         url: String,
@@ -139,11 +176,16 @@ open class Requests(
         json: Any? = null,
         requestBody: RequestBody? = null,
         allowRedirects: Boolean = true,
+        cacheTime: Int = defaultCacheTime,
+        cacheUnit: DurationUnit = defaultCacheTimeUnit,
         timeout: Duration = defaultTimeout,
         interceptor: Interceptor? = null,
+        verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ) = custom("POST", url, headers, referer, params, cookies,
-        data, files, json, requestBody, allowRedirects, timeout, interceptor, responseParser)
+    ) = custom(
+        "POST", url, headers, referer, params, cookies, data, files, json, requestBody,
+        allowRedirects, cacheTime, cacheUnit, timeout, interceptor, verify, responseParser
+    )
 
     suspend fun put(
         url: String,
@@ -156,11 +198,16 @@ open class Requests(
         json: Any? = null,
         requestBody: RequestBody? = null,
         allowRedirects: Boolean = true,
+        cacheTime: Int = defaultCacheTime,
+        cacheUnit: DurationUnit = defaultCacheTimeUnit,
         timeout: Duration = defaultTimeout,
         interceptor: Interceptor? = null,
+        verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ) = custom("PUT", url, headers, referer, params, cookies,
-        data, files, json, requestBody, allowRedirects, timeout, interceptor, responseParser)
+    ) = custom(
+        "PUT", url, headers, referer, params, cookies, data, files, json, requestBody,
+        allowRedirects, cacheTime, cacheUnit, timeout, interceptor, verify, responseParser
+    )
 
     suspend fun delete(
         url: String,
@@ -173,11 +220,16 @@ open class Requests(
         json: Any? = null,
         requestBody: RequestBody? = null,
         allowRedirects: Boolean = true,
+        cacheTime: Int = defaultCacheTime,
+        cacheUnit: DurationUnit = defaultCacheTimeUnit,
         timeout: Duration = defaultTimeout,
         interceptor: Interceptor? = null,
+        verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ) = custom("DELETE", url, headers, referer, params, cookies,
-        data, files, json, requestBody, allowRedirects, timeout, interceptor, responseParser)
+    ) = custom(
+        "DELETE", url, headers, referer, params, cookies, data, files, json, requestBody,
+        allowRedirects, cacheTime, cacheUnit, timeout, interceptor, verify, responseParser
+    )
 
     suspend fun head(
         url: String,
@@ -186,11 +238,16 @@ open class Requests(
         params: Map<String, String> = emptyMap(),
         cookies: Map<String, String> = emptyMap(),
         allowRedirects: Boolean = true,
+        cacheTime: Int = defaultCacheTime,
+        cacheUnit: DurationUnit = defaultCacheTimeUnit,
         timeout: Duration = defaultTimeout,
         interceptor: Interceptor? = null,
+        verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ) = custom("HEAD", url, headers, referer, params, cookies,
-        null, null, null, null, allowRedirects, timeout, interceptor, responseParser)
+    ) = custom(
+        "HEAD", url, headers, referer, params, cookies, null, null, null, null,
+        allowRedirects, cacheTime, cacheUnit, timeout, interceptor, verify, responseParser
+    )
 
     suspend fun patch(
         url: String,
@@ -203,11 +260,16 @@ open class Requests(
         json: Any? = null,
         requestBody: RequestBody? = null,
         allowRedirects: Boolean = true,
+        cacheTime: Int = defaultCacheTime,
+        cacheUnit: DurationUnit = defaultCacheTimeUnit,
         timeout: Duration = defaultTimeout,
         interceptor: Interceptor? = null,
+        verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ) = custom("PATCH", url, headers, referer, params, cookies,
-        data, files, json, requestBody, allowRedirects, timeout, interceptor, responseParser)
+    ) = custom(
+        "PATCH", url, headers, referer, params, cookies, data, files, json, requestBody,
+        allowRedirects, cacheTime, cacheUnit, timeout, interceptor, verify, responseParser
+    )
 
     suspend fun options(
         url: String,
@@ -220,164 +282,17 @@ open class Requests(
         json: Any? = null,
         requestBody: RequestBody? = null,
         allowRedirects: Boolean = true,
+        cacheTime: Int = defaultCacheTime,
+        cacheUnit: DurationUnit = defaultCacheTimeUnit,
         timeout: Duration = defaultTimeout,
         interceptor: Interceptor? = null,
+        verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ) = custom("OPTIONS", url, headers, referer, params, cookies,
-        data, files, json, requestBody, allowRedirects, timeout, interceptor, responseParser)
+    ) = custom(
+        "OPTIONS", url, headers, referer, params, cookies, data, files, json, requestBody,
+        allowRedirects, cacheTime, cacheUnit, timeout, interceptor, verify, responseParser
+    )
 }
-
-// ── Back-compat overloads (Long timeout, cacheTime, verify) ──────────────────
-// These mirror the original NiceHttp API exactly so existing call sites compile
-// without changes. cacheTime/cacheUnit are accepted but ignored - caching is
-// OkHttp-specific and not available cross-platform. verify=false should be set
-// once at construction time via ignoreAllSSLErrors() on JVM/Android instead.
-
-suspend fun Requests.get(
-    url: String,
-    headers: Map<String, String> = emptyMap(),
-    referer: String? = null,
-    params: Map<String, String> = emptyMap(),
-    cookies: Map<String, String> = emptyMap(),
-    allowRedirects: Boolean = true,
-    cacheTime: Int = 0,
-    cacheUnit: DurationUnit = DurationUnit.MINUTES,
-    timeout: Long = 0L,
-    interceptor: Interceptor? = null,
-    verify: Boolean = true,
-    responseParser: ResponseParser? = this.responseParser,
-) = custom("GET", url, headers, referer, params, cookies,
-    null, null, null, null, allowRedirects,
-    if (timeout > 0) timeout.seconds else Duration.ZERO,
-    interceptor, responseParser)
-
-suspend fun Requests.post(
-    url: String,
-    headers: Map<String, String> = emptyMap(),
-    referer: String? = null,
-    params: Map<String, String> = emptyMap(),
-    cookies: Map<String, String> = emptyMap(),
-    data: Map<String, String>? = this.defaultData,
-    files: List<NiceFile>? = null,
-    json: Any? = null,
-    requestBody: RequestBody? = null,
-    allowRedirects: Boolean = true,
-    cacheTime: Int = 0,
-    cacheUnit: DurationUnit = DurationUnit.MINUTES,
-    timeout: Long = 0L,
-    interceptor: Interceptor? = null,
-    verify: Boolean = true,
-    responseParser: ResponseParser? = this.responseParser,
-) = custom("POST", url, headers, referer, params, cookies,
-    data, files, json, requestBody, allowRedirects,
-    if (timeout > 0) timeout.seconds else Duration.ZERO,
-    interceptor, responseParser)
-
-suspend fun Requests.put(
-    url: String,
-    headers: Map<String, String> = emptyMap(),
-    referer: String? = null,
-    params: Map<String, String> = emptyMap(),
-    cookies: Map<String, String> = emptyMap(),
-    data: Map<String, String>? = this.defaultData,
-    files: List<NiceFile>? = null,
-    json: Any? = null,
-    requestBody: RequestBody? = null,
-    allowRedirects: Boolean = true,
-    cacheTime: Int = 0,
-    cacheUnit: DurationUnit = DurationUnit.MINUTES,
-    timeout: Long = 0L,
-    interceptor: Interceptor? = null,
-    verify: Boolean = true,
-    responseParser: ResponseParser? = this.responseParser,
-) = custom("PUT", url, headers, referer, params, cookies,
-    data, files, json, requestBody, allowRedirects,
-    if (timeout > 0) timeout.seconds else Duration.ZERO,
-    interceptor, responseParser)
-
-suspend fun Requests.delete(
-    url: String,
-    headers: Map<String, String> = emptyMap(),
-    referer: String? = null,
-    params: Map<String, String> = emptyMap(),
-    cookies: Map<String, String> = emptyMap(),
-    data: Map<String, String>? = this.defaultData,
-    files: List<NiceFile>? = null,
-    json: Any? = null,
-    requestBody: RequestBody? = null,
-    allowRedirects: Boolean = true,
-    cacheTime: Int = 0,
-    cacheUnit: DurationUnit = DurationUnit.MINUTES,
-    timeout: Long = 0L,
-    interceptor: Interceptor? = null,
-    verify: Boolean = true,
-    responseParser: ResponseParser? = this.responseParser,
-) = custom("DELETE", url, headers, referer, params, cookies,
-    data, files, json, requestBody, allowRedirects,
-    if (timeout > 0) timeout.seconds else Duration.ZERO,
-    interceptor, responseParser)
-
-suspend fun Requests.head(
-    url: String,
-    headers: Map<String, String> = emptyMap(),
-    referer: String? = null,
-    params: Map<String, String> = emptyMap(),
-    cookies: Map<String, String> = emptyMap(),
-    allowRedirects: Boolean = true,
-    cacheTime: Int = 0,
-    cacheUnit: DurationUnit = DurationUnit.MINUTES,
-    timeout: Long = 0L,
-    interceptor: Interceptor? = null,
-    verify: Boolean = true,
-    responseParser: ResponseParser? = this.responseParser,
-) = custom("HEAD", url, headers, referer, params, cookies,
-    null, null, null, null, allowRedirects,
-    if (timeout > 0) timeout.seconds else Duration.ZERO,
-    interceptor, responseParser)
-
-suspend fun Requests.patch(
-    url: String,
-    headers: Map<String, String> = emptyMap(),
-    referer: String? = null,
-    params: Map<String, String> = emptyMap(),
-    cookies: Map<String, String> = emptyMap(),
-    data: Map<String, String>? = this.defaultData,
-    files: List<NiceFile>? = null,
-    json: Any? = null,
-    requestBody: RequestBody? = null,
-    allowRedirects: Boolean = true,
-    cacheTime: Int = 0,
-    cacheUnit: DurationUnit = DurationUnit.MINUTES,
-    timeout: Long = 0L,
-    interceptor: Interceptor? = null,
-    verify: Boolean = true,
-    responseParser: ResponseParser? = this.responseParser,
-) = custom("PATCH", url, headers, referer, params, cookies,
-    data, files, json, requestBody, allowRedirects,
-    if (timeout > 0) timeout.seconds else Duration.ZERO,
-    interceptor, responseParser)
-
-suspend fun Requests.options(
-    url: String,
-    headers: Map<String, String> = emptyMap(),
-    referer: String? = null,
-    params: Map<String, String> = emptyMap(),
-    cookies: Map<String, String> = emptyMap(),
-    data: Map<String, String>? = this.defaultData,
-    files: List<NiceFile>? = null,
-    json: Any? = null,
-    requestBody: RequestBody? = null,
-    allowRedirects: Boolean = true,
-    cacheTime: Int = 0,
-    cacheUnit: DurationUnit = DurationUnit.MINUTES,
-    timeout: Long = 0L,
-    interceptor: Interceptor? = null,
-    verify: Boolean = true,
-    responseParser: ResponseParser? = this.responseParser,
-) = custom("OPTIONS", url, headers, referer, params, cookies,
-    data, files, json, requestBody, allowRedirects,
-    if (timeout > 0) timeout.seconds else Duration.ZERO,
-    interceptor, responseParser)
 
 // ── Body builder ──────────────────────────────────────────────────────────────
 
