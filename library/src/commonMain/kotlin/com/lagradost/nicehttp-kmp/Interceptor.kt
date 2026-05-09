@@ -101,24 +101,11 @@ class RetryInterceptor(
 
 object CacheInterceptor : Interceptor {
     override suspend fun intercept(chain: Interceptor.Chain): INiceResponse {
-        // Add Cache-Control to request so HttpCache serves from cache if available
-        chain.request.headers.apply {
-            remove("Cache-Control")
-            append("Cache-Control", "only-if-cached, max-stale=${Int.MAX_VALUE}")
-        }
-        val response = chain.proceed()
-        // Strip server cache headers and force cache storage — equivalent of FORCE_CACHE
-        val newHeaders = Headers.build {
-            response.headers.forEach { key, values ->
-                if (!key.equals("Cache-Control", ignoreCase = true) &&
-                    !key.equals("Pragma", ignoreCase = true)
-                ) {
-                    values.forEach { append(key, it) }
-                }
-            }
-            append("Cache-Control", "max-age=${Int.MAX_VALUE}")
-        }
-        return response.withHeaders(newHeaders)
+        val req = chain.request
+        req.headers.remove("Cache-Control") // Remove site cache
+        req.headers.remove("Pragma") // Remove site cache
+        req.headers.append("Cache-Control", "only-if-cached, max-stale=${Int.MAX_VALUE}")
+        return chain.proceed(req)
     }
 }
 
