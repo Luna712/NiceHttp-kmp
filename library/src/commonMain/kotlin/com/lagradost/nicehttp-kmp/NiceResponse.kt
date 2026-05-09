@@ -69,6 +69,9 @@ interface INiceResponse {
 
     /** Same as [document] but without the size guard. */
     suspend fun documentLarge(): Document
+
+    val headersMap: Map<String, String>
+        get() = headers.entries().associate { (key, values) -> key to values.last() }
 }
 
 /**
@@ -233,16 +236,6 @@ fun Headers.getRequestCookies(): Map<String, String> =
         }
         ?.toMap()
         ?: emptyMap()
-
-/** Converts Ktor [Headers] to a plain Map, keeping the last value for duplicate keys. */
-/* fun Headers.toMap(): Map<String, String> =
-    entries().associate { (key, values) -> key to values.last() }*/
-
-/** Converts Ktor [Headers] to a Map with all values per key. */
-/*fun Headers.toMultiMap(): Map<String, List<String>> =
-    entries().associate { (key, values) -> key to values } */
-
-// ── Parsed helpers as extensions (inline reified can't live in interfaces) ────
 
 /** Parses the body as [T] using the configured [ResponseParser]. */
 suspend inline fun <reified T : Any> INiceResponse.parsed(): T =
