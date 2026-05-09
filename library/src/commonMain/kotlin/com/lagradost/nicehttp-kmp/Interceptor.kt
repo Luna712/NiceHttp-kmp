@@ -103,7 +103,7 @@ class LoggingInterceptor(
     override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
         log("--> ${ctx.method} ${ctx.url}")
         val call = ctx.proceed()
-        log("<-- ${call.response.status.value} ${call.response.request.url.buildString()}")
+        log("<-- ${call.response.status.value} ${ctx.url}")
         return call
     }
 }
