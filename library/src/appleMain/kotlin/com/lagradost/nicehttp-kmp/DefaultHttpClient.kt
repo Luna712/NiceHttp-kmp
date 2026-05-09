@@ -4,8 +4,9 @@ import io.ktor.client.*
 import io.ktor.client.engine.darwin.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.cache.*
-import platform.Foundation.*
-import platform.darwin.*
+import platform.Foundation.NSURLCredential
+import platform.Foundation.NSURLSessionAuthChallengeUseCredential
+import platform.Foundation.serverTrust
 
 actual fun defaultHttpClient(): HttpClient = HttpClient(Darwin) {
     install(HttpTimeout)
@@ -18,26 +19,17 @@ actual fun insecureHttpClient(): HttpClient = HttpClient(Darwin) {
     install(HttpCache)
     install(HttpRequestRetry) { noRetry() }
     engine {
-        configureSession {
-            setSessionDelegate(object : NSURLSessionDelegate(
-                NSObject(),
-                NSURLSessionTaskDelegateProtocol
-            ) {
-                override fun URLSession(
-                    session: NSURLSession,
-                    task: NSURLSessionTask,
-                    didReceiveChallenge: NSURLAuthenticationChallenge,
-                    completionHandler: (NSURLSessionAuthChallengeDisposition, NSURLCredential?) -> Unit
-                ) {
-                    // Accept all certificates
-                    completionHandler(
-                        NSURLSessionAuthChallengeUseCredential,
-                        NSURLCredential.credentialForTrust(
-                            didReceiveChallenge.protectionSpace.serverTrust!!
-                        )
-                    )
-                }
-            })
+        handleChallenge { session, task, challenge, completionHandler ->
+            val serverTrust = challenge.protectionSpace.serverTrust
+            if (serverTrust != null) {
+                completionHandler(
+                    NSURLSessionAuthChallengeUseCredential,
+                    NSURLCredential.credentialForTrust(serverTrust)
+                )
+            } else {
+                // Fallback to default handling if trust is null
+                completionHandler(platform.Foundation.NSURLSessionAuthChallengePerformDefaultHandling, null)
+            }
         }
     }
 }
