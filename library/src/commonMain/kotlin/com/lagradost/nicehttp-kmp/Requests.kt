@@ -7,12 +7,10 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.http.content.*
-import kotlin.time.Duration
 import kotlin.time.DurationUnit
-import kotlin.time.Duration.Companion.seconds
 
 /**
- * Multiplatform HTTP client modelled after the original NiceHttp `Requests` class.
+ * Multiplatform HTTP client modelled after the original NiceHttp [Requests] class.
  *
  * Instead of OkHttp it uses a Ktor [HttpClient] whose engine is resolved per-platform:
  *  - JVM / Android  → OkHttp engine  (retains full OkHttp power for DNS-over-HTTPS, etc.)
@@ -26,9 +24,12 @@ import kotlin.time.Duration.Companion.seconds
  * @param baseClient        The Ktor [HttpClient] used for all requests.
  * @param defaultHeaders    Headers sent with every request (overridable per-call).
  * @param defaultReferer    Referer header sent when not overridden per-call.
+ * @param defaultData       Default form data sent with every request.
  * @param defaultCookies    Cookies merged into every request.
- * @param defaultTimeout    Global call timeout; [Duration.ZERO] means no timeout.
- * @param responseParser    JSON parser used by [NiceResponse.parsed].
+ * @param defaultCacheTime  Default cache time, used with [defaultCacheUnit]. 0 means no caching.
+ * @param defaultCacheUnit  Unit for [defaultCacheTime], defaults to minutes.
+ * @param defaultTimeOut    Default timeout in seconds. 0 means no timeout.
+ * @param responseParser    JSON parser used by [INiceResponse.parsed].
  * @param interceptors      List of [Interceptor]s applied to every request in order.
  */
 open class Requests(
@@ -39,7 +40,7 @@ open class Requests(
     var defaultCookies: Map<String, String> = emptyMap(),
     var defaultCacheTime: Int = 0,
     var defaultCacheTimeUnit: DurationUnit = DurationUnit.MINUTES,
-    var defaultTimeout: Duration = Duration.ZERO,
+    var defaultTimeout: Long = 0L,
     var responseParser: ResponseParser? = null,
     var interceptors: MutableList<Interceptor> = mutableListOf(),
 ) {
@@ -72,8 +73,15 @@ open class Requests(
      * @param json           Object serialised to JSON, or a raw [JsonAsString].
      * @param requestBody    Fully pre-built [RequestBody] (highest priority body).
      * @param allowRedirects Whether to follow HTTP redirects.
-     * @param timeout        Overrides [defaultTimeout] for this call.
+     * @param cacheTime      How long to cache the response. 0 means no caching.
+     *                       Uses [cacheUnit] as the time unit.
+     * @param cacheUnit      Unit for [cacheTime], defaults to [defaultCacheUnit].
+     * @param timeout        Request timeout in seconds. 0 means no timeout.
+     *                       Overrides [defaultTimeOut] for this call.
      * @param interceptor    Per-call [Interceptor], appended after [interceptors].
+     * @param verify         If false, SSL certificate verification is disabled.
+     *                       Only has effect on platforms that support it (JVM/Android, Darwin, Curl, WinHttp).
+     *                       Silently ignored on JS/WASM.
      * @param responseParser Overrides [this.responseParser] for this call.
      */
     open suspend fun custom(
@@ -90,7 +98,7 @@ open class Requests(
         allowRedirects: Boolean = true,
         cacheTime: Int = defaultCacheTime,
         cacheUnit: DurationUnit = defaultCacheTimeUnit,
-        timeout: Duration = defaultTimeout,
+        timeout: Long = defaultTimeout,
         interceptor: Interceptor? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
@@ -108,8 +116,8 @@ open class Requests(
             url(finalUrl)
             finalHeaders.forEach { k, values -> values.forEach { v -> header(k, v) } }
             body?.let { setBody(it.content) }
-            if (timeout > Duration.ZERO) {
-                val ms = timeout.inWholeMilliseconds
+            if (timeout > 0L) {
+                val ms = timeout * 1000L
                 timeout {
                     requestTimeoutMillis = ms
                     connectTimeoutMillis = ms
@@ -156,7 +164,7 @@ open class Requests(
         allowRedirects: Boolean = true,
         cacheTime: Int = defaultCacheTime,
         cacheUnit: DurationUnit = defaultCacheTimeUnit,
-        timeout: Duration = defaultTimeout,
+        timeout: Long = defaultTimeout,
         interceptor: Interceptor? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
@@ -178,7 +186,7 @@ open class Requests(
         allowRedirects: Boolean = true,
         cacheTime: Int = defaultCacheTime,
         cacheUnit: DurationUnit = defaultCacheTimeUnit,
-        timeout: Duration = defaultTimeout,
+        timeout: Long = defaultTimeout,
         interceptor: Interceptor? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
@@ -200,7 +208,7 @@ open class Requests(
         allowRedirects: Boolean = true,
         cacheTime: Int = defaultCacheTime,
         cacheUnit: DurationUnit = defaultCacheTimeUnit,
-        timeout: Duration = defaultTimeout,
+        timeout: Long = defaultTimeout,
         interceptor: Interceptor? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
@@ -222,7 +230,7 @@ open class Requests(
         allowRedirects: Boolean = true,
         cacheTime: Int = defaultCacheTime,
         cacheUnit: DurationUnit = defaultCacheTimeUnit,
-        timeout: Duration = defaultTimeout,
+        timeout: Long = defaultTimeout,
         interceptor: Interceptor? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
@@ -240,7 +248,7 @@ open class Requests(
         allowRedirects: Boolean = true,
         cacheTime: Int = defaultCacheTime,
         cacheUnit: DurationUnit = defaultCacheTimeUnit,
-        timeout: Duration = defaultTimeout,
+        timeout: Long = defaultTimeout,
         interceptor: Interceptor? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
@@ -262,7 +270,7 @@ open class Requests(
         allowRedirects: Boolean = true,
         cacheTime: Int = defaultCacheTime,
         cacheUnit: DurationUnit = defaultCacheTimeUnit,
-        timeout: Duration = defaultTimeout,
+        timeout: Long = defaultTimeout,
         interceptor: Interceptor? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
@@ -284,7 +292,7 @@ open class Requests(
         allowRedirects: Boolean = true,
         cacheTime: Int = defaultCacheTime,
         cacheUnit: DurationUnit = defaultCacheTimeUnit,
-        timeout: Duration = defaultTimeout,
+        timeout: Long = defaultTimeout,
         interceptor: Interceptor? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
