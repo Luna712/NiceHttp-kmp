@@ -81,10 +81,19 @@ class FallbackUrlInterceptor(
         }
 
         val newUrl = chain.request.url.buildString().replaceFirst(primaryUrl, fallbackUrl)
+        val parsed = io.ktor.http.Url(newUrl)
 
         val fallbackRequest = HttpRequestBuilder().apply {
             takeFrom(chain.request)
-            url(io.ktor.http.Url(newUrl))
+            url.protocol = parsed.protocol
+            url.host = parsed.host
+            url.port = parsed.port
+            url.encodedPath = parsed.encodedPath
+            url.encodedParameters = io.ktor.http.ParametersBuilder().apply {
+                parsed.parameters.forEach { key, values ->
+                    values.forEach { append(key, it) }
+                }
+            }
         }
 
         return chain.proceed(fallbackRequest)
