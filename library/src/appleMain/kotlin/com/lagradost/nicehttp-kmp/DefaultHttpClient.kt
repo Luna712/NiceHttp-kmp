@@ -16,11 +16,6 @@ actual fun insecureHttpClient(): HttpClient = HttpClient(Darwin) {
     install(HttpCache)
     install(HttpRequestRetry) { noRetry() }
     engine {
-        handleChallenge { session, task, challenge, completionHandler ->
-            completionHandler(
-                platform.Foundation.NSURLSessionAuthChallengeDisposition.NSURLSessionAuthChallengeUseCredential,
-                platform.Foundation.NSURLCredential.credentialForTrust(challenge.protectionSpace.serverTrust)
-            )
-        }
+        peerAuthentication = PeerAuthentication.None
     }
 }
