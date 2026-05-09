@@ -106,7 +106,7 @@ object CacheInterceptor : Interceptor {
             remove("Pragma") // Remove site cache
             append("Cache-Control", "only-if-cached, max-stale=${Int.MAX_VALUE}")
         }
-        return chain.proceed(req)
+        return chain.proceed()
     }
 }
 
