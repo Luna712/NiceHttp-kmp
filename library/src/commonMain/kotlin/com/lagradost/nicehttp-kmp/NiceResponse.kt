@@ -55,6 +55,9 @@ interface INiceResponse {
     /** Alias for [response] for source compatibility with original NiceHttp */
     val okhttpResponse: HttpResponse
 
+    val headersMap: Map<String, String>
+        get() = headers.entries().associate { (key, values) -> key to values.last() }
+
     /**
      * Reads the response body as a string. Throws [IllegalStateException] if the body exceeds
      * [MAX_TEXT_BYTES] (use [textLarge] to bypass that guard).
@@ -69,9 +72,6 @@ interface INiceResponse {
 
     /** Same as [document] but without the size guard. */
     suspend fun documentLarge(): Document
-
-    val headersMap: Map<String, String>
-        get() = headers.entries().associate { (key, values) -> key to values.last() }
 }
 
 /**
