@@ -5,6 +5,7 @@ import io.ktor.client.engine.darwin.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.cache.*
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.UnsafeNumber
 import kotlinx.cinterop.convert
 import platform.Foundation.NSURLCredential
 import platform.Foundation.NSURLSessionAuthChallengePerformDefaultHandling
@@ -23,7 +24,7 @@ actual fun insecureHttpClient(): HttpClient = HttpClient(Darwin) {
     install(HttpCache)
     install(HttpRequestRetry) { noRetry() }
 
-    @OptIn(ExperimentalForeignApi::class)
+    @OptIn(ExperimentalForeignApi::class, UnsafeNumber::class)
     engine {
         handleChallenge { _, _, challenge, completionHandler ->
             val serverTrust = challenge.protectionSpace.serverTrust
