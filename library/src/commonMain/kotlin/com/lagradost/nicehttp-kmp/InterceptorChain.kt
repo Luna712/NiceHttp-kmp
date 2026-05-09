@@ -3,6 +3,7 @@ package com.lagradost.nicehttp.kmp
 import io.ktor.client.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
+import io.ktor.http.*
 
 /**
  * Installs a list of [Interceptor]s into an [HttpClient] via Ktor's [HttpSend] plugin.
@@ -11,7 +12,7 @@ import io.ktor.client.request.*
  * [HttpCache], [HttpTimeout], and other plugins.
  * Interceptors are applied in order: first in list = first to run.
  */
-internal fun HttpClient.withInterceptors(
+internal suspend fun HttpClient.withInterceptors(
     interceptors: List<Interceptor>,
 ): HttpClient {
     if (interceptors.isEmpty()) return this
@@ -20,7 +21,7 @@ internal fun HttpClient.withInterceptors(
             for (interceptor in interceptors.reversed()) {
                 intercept { request ->
                     interceptor.intercept(
-                        HttpSendInterceptorContext(request) { execute(it) }
+                        HttpSendInterceptorContext(request) { req -> proceed(req) }
                     )
                 }
             }
