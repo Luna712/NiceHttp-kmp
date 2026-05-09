@@ -15,7 +15,13 @@ version = "1.0.0"
 
 kotlin {
     // ── JVM ──────────────────────────────────────────────────────────────────
-    jvm()
+    jvm {
+        compilations.all {
+            compilerOptions.configure {
+                jvmTarget.set(JvmTarget.JVM_1_8)
+            }
+        }
+    }
 
     // ── Android ───────────────────────────────────────────────────────────────
     android {
@@ -84,7 +90,8 @@ kotlin {
         }
 
         // JVM: use OkHttp engine (keeps full API parity with original NiceHttp)
-        val jvmMain by getting {
+        val jvmCommonMain by creating {
+            dependsOn(commonMain)
             dependencies {
                 api(libs.ktor.client.okhttp)
                 // Expose OkHttp extras so callers can still configure DNS-over-HTTPS, etc.
@@ -93,13 +100,12 @@ kotlin {
             }
         }
 
-        // Android: also use OkHttp engine
         val androidMain by getting {
-            dependencies {
-                api(libs.ktor.client.okhttp)
-                api(libs.okhttp)
-                api(libs.okhttp.dnsoverhttps)
-            }
+            dependsOn(jvmCommonMain)
+        }
+
+        val jvmMain by getting {
+            dependsOn(jvmCommonMain)
         }
 
         // JS: browser/Node.js Ktor engine
