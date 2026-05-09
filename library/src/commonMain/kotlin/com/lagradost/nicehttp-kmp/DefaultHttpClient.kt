@@ -17,3 +17,4 @@ import io.ktor.client.*
  * You can always supply your own `HttpClient` to [Requests] or [Session] instead.
  */
 expect fun defaultHttpClient(): HttpClient
+expect fun insecureHttpClient(): HttpClient
