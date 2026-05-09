@@ -1,128 +1,113 @@
 package com.lagradost.nicehttp.kmp
 
-import io.ktor.client.request.HttpRequestBuilder
-import io.ktor.http.Headers
+import io.ktor.client.plugins.sender.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
 
 /**
- * KMP replacement for okhttp3.Interceptor.
- * On JVM/Android, okhttp3.Interceptor can be converted via .toNiceInterceptor().
- * On JS/WASM/Native, implement this interface directly.
+ * KMP interceptor backed by Ktor's [HttpSend] plugin.
+ * Runs inside Ktor's actual request pipeline, properly interacting
+ * with [HttpCache], [HttpTimeout], and other plugins.
  */
 fun interface Interceptor {
-    suspend fun intercept(chain: Chain): INiceResponse
+    suspend fun intercept(sender: HttpSendInterceptorContext): HttpClientCall
+}
 
-    interface Chain {
-        val request: HttpRequestBuilder
-        val url: String get() = request.url.buildString()
-        val headers: Headers get() = request.headers.build()
-        val method: String get() = request.method.value
-        suspend fun proceed(request: HttpRequestBuilder): INiceResponse
-        suspend fun proceed(): INiceResponse = proceed(request)
+/** Context passed to each interceptor, mirrors OkHttp's Chain concept. */
+class HttpSendInterceptorContext(
+    val request: HttpRequestBuilder,
+    val execute: suspend (HttpRequestBuilder) -> HttpClientCall,
+) {
+    /** Proceed with the current request unchanged. */
+    suspend fun proceed(): HttpClientCall = execute(request)
+
+    /** Proceed with a modified request. */
+    suspend fun proceed(block: HttpRequestBuilder.() -> Unit): HttpClientCall {
+        request.block()
+        return execute(request)
     }
 }
 
-/**
- * Interceptor that does nothing and just proceeds with the request.
- * Useful as a base/no-op.
- */
-object PassThroughInterceptor : Interceptor {
-    override suspend fun intercept(chain: Interceptor.Chain): INiceResponse =
-        chain.proceed()
-}
-
-/**
- * Interceptor that adds headers to every request.
- */
+/** Adds/replaces headers on every request. */
 class HeadersInterceptor(
     private val headers: Map<String, String>,
 ) : Interceptor {
-    override suspend fun intercept(chain: Interceptor.Chain): INiceResponse {
-        val req = chain.request
+    override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
         headers.forEach { (k, v) ->
-            req.headers.remove(k)  // remove existing value first
-            req.headers.append(k, v)
+            ctx.request.headers.remove(k)
+            ctx.request.headers.append(k, v)
         }
-        return chain.proceed(req)
+        return ctx.proceed()
     }
 }
 
-/**
- * Interceptor that retries failed requests.
- */
+/** Retries failed requests up to [maxRetries] times. */
 class RetryInterceptor(
     private val maxRetries: Int = 3,
-    private val shouldRetry: (INiceResponse) -> Boolean = { !it.isSuccessful },
+    private val shouldRetry: (HttpClientCall) -> Boolean = { !it.response.status.isSuccess() },
 ) : Interceptor {
-    override suspend fun intercept(chain: Interceptor.Chain): INiceResponse {
-        var response = chain.proceed()
+    override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
+        var call = ctx.proceed()
         var retries = 0
-        while (shouldRetry(response) && retries < maxRetries) {
+        while (shouldRetry(call) && retries < maxRetries) {
             retries++
-            response = chain.proceed()
+            call = ctx.execute(ctx.request)
         }
-        return response
+        return call
     }
 }
 
-/**
- * Interceptor that retries a failed request against a fallback URL.
- * Replaces the first occurrence of [primaryUrl] with [fallbackUrl] in the request URL.
- */
-/*class FallbackUrlInterceptor(
+/** Logs requests and responses. */
+class LoggingInterceptor(
+    private val log: (String) -> Unit = ::println,
+) : Interceptor {
+    override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
+        log("--> ${ctx.request.method.value} ${ctx.request.url.buildString()}")
+        val call = ctx.proceed()
+        log("<-- ${call.response.status.value} ${call.response.request.url}")
+        return call
+    }
+}
+
+/** Retries against a fallback URL if the primary fails. */
+/* class FallbackUrlInterceptor(
     private val primaryUrl: String,
     private val fallbackUrl: String,
-    private val shouldFallback: (INiceResponse) -> Boolean = { !it.isSuccessful },
+    private val shouldFallback: (HttpClientCall) -> Boolean = { !it.response.status.isSuccess() },
 ) : Interceptor {
-    override suspend fun intercept(chain: Interceptor.Chain): INiceResponse {
+    override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
         try {
-            val response = chain.proceed()
-            if (!shouldFallback(response)) return response
+            val call = ctx.proceed()
+            if (!shouldFallback(call)) return call
         } catch (_: Exception) {
         }
-
-        val newUrl = chain.request.url.buildString().replaceFirst(primaryUrl, fallbackUrl)
+        val newUrl = ctx.request.url.buildString().replaceFirst(primaryUrl, fallbackUrl)
         val parsed = io.ktor.http.Url(newUrl)
-
-        val fallbackRequest = HttpRequestBuilder().apply {
-            takeFrom(chain.request)
-            url.protocol = parsed.protocol
-            url.host = parsed.host
-            url.port = parsed.port
-            url.segments = parsed.segments
-            url.parameters.clear()
+        ctx.request.url.apply {
+            protocol = parsed.protocol
+            host = parsed.host
+            port = parsed.port
+            pathSegments = parsed.pathSegments
+            parameters.clear()
             parsed.parameters.forEach { key, values ->
-                values.forEach { url.parameters.append(key, it) }
+                values.forEach { parameters.append(key, it) }
             }
         }
-
-        return chain.proceed(fallbackRequest)
+        return ctx.execute(ctx.request)
     }
-}*/
-
-object CacheInterceptor : Interceptor {
-    override suspend fun intercept(chain: Interceptor.Chain): INiceResponse {
-        chain.request.headers.apply {
-            remove("Cache-Control") // Remove site cache
-            remove("Pragma") // Remove site cache
-            append("Cache-Control", "only-if-cached, max-stale=${Int.MAX_VALUE}")
-        }
-        return chain.proceed()
-    }
-}
+} */
 
 /**
- * Interceptor that logs requests and responses.
+ * Equivalent of original NiceHttp's CacheInterceptor.
+ * Forces cache usage by setting Cache-Control headers on the request.
  */
-class LoggingInterceptor(
-    private val log: (String) -> Unit = ::println
-) : Interceptor {
-    override suspend fun intercept(chain: Interceptor.Chain): INiceResponse {
-        log("--> ${chain.method} ${chain.url}")
-        chain.headers.forEach { k, values ->
-            values.forEach { v -> log("$k: $v") }
+object CacheInterceptor : Interceptor {
+    override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
+        ctx.request.headers.apply {
+            remove("Cache-Control")
+            remove("Pragma")
+            append("Cache-Control", "only-if-cached, max-stale=${Int.MAX_VALUE}")
         }
-        val response = chain.proceed()
-        log("<-- ${response.code} ${response.url}")
-        return response
+        return ctx.proceed()
     }
 }
