@@ -1,45 +1,25 @@
 package com.lagradost.nicehttp.kmp
 
 import io.ktor.client.*
+import io.ktor.client.plugins.sender.*
 import io.ktor.client.request.*
-import io.ktor.http.*
-
-internal class RealChain(
-    override val request: HttpRequestBuilder,
-    private val client: HttpClient,
-    private val responseParser: ResponseParser?,
-) : Interceptor.Chain {
-    override suspend fun proceed(request: HttpRequestBuilder): INiceResponse {
-        val response = client.request(request)
-        return NiceResponse(response, responseParser)
-    }
-}
 
 /**
- * Builds a chain from a list of interceptors and executes it.
- * Mirrors OkHttp's interceptor chain exactly - each interceptor
- * calls chain.proceed() to pass to the next one.
+ * Installs a list of [Interceptor]s into an [HttpClient] via [HttpSend].
+ * Returns a new configured client — does not modify the original.
  */
-internal suspend fun executeWithInterceptors(
+internal fun HttpClient.withInterceptors(
     interceptors: List<Interceptor>,
-    request: HttpRequestBuilder,
-    client: HttpClient,
-    responseParser: ResponseParser?,
-): INiceResponse {
-    if (interceptors.isEmpty()) {
-        return RealChain(request, client, responseParser).proceed(request)
-    }
-
-    fun chainAt(index: Int): Interceptor.Chain = object : Interceptor.Chain {
-        override val request: HttpRequestBuilder = request
-        override suspend fun proceed(request: HttpRequestBuilder): INiceResponse {
-            return if (index + 1 < interceptors.size) {
-                interceptors[index + 1].intercept(chainAt(index + 1))
-            } else {
-                RealChain(request, client, responseParser).proceed(request)
+): HttpClient {
+    if (interceptors.isEmpty()) return this
+    return config {
+        install(HttpSend) {
+            for (interceptor in interceptors.reversed()) {
+                intercept { request ->
+                    val ctx = HttpSendInterceptorContext(request) { req -> execute(req) }
+                    interceptor.intercept(ctx)
+                }
             }
         }
     }
-
-    return interceptors[0].intercept(chainAt(0))
 }
