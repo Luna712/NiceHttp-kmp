@@ -18,5 +18,4 @@ internal actual fun ByteArray.toPlatformInputStream(): PlatformInputStream =
             position += count
             return count
         }
-        override fun close() = Unit
     }

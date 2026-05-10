@@ -80,6 +80,7 @@ kotlin {
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
                 api(libs.ksoup)
+                api(libs.okio)
             }
         }
         val commonTest by getting {
