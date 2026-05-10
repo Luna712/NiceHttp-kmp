@@ -5,6 +5,7 @@ import io.ktor.client.call.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import kotlinx.coroutines.runBlocking
@@ -47,8 +48,34 @@ fun okhttp3.Interceptor.toNiceInterceptor(): Interceptor = Interceptor { ctx ->
         }
 
         override fun connection() = null
-        override fun call(): okhttp3.Call =
-            throw UnsupportedOperationException("call() not available in KMP bridge")
+
+        override fun call(): okhttp3.Call = object : okhttp3.Call {
+            private var executed = false
+            private var canceled = false
+
+            override fun request() = okRequest
+
+            override fun execute(): okhttp3.Response = runBlocking {
+                executed = true
+                ctx.execute(okRequest.toKtorRequestBuilder()).toOkHttpResponse(okRequest)
+            }
+
+            override fun enqueue(responseCallback: okhttp3.Callback) {
+                try {
+                    val response = execute()
+                    responseCallback.onResponse(this, response)
+                } catch (e: java.io.IOException) {
+                    responseCallback.onFailure(this, e)
+                }
+            }
+
+            override fun cancel() { canceled = true }
+            override fun isExecuted() = executed
+            override fun isCanceled() = canceled
+            override fun timeout() = okio.Timeout.NONE
+            override fun clone(): okhttp3.Call = this
+        }
+
         override fun connectTimeoutMillis() = 0
         override fun withConnectTimeout(timeout: Int, unit: java.util.concurrent.TimeUnit) = this
         override fun readTimeoutMillis() = 0
@@ -71,7 +98,7 @@ fun Interceptor.toOkHttpInterceptor(): okhttp3.Interceptor = okhttp3.Interceptor
         }
         this@toOkHttpInterceptor.intercept(ctx)
     }
-    call.toOkHttpResponse(chain.request())
+    runBlocking { call.toOkHttpResponse(chain.request()) }
 }
 
 
