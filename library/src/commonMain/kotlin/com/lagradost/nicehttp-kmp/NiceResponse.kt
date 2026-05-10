@@ -18,7 +18,11 @@ class NiceResponse(
     /** HTTP status code, e.g. 200 */
     val code: Int get() = response.status.value
 
-    /** Raw Ktor [Headers] */
+    /**
+     * Response headers wrapped in [NiceHeaders], which delegates [Headers] and adds
+     * [NiceHeaders.toMap] and [NiceHeaders.toMultiMap] for source compatibility
+     * with the original NiceHttp library.
+     */
     val headers: NiceHeaders get() = NiceHeaders(response.headers)
 
     /** Final URL after any redirects */
