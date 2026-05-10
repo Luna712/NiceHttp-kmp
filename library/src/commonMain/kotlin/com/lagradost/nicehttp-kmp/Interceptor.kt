@@ -12,7 +12,7 @@ import io.ktor.http.*
  * On JVM/Android, okhttp3.Interceptor can be converted via .toNiceInterceptor().
  */
 fun interface Interceptor {
-    fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall
+    suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall
 }
 
 /**
@@ -29,16 +29,16 @@ class HttpSendInterceptorContext(
     val method: String get() = request.method.value
 
     /** Proceed with the current request unchanged. */
-    fun proceed(): HttpClientCall = execute(request)
+    suspend fun proceed(): HttpClientCall = execute(request)
 
     /** Proceed with a modified request. */
-    fun proceed(block: HttpRequestBuilder.() -> Unit): HttpClientCall {
+    suspend fun proceed(block: HttpRequestBuilder.() -> Unit): HttpClientCall {
         request.block()
         return execute(request)
     }
 
     /** Proceed with a different request builder entirely. */
-    fun proceed(request: HttpRequestBuilder): HttpClientCall =
+    suspend fun proceed(request: HttpRequestBuilder): HttpClientCall =
         execute(request)
 }
 
@@ -49,7 +49,7 @@ class HttpSendInterceptorContext(
 class HeadersInterceptor(
     private val headers: Map<String, String>,
 ) : Interceptor {
-    override fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
+    override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
         headers.forEach { (k, v) ->
             ctx.request.headers.remove(k)
             ctx.request.headers.append(k, v)
@@ -66,7 +66,7 @@ class RetryInterceptor(
     private val maxRetries: Int = 3,
     private val shouldRetry: (HttpClientCall) -> Boolean = { !it.response.status.isSuccess() },
 ) : Interceptor {
-    override fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
+    override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
         var call = ctx.proceed()
         var retries = 0
         while (shouldRetry(call) && retries < maxRetries) {
@@ -87,7 +87,7 @@ class RetryInterceptor(
     private val fallbackUrl: String,
     private val shouldFallback: (HttpClientCall) -> Boolean = { !it.response.status.isSuccess() },
 ) : Interceptor {
-    override fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
+    override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
         try {
             val call = ctx.proceed()
             if (!shouldFallback(call)) return call
@@ -115,7 +115,7 @@ class RetryInterceptor(
  * Applied automatically to every request in [Requests.custom].
  */
 object CacheInterceptor : Interceptor {
-    override fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
+    override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
         ctx.request.headers.apply {
             remove("Cache-Control")
             remove("Pragma")
@@ -132,7 +132,7 @@ object CacheInterceptor : Interceptor {
 class LoggingInterceptor(
     private val log: (String) -> Unit = ::println,
 ) : Interceptor {
-    override fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
+    override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
         log("--> ${ctx.method} ${ctx.url}")
         val call = ctx.proceed()
         log("<-- ${call.response.status.value} ${ctx.url}")
@@ -147,7 +147,7 @@ class LoggingInterceptor(
  * [HttpCache], [HttpTimeout], and other plugins.
  * Interceptors are applied in order: first in list = first to run.
  */
-internal fun HttpClient.withInterceptors(
+internal suspend fun HttpClient.withInterceptors(
     interceptors: List<Interceptor>,
 ): HttpClient {
     if (interceptors.isEmpty()) return this
