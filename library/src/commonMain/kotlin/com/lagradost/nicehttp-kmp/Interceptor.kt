@@ -135,8 +135,17 @@ class LoggingInterceptor(
 ) : Interceptor {
     override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
         log("--> ${ctx.method} ${ctx.url}")
+        ctx.headers.forEach { key, values ->
+            values.forEach { value -> log("$key: $value") }
+        }
+
         val call = ctx.proceed()
-        log("<-- ${call.response.status.value} ${ctx.url}")
+
+        log("<-- ${call.response.status.value} ${call.response.request.url.toString()}")
+        call.response.headers.forEach { key, values ->
+            values.forEach { value -> log("$key: $value") }
+        }
+
         return call
     }
 }
