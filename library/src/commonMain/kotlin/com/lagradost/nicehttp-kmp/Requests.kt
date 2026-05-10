@@ -29,7 +29,7 @@ import kotlin.time.DurationUnit
  * @param defaultCacheTime  Default cache time, used with [defaultCacheUnit]. 0 means no caching.
  * @param defaultCacheUnit  Unit for [defaultCacheTime], defaults to minutes.
  * @param defaultTimeOut    Default timeout in seconds. 0 means no timeout.
- * @param responseParser    JSON parser used by [INiceResponse.parsed].
+ * @param responseParser    JSON parser used by [NiceResponse.parsed].
  * @param interceptors      List of [Interceptor]s applied to every request in order.
  */
 open class Requests(
