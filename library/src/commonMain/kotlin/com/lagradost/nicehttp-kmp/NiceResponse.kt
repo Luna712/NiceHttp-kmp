@@ -130,11 +130,11 @@ fun Headers.getRequestCookies(): Map<String, String> =
         ?: emptyMap()
 
 /** Parses the body as [T] using the configured [ResponseParser]. */
-suspend inline fun <reified T : Any> INiceResponse.parsed(): T =
+suspend inline fun <reified T : Any> NiceResponse.parsed(): T =
     parser!!.parse(text(), T::class)
 
 /** Same as [parsed] but returns null on failure. */
-suspend inline fun <reified T : Any> INiceResponse.parsedSafe(): T? = try {
+suspend inline fun <reified T : Any> NiceResponse.parsedSafe(): T? = try {
     parser?.parseSafe(text(), T::class)
 } catch (e: Exception) {
     e.printStackTrace()
@@ -142,11 +142,11 @@ suspend inline fun <reified T : Any> INiceResponse.parsedSafe(): T? = try {
 }
 
 /** Like [parsed] but without the size guard. */
-suspend inline fun <reified T : Any> INiceResponse.parsedLarge(): T =
+suspend inline fun <reified T : Any> NiceResponse.parsedLarge(): T =
     parser!!.parse(textLarge(), T::class)
 
 /** Like [parsedSafe] but without the size guard. */
-suspend inline fun <reified T : Any> INiceResponse.parsedSafeLarge(): T? = try {
+suspend inline fun <reified T : Any> NiceResponse.parsedSafeLarge(): T? = try {
     parser?.parseSafe(textLarge(), T::class)
 } catch (e: Exception) {
     e.printStackTrace()
