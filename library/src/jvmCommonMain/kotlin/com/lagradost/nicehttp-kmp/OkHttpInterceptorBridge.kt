@@ -65,6 +65,8 @@ fun Interceptor.toOkHttpInterceptor(): okhttp3.Interceptor = okhttp3.Interceptor
     val ktorBuilder = chain.request().toKtorRequestBuilder()
     val call = runBlocking {
         val ctx = HttpSendInterceptorContext(ktorBuilder) { req ->
+            // Can't execute via Ktor here since we're in OkHttp's sync chain
+            // so just build a synthetic call from the OkHttp proceed result
             chain.proceed(req.toOkHttpRequest()).toKtorCall(req)
         }
         this@toOkHttpInterceptor.intercept(ctx)
