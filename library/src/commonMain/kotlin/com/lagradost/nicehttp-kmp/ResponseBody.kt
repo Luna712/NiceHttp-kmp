@@ -21,6 +21,13 @@ class ResponseBody(private val data: ByteArray) {
      */
     fun byteStream(): PlatformInputStream = data.toPlatformInputStream()
 
+    /**
+     * Returns the body as a platform-specific buffered source.
+     * On JVM/Android returns [okio.BufferedSource].
+     * On other platforms returns a [PlatformSource] wrapping the raw bytes.
+     */
+    fun source(): PlatformSource = data.toPlatformSource()
+
     /** No-op - included for okhttp3.ResponseBody source compatibility. */
     fun close() = Unit
 }
