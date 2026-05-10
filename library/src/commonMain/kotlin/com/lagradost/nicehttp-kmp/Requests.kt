@@ -124,6 +124,7 @@ open class Requests(
             allInterceptors.add(0, HeadersInterceptor(mapOf("Cache-Control" to "max-age=$seconds")))
         }
         allInterceptors.add(0, CacheInterceptor)
+        allInterceptors.add(0, LoggingInterceptor())
 
         // Pick base client
         val clientToUse = when {
