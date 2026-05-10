@@ -100,7 +100,7 @@ class NiceResponse(
     /** Same as [document] but without the size guard. */
     suspend fun documentLarge(): Document = Ksoup.parse(textLarge())
 
-    fun toString(): String =
+    override fun toString(): String =
         "NiceResponse(code=$code, url=$url)"
 }
 
