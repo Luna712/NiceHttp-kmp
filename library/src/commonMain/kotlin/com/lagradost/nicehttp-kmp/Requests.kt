@@ -32,7 +32,7 @@ import kotlin.time.DurationUnit
  * @param responseParser    JSON parser used by [NiceResponse.parsed].
  * @param interceptors      List of [Interceptor]s applied to every request in order.
  */
-open class Requests(
+open class BaseRequests(
     var baseClient: HttpClient = defaultHttpClient(),
     var defaultHeaders: Map<String, String> = mapOf("user-agent" to "NiceHttp"),
     var defaultReferer: String? = null,

@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
  * This will eventually be removed.
  */
 
-open class OkHttpRequests(
+open class Requests(
     baseClient: io.ktor.client.HttpClient = defaultHttpClient(),
     defaultHeaders: Map<String, String> = mapOf("user-agent" to "NiceHttp"),
     defaultReferer: String? = null,
@@ -19,7 +19,7 @@ open class OkHttpRequests(
     defaultTimeOut: Long = 0L,
     responseParser: ResponseParser? = null,
     interceptors: MutableList<Interceptor> = mutableListOf(),
-) : Requests(
+) : BaseRequests(
     baseClient, defaultHeaders, defaultReferer, defaultData, defaultCookies,
     defaultCacheTime, defaultCacheUnit, defaultTimeOut, responseParser, interceptors,
 ) {
@@ -191,5 +191,3 @@ open class OkHttpRequests(
         interceptor?.toNiceInterceptor(), verify, responseParser,
     )
 }
-
-typealias Requests = OkHttpRequests

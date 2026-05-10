@@ -19,3 +19,5 @@ actual fun insecureHttpClient(): HttpClient = HttpClient(Js) {
     // is handled by the runtime and cannot be bypassed programmatically.
     // verify = false is silently ignored on this platform.
 }
+
+typealias Requests = BaseRequests

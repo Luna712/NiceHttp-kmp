@@ -19,3 +19,5 @@ actual fun insecureHttpClient(): HttpClient = HttpClient(WinHttp) {
         sslVerify = false
     }
 }
+
+typealias Requests = BaseRequests

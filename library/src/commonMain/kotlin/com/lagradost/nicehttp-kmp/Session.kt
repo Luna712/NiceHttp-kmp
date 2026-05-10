@@ -4,7 +4,7 @@ import io.ktor.client.*
 import io.ktor.client.plugins.cookies.*
 
 /**
- * A [Requests] subclass that automatically persists cookies across all requests,
+ * A [BaseRequests] subclass that automatically persists cookies across all requests,
  * mirroring the original NiceHttp `Session`.
  *
  * Cookies are stored in an [AcceptAllCookiesStorage] (in-memory) and are sent back
@@ -20,7 +20,7 @@ import io.ktor.client.plugins.cookies.*
 class Session(
     client: HttpClient = defaultHttpClient(),
     defaultHeaders: Map<String, String> = mapOf("user-agent" to "NiceHttp"),
-) : Requests(
+) : BaseRequests(
     baseClient = client.config {
         install(HttpCookies) {
             storage = AcceptAllCookiesStorage()

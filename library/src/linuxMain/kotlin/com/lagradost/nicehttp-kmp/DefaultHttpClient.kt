@@ -22,3 +22,5 @@ actual fun insecureHttpClient(): HttpClient = HttpClient(Curl) {
         sslVerify = false
     }
 }
+
+typealias Requests = BaseRequests

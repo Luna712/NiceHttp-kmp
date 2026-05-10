@@ -43,3 +43,5 @@ actual fun insecureHttpClient(): HttpClient = HttpClient(Darwin) {
         }
     }
 }
+
+typealias Requests = BaseRequests
