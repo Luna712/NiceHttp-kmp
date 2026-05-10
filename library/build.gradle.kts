@@ -70,6 +70,10 @@ kotlin {
     // ── Native: Windows ───────────────────────────────────────────────────────
     mingwX64()
 
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
+
     // ── Source sets ──────────────────────────────────────────────────────────
     applyDefaultHierarchyTemplate()
 
@@ -80,6 +84,7 @@ kotlin {
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
                 api(libs.ksoup)
+                api(libs.okio)
             }
         }
         val commonTest by getting {
