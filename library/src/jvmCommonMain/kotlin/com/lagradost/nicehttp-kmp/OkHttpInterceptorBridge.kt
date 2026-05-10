@@ -108,7 +108,6 @@ fun Interceptor.toOkHttpInterceptor(): okhttp3.Interceptor = okhttp3.Interceptor
     runBlocking { call.toOkHttpResponse(chain.request()) }
 }
 
-
 internal fun HttpRequestBuilder.toOkHttpRequest(): okhttp3.Request {
     val url = this.url.buildString()
     val method = this.method.value
