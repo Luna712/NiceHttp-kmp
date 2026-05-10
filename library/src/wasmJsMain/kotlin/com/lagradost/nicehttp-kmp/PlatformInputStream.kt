@@ -1,16 +1,22 @@
 package com.lagradost.nicehttp.kmp
 
-actual open class PlatformInputStream internal constructor(private val data: ByteArray) {
-    private var position = 0
-    actual fun read(): Int = if (position >= data.size) -1 else data[position++].toInt() and 0xFF
-    actual fun read(buffer: ByteArray, offset: Int, length: Int): Int {
-        if (position >= data.size) return -1
-        val count = minOf(length, data.size - position)
-        data.copyInto(buffer, offset, position, position + count)
-        position += count
-        return count
-    }
-    actual fun close() = Unit
+actual abstract class PlatformInputStream {
+    actual abstract fun read(): Int
+    actual abstract fun read(buffer: ByteArray, offset: Int, length: Int): Int
+    actual abstract fun close()
 }
 
-internal actual fun ByteArray.toPlatformInputStream(): PlatformInputStream = PlatformInputStream(this)
+internal actual fun ByteArray.toPlatformInputStream(): PlatformInputStream =
+    object : PlatformInputStream() {
+        private var position = 0
+        override fun read(): Int =
+            if (position >= size) -1 else this@toPlatformInputStream[position++].toInt() and 0xFF
+        override fun read(buffer: ByteArray, offset: Int, length: Int): Int {
+            if (position >= size) return -1
+            val count = minOf(length, size - position)
+            copyInto(buffer, offset, position, position + count)
+            position += count
+            return count
+        }
+        override fun close() = Unit
+    }

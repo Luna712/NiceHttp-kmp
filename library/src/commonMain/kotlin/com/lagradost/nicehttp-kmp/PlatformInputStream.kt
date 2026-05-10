@@ -1,6 +1,6 @@
 package com.lagradost.nicehttp.kmp
 
-expect open class PlatformInputStream {
+expect abstract class PlatformInputStream {
     fun read(): Int
     fun read(buffer: ByteArray, offset: Int, length: Int): Int
     fun close()
