@@ -59,8 +59,8 @@ class NiceResponse(
         ResponseBody(runBlockingCompat { response.readRawBytes() })
     }
 
-    /** Alias for [response] for source compatibility with original NiceHttp */
-    val okhttpResponse: HttpResponse get() = response
+    /** Alias for [NiceResponse] for source compatibility with original NiceHttp */
+    val okhttpResponse: NiceResponse get() = this
 
     val headersMap: Map<String, String>
         get() = headers.entries().associate { (key, values) -> key to values.last() }
