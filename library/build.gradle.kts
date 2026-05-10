@@ -94,6 +94,7 @@ kotlin {
             dependsOn(commonMain)
             dependencies {
                 api(libs.ktor.client.okhttp)
+                api(libs.ktor.client.mock)
                 // Expose OkHttp extras so callers can still configure DNS-over-HTTPS, etc.
                 api(libs.okhttp)
                 api(libs.okhttp.dnsoverhttps)
