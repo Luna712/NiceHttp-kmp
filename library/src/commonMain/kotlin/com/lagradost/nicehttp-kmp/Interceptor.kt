@@ -148,14 +148,14 @@ class LoggingInterceptor(
  * [HttpCache], [HttpTimeout], and other plugins.
  * Interceptors are applied in order: first in list = first to run.
  */
-internal suspend fun HttpClient.withInterceptors(
+internal fun HttpClient.withInterceptors(
     interceptors: List<Interceptor>,
 ): HttpClient {
     if (interceptors.isEmpty()) return this
     return config {
         install(HttpSend) {
-            for (interceptor in interceptors.reversed()) {
-                intercept { request ->
+            interceptors.reversed().forEach { interceptor ->
+                intercept { request: HttpRequestBuilder ->
                     interceptor.intercept(
                         HttpSendInterceptorContext(request) { req -> proceed(req) }
                     )
