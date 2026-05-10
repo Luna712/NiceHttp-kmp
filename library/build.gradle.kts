@@ -70,6 +70,13 @@ kotlin {
     // ── Native: Windows ───────────────────────────────────────────────────────
     mingwX64()
 
+    compilerOptions {
+        freeCompilerArgs.addAll(
+            "-Xexpect-actual-classes",
+            "-Xannotation-default-target=param-property"
+        )
+    }
+
     // ── Source sets ──────────────────────────────────────────────────────────
     applyDefaultHierarchyTemplate()
 
