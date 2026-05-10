@@ -14,6 +14,13 @@ class ResponseBody(private val data: ByteArray) {
     /** Returns the content length in bytes. Equivalent to okhttp3.ResponseBody.contentLength(). */
     fun contentLength(): Long = data.size.toLong()
 
+    /**
+     * Returns the body as a platform-specific input stream.
+     * On JVM/Android returns [java.io.InputStream].
+     * On other platforms returns a [PlatformInputStream] wrapping the raw bytes.
+     */
+    fun byteStream(): PlatformInputStream = data.toPlatformInputStream()
+
     /** No-op - included for okhttp3.ResponseBody source compatibility. */
     fun close() = Unit
 }
