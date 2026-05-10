@@ -1,6 +1,7 @@
 package com.lagradost.nicehttp.kmp
 
 import io.ktor.client.*
+import io.ktor.client.call.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.http.*
