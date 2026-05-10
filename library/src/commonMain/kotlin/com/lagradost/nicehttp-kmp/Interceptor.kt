@@ -6,6 +6,16 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 
 /**
+ * KMP interceptor backed by Ktor's [HttpSend] plugin.
+ * Runs inside Ktor's actual request pipeline, properly interacting
+ * with [HttpCache], [HttpTimeout], and other plugins.
+ * On JVM/Android, okhttp3.Interceptor can be converted via .toNiceInterceptor().
+ */
+fun interface Interceptor {
+    suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall
+}
+
+/**
  * Context passed to each [Interceptor], wrapping Ktor's [HttpSendInterceptor].
  * Hides Ktor internals from the public API while still running inside
  * Ktor's pipeline so [HttpCache], [HttpTimeout] etc. are honoured.
@@ -30,32 +40,6 @@ class HttpSendInterceptorContext(
     /** Proceed with a different request builder entirely. */
     suspend fun proceed(request: HttpRequestBuilder): HttpClientCall =
         execute(request)
-}
-
-/**
- * KMP interceptor backed by Ktor's [HttpSend] plugin.
- * Runs inside Ktor's actual request pipeline, properly interacting
- * with [HttpCache], [HttpTimeout], and other plugins.
- * On JVM/Android, okhttp3.Interceptor can be converted via .toNiceInterceptor().
- */
-fun interface Interceptor {
-    suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall
-}
-
-/**
- * Equivalent of original NiceHttp's CacheInterceptor.
- * Strips server cache headers and forces Ktor's [HttpCache] to serve from cache.
- * Applied automatically to every request in [Requests.custom].
- */
-object CacheInterceptor : Interceptor {
-    override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
-        ctx.request.headers.apply {
-            remove("Cache-Control")
-            remove("Pragma")
-            append("Cache-Control", "only-if-cached, max-stale=${Int.MAX_VALUE}")
-        }
-        return ctx.proceed()
-    }
 }
 
 /**
@@ -94,21 +78,6 @@ class RetryInterceptor(
 }
 
 /**
- * Logs request and response details.
- * @param log logging function, defaults to [println].
- */
-class LoggingInterceptor(
-    private val log: (String) -> Unit = ::println,
-) : Interceptor {
-    override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
-        log("--> ${ctx.method} ${ctx.url}")
-        val call = ctx.proceed()
-        log("<-- ${call.response.status.value} ${ctx.url}")
-        return call
-    }
-}
-
-/**
  * Retries a failed request against a fallback URL.
  * Replaces the first occurrence of [primaryUrl] with [fallbackUrl] in the request URL.
  * @param shouldFallback called with each [HttpClientCall]; return true to use fallback.
@@ -139,3 +108,34 @@ class LoggingInterceptor(
         }
     }
 }*/
+
+/**
+ * Equivalent of original NiceHttp's CacheInterceptor.
+ * Strips server cache headers and forces Ktor's [HttpCache] to serve from cache.
+ * Applied automatically to every request in [Requests.custom].
+ */
+object CacheInterceptor : Interceptor {
+    override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
+        ctx.request.headers.apply {
+            remove("Cache-Control")
+            remove("Pragma")
+            append("Cache-Control", "only-if-cached, max-stale=${Int.MAX_VALUE}")
+        }
+        return ctx.proceed()
+    }
+}
+
+/**
+ * Logs request and response details.
+ * @param log logging function, defaults to [println].
+ */
+class LoggingInterceptor(
+    private val log: (String) -> Unit = ::println,
+) : Interceptor {
+    override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
+        log("--> ${ctx.method} ${ctx.url}")
+        val call = ctx.proceed()
+        log("<-- ${call.response.status.value} ${ctx.url}")
+        return call
+    }
+}
