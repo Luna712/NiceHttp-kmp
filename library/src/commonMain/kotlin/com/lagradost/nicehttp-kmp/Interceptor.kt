@@ -117,12 +117,25 @@ class RetryInterceptor(
  */
 object CacheInterceptor : Interceptor {
     override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
+        // Try cache first
         ctx.request.headers.apply {
             remove("Cache-Control")
             remove("Pragma")
             append("Cache-Control", "only-if-cached, max-stale=${Int.MAX_VALUE}")
         }
-        return ctx.proceed()
+
+        val cachedCall = ctx.proceed()
+
+        // 504 means no cache available - fall back to normal online request
+        if (cachedCall.response.status.value == 504) {
+            ctx.request.headers.apply {
+                remove("Cache-Control")
+                remove("Pragma")
+            }
+            return ctx.proceed()
+        }
+
+        return cachedCall
     }
 }
 
