@@ -11,6 +11,9 @@ class ResponseBody(private val data: ByteArray) {
     /** Returns the body as a UTF-8 string. */
     fun string(): String = data.decodeToString()
 
+    /** Returns the content length in bytes. Equivalent to okhttp3.ResponseBody.contentLength(). */
+    fun contentLength(): Long = data.size.toLong()
+
     /** No-op - included for okhttp3.ResponseBody source compatibility. */
     fun close() = Unit
 }

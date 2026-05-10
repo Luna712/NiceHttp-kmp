@@ -29,7 +29,7 @@ import kotlin.time.DurationUnit
  * @param defaultCacheTime  Default cache time, used with [defaultCacheUnit]. 0 means no caching.
  * @param defaultCacheUnit  Unit for [defaultCacheTime], defaults to minutes.
  * @param defaultTimeOut    Default timeout in seconds. 0 means no timeout.
- * @param responseParser    JSON parser used by [INiceResponse.parsed].
+ * @param responseParser    JSON parser used by [NiceResponse.parsed].
  * @param interceptors      List of [Interceptor]s applied to every request in order.
  */
 open class Requests(
@@ -102,7 +102,7 @@ open class Requests(
         interceptor: Interceptor? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ): INiceResponse {
+    ): NiceResponse {
         val finalUrl = addParamsToUrl(url, params)
         val finalHeaders = buildHeaders(
             defaultHeaders + headers,
@@ -111,7 +111,33 @@ open class Requests(
         )
         val body = buildBody(method, data, files, json, requestBody, responseParser)
 
-        val requestBuilder = HttpRequestBuilder().apply {
+        // Build all interceptors for this call
+        val allInterceptors = interceptors.toMutableList()
+        allInterceptors.add(0, LoggingInterceptor())
+        if (cacheTime > 0) {
+            val seconds = when (cacheUnit) {
+                DurationUnit.SECONDS -> cacheTime
+                DurationUnit.MINUTES -> cacheTime * 60
+                DurationUnit.HOURS   -> cacheTime * 3600
+                DurationUnit.DAYS    -> cacheTime * 86400
+                else                 -> cacheTime * 60
+            }
+            allInterceptors.add(0, HeadersInterceptor(mapOf("Cache-Control" to "max-age=$seconds")))
+        }
+        // allInterceptors.add(0, CacheInterceptor)
+
+        // Pick base client
+        val clientToUse = when {
+            !verify && !allowRedirects -> insecureNoRedirectClient
+            !verify                    -> insecureClient
+            !allowRedirects            -> noRedirectClient
+            else                       -> baseClient
+        }
+
+        // Install interceptors via HttpSend
+        val client = clientToUse.withInterceptors(allInterceptors)
+
+        val response = client.request {
             this.method = HttpMethod(method.uppercase())
             url(finalUrl)
             finalHeaders.forEach { k, values -> values.forEach { v -> header(k, v) } }
@@ -126,31 +152,7 @@ open class Requests(
             }
         }
 
-        // Merge instance-level interceptors with the per-call interceptor
-        val allInterceptors = interceptors.toMutableList()
-        allInterceptors.add(0, CacheInterceptor)
-
-        if (cacheTime > 0) {
-            val seconds = when (cacheUnit) {
-                DurationUnit.SECONDS -> cacheTime
-                DurationUnit.MINUTES -> cacheTime * 60
-                DurationUnit.HOURS   -> cacheTime * 3600
-                DurationUnit.DAYS    -> cacheTime * 86400
-                else                 -> cacheTime * 60
-            }
-            allInterceptors.add(0, HeadersInterceptor(mapOf("Cache-Control" to "max-age=$seconds")))
-        }
-
-        if (interceptor != null) allInterceptors.add(interceptor)
-
-        val clientToUse = when {
-            !verify && !allowRedirects -> insecureNoRedirectClient
-            !verify                    -> insecureClient
-            !allowRedirects            -> noRedirectClient
-            else                       -> baseClient
-        }
-
-        return executeWithInterceptors(allInterceptors, requestBuilder, clientToUse, responseParser)
+        return NiceResponse(response, responseParser)
     }
 
     // ── Verb shortcuts ────────────────────────────────────────────────────────
