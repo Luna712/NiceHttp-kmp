@@ -171,7 +171,7 @@ internal suspend fun okhttp3.Response.toKtorCall(
         )
     }
     val client = HttpClient(mockEngine)
-    return client.call(url)
+    return client.get(url).call
 }
 
 internal suspend fun HttpClientCall.toOkHttpResponse(request: okhttp3.Request): Response {
