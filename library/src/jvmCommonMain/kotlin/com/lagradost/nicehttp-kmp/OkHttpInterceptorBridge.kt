@@ -74,6 +74,13 @@ fun okhttp3.Interceptor.toNiceInterceptor(): Interceptor = Interceptor { ctx ->
             override fun isCanceled() = canceled
             override fun timeout() = okio.Timeout.NONE
             override fun clone(): okhttp3.Call = this
+
+            override fun <T : Any> tag(type: kotlin.reflect.KClass<T>): T? = null
+            override fun <T> tag(type: Class<out T>): T? = null
+            override fun <T : Any> tag(type: kotlin.reflect.KClass<T>, computeIfAbsent: () -> T): T =
+                computeIfAbsent()
+            override fun <T : Any> tag(type: Class<T>, computeIfAbsent: () -> T): T =
+                computeIfAbsent()
         }
 
         override fun connectTimeoutMillis() = 0
