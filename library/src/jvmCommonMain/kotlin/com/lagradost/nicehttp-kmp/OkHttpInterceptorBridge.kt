@@ -164,7 +164,7 @@ internal fun okhttp3.Request.toKtorRequestBuilder(): HttpRequestBuilder =
 internal suspend fun okhttp3.Response.toKtorCall(
     request: HttpRequestBuilder,
 ): HttpClientCall {
-    val bytes = body?.bytes() ?: ByteArray(0)
+    val bytes = body.bytes()
     val code = code
     val url = this.request.url.toString()
     val ktorHeaders = Headers.build {
