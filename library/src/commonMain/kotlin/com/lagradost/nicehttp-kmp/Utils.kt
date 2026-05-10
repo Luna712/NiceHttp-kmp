@@ -31,7 +31,7 @@ internal fun addParamsToUrl(url: String, params: Map<String, String?>): String {
  *
  * Header names are normalised to lowercase so lookups are case-insensitive.
  */
-internal fun buildHeaders(
+fun buildHeaders(
     headers: Map<String, String>,
     referer: String?,
     cookie: Map<String, String>,
