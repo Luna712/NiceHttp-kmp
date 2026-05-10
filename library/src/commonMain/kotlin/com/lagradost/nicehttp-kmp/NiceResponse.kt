@@ -66,6 +66,9 @@ class NiceResponse(
     /** Alias for [NiceResponse] for source compatibility with original NiceHttp */
     val okhttpResponse: NiceResponse get() = this
 
+    /** Returns the value of the header with the given [name], or null if absent. */
+    fun header(name: String): String? = headers[name]
+
     // ── Body helpers ─────────────────────────────────────────────────────────
 
     /**
