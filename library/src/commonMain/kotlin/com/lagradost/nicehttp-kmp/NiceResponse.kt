@@ -65,6 +65,9 @@ class NiceResponse(
     val headersMap: Map<String, String>
         get() = headers.entries().associate { (key, values) -> key to values.last() }
 
+    /** Convenience alias for [headersMap] for source compatibility with original NiceHttp */
+    fun headers.toMap(): Map<String, String> = headersMap
+
     // ── Body helpers ─────────────────────────────────────────────────────────
 
     /**
