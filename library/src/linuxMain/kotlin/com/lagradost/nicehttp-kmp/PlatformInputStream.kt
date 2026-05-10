@@ -1,9 +1,9 @@
 package com.lagradost.nicehttp.kmp
 
 actual abstract class PlatformInputStream {
-    actual abstract fun read(): Int
-    actual abstract fun read(buffer: ByteArray, offset: Int, length: Int): Int
-    actual abstract fun close()
+    actual open fun read(): Int = -1
+    actual open fun read(buffer: ByteArray, offset: Int, length: Int): Int = -1
+    actual open fun close() = Unit
 }
 
 internal actual fun ByteArray.toPlatformInputStream(): PlatformInputStream =
