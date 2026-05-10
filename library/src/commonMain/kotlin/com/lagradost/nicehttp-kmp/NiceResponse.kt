@@ -100,6 +100,30 @@ class NiceResponse(
     /** Same as [document] but without the size guard. */
     suspend fun documentLarge(): Document = Ksoup.parse(textLarge())
 
+    /** Parses the body as [T] using the configured [ResponseParser]. */
+    suspend inline fun <reified T : Any> parsed(): T =
+        parser!!.parse(text(), T::class)
+
+    /** Same as [parsed] but returns null on failure. */
+    suspend inline fun <reified T : Any> parsedSafe(): T? = try {
+        parser?.parseSafe(text(), T::class)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+
+    /** Like [parsed] but without the size guard. */
+    suspend inline fun <reified T : Any> parsedLarge(): T =
+        parser!!.parse(textLarge(), T::class)
+
+    /** Like [parsedSafe] but without the size guard. */
+    suspend inline fun <reified T : Any> parsedSafeLarge(): T? = try {
+        parser?.parseSafe(textLarge(), T::class)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+
     override fun toString(): String =
         "NiceResponse(code=$code, url=$url)"
 }
@@ -128,27 +152,3 @@ fun Headers.getRequestCookies(): Map<String, String> =
         }
         ?.toMap()
         ?: emptyMap()
-
-/** Parses the body as [T] using the configured [ResponseParser]. */
-suspend inline fun <reified T : Any> NiceResponse.parsed(): T =
-    parser!!.parse(text(), T::class)
-
-/** Same as [parsed] but returns null on failure. */
-suspend inline fun <reified T : Any> NiceResponse.parsedSafe(): T? = try {
-    parser?.parseSafe(text(), T::class)
-} catch (e: Exception) {
-    e.printStackTrace()
-    null
-}
-
-/** Like [parsed] but without the size guard. */
-suspend inline fun <reified T : Any> NiceResponse.parsedLarge(): T =
-    parser!!.parse(textLarge(), T::class)
-
-/** Like [parsedSafe] but without the size guard. */
-suspend inline fun <reified T : Any> NiceResponse.parsedSafeLarge(): T? = try {
-    parser?.parseSafe(textLarge(), T::class)
-} catch (e: Exception) {
-    e.printStackTrace()
-    null
-}
