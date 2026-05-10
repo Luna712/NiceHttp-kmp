@@ -153,11 +153,7 @@ class LoggingInterceptor(
         }
 
         val call = ctx.proceed()
-
         log("<-- ${call.response.status.value} ${call.response.call.request.url}")
-        call.response.headers.forEach { key, values ->
-            values.forEach { value -> log("$key: $value") }
-        }
 
         return call
     }
