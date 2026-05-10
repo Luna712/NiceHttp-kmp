@@ -153,13 +153,13 @@ internal fun HttpClient.withInterceptors(
 ): HttpClient {
     if (interceptors.isEmpty()) return this
     return config {
-        install(HttpSend) {
-            interceptors.reversed().forEach { interceptor ->
-                intercept { request: HttpRequestBuilder ->
-                    interceptor.intercept(
-                        HttpSendInterceptorContext(request) { req -> proceed(req) }
-                    )
-                }
+        install(HttpSend)
+    }.also { client ->
+        interceptors.reversed().forEach { interceptor ->
+            client.plugin(HttpSend).intercept { request ->
+                interceptor.intercept(
+                    HttpSendInterceptorContext(request) { req -> execute(req) }
+                )
             }
         }
     }
