@@ -19,7 +19,7 @@ class NiceResponse(
     val code: Int get() = response.status.value
 
     /** Raw Ktor [Headers] */
-    val headers: Headers get() = response.headers
+    val headers: NiceHeaders get() = NiceHeaders(response.headers)
 
     /** Final URL after any redirects */
     val url: String get() = response.request.url.toString()
@@ -64,9 +64,6 @@ class NiceResponse(
 
     val headersMap: Map<String, String>
         get() = headers.entries().associate { (key, values) -> key to values.last() }
-
-    /** Convenience alias for [headersMap] for source compatibility with original NiceHttp */
-    fun headers.toMap(): Map<String, String> = headersMap
 
     // ── Body helpers ─────────────────────────────────────────────────────────
 
