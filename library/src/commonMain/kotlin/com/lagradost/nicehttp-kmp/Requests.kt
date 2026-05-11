@@ -21,16 +21,16 @@ import kotlin.time.DurationUnit
  *
  * Pass a pre-configured [HttpClient] if you need custom TLS, logging, or auth plugins.
  *
- * @param baseClient        The Ktor [HttpClient] used for all requests.
- * @param defaultHeaders    Headers sent with every request (overridable per-call).
- * @param defaultReferer    Referer header sent when not overridden per-call.
- * @param defaultData       Default form data sent with every request.
- * @param defaultCookies    Cookies merged into every request.
- * @param defaultCacheTime  Default cache time, used with [defaultCacheUnit]. 0 means no caching.
- * @param defaultCacheUnit  Unit for [defaultCacheTime], defaults to minutes.
- * @param defaultTimeOut    Default timeout in seconds. 0 means no timeout.
- * @param responseParser    JSON parser used by [NiceResponse.parsed].
- * @param interceptors      List of [Interceptor]s applied to every request in order.
+ * @param baseClient               The Ktor [HttpClient] used for all requests.
+ * @param defaultHeaders           Headers sent with every request (overridable per-call).
+ * @param defaultReferer           Referer header sent when not overridden per-call.
+ * @param defaultData              Default form data sent with every request.
+ * @param defaultCookies           Cookies merged into every request.
+ * @param defaultCacheTime         Default cache time, used with [defaultCacheDurationUnit]. 0 means no caching.
+ * @param defaultCacheDurationUnit Unit for [defaultCacheTime], defaults to minutes.
+ * @param defaultTimeOut           Default timeout in seconds. 0 means no timeout.
+ * @param responseParser           JSON parser used by [NiceResponse.parsed].
+ * @param interceptors             List of [Interceptor]s applied to every request in order.
  */
 open class Requests(
     var baseClient: HttpClient = defaultHttpClient(),
@@ -62,27 +62,27 @@ open class Requests(
     /**
      * Generic request method – all verb shortcuts delegate here.
      *
-     * @param method         HTTP method string ("GET", "POST", …).
-     * @param url            Target URL.
-     * @param headers        Extra headers merged on top of [defaultHeaders].
-     * @param referer        Overrides [defaultReferer] for this call.
-     * @param params         Query-string parameters appended to [url].
-     * @param cookies        Merged with [defaultCookies].
-     * @param data           URL-encoded form body (mutually exclusive with [json]/[requestBody]).
-     * @param files          Multipart form parts.
-     * @param json           Object serialised to JSON, or a raw [JsonAsString].
-     * @param requestBody    Fully pre-built [RequestBody] (highest priority body).
-     * @param allowRedirects Whether to follow HTTP redirects.
-     * @param cacheTime      How long to cache the response. 0 means no caching.
-     *                       Uses [cacheUnit] as the time unit.
-     * @param cacheUnit      Unit for [cacheTime], defaults to [defaultCacheUnit].
-     * @param timeout        Request timeout in seconds. 0 means no timeout.
-     *                       Overrides [defaultTimeOut] for this call.
-     * @param interceptor    Per-call [Interceptor], appended after [interceptors].
-     * @param verify         If false, SSL certificate verification is disabled.
-     *                       Only has effect on platforms that support it (JVM/Android, Darwin, Curl, WinHttp).
-     *                       Silently ignored on JS/WASM.
-     * @param responseParser Overrides [this.responseParser] for this call.
+     * @param method            HTTP method string ("GET", "POST", …).
+     * @param url               Target URL.
+     * @param headers           Extra headers merged on top of [defaultHeaders].
+     * @param referer           Overrides [defaultReferer] for this call.
+     * @param params            Query-string parameters appended to [url].
+     * @param cookies           Merged with [defaultCookies].
+     * @param data              URL-encoded form body (mutually exclusive with [json]/[requestBody]).
+     * @param files             Multipart form parts.
+     * @param json              Object serialised to JSON, or a raw [JsonAsString].
+     * @param requestBody       Fully pre-built [RequestBody] (highest priority body).
+     * @param allowRedirects    Whether to follow HTTP redirects.
+     * @param cacheTime         How long to cache the response. 0 means no caching.
+     *                          Uses [cacheDurationUnit] as the duration unit.
+     * @param cacheDurationUnit Unit for [cacheTime], defaults to [defaultCacheDurationUnit].
+     * @param timeout           Request timeout in seconds. 0 means no timeout.
+     *                          Overrides [defaultTimeOut] for this call.
+     * @param interceptor       Per-call [Interceptor], appended after [interceptors].
+     * @param verify            If false, SSL certificate verification is disabled.
+     *                          Only has effect on platforms that support it (JVM/Android, Darwin, Curl, WinHttp).
+     *                          Silently ignored on JS/WASM.
+     * @param responseParser    Overrides [this.responseParser] for this call.
      */
     open suspend fun custom(
         method: String,
@@ -115,7 +115,7 @@ open class Requests(
         val allInterceptors = interceptors.toMutableList()
         allInterceptors.add(0, LoggingInterceptor())
         if (cacheTime > 0) {
-            val seconds = when (cacheUnit) {
+            val seconds = when (cacheDurationUnit) {
                 DurationUnit.SECONDS -> cacheTime
                 DurationUnit.MINUTES -> cacheTime * 60
                 DurationUnit.HOURS   -> cacheTime * 3600
