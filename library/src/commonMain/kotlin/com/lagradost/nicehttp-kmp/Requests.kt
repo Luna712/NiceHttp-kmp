@@ -39,7 +39,7 @@ open class Requests(
     var defaultData: Map<String, String> = emptyMap(),
     var defaultCookies: Map<String, String> = emptyMap(),
     var defaultCacheTime: Int = 0,
-    var defaultCacheTimeUnit: DurationUnit = DurationUnit.MINUTES,
+    var defaultCacheDurationUnit: DurationUnit = DurationUnit.MINUTES,
     var defaultTimeOut: Long = 0L,
     var responseParser: ResponseParser? = null,
     var interceptors: MutableList<Interceptor> = mutableListOf(),
@@ -97,7 +97,7 @@ open class Requests(
         requestBody: RequestBody? = null,
         allowRedirects: Boolean = true,
         cacheTime: Int = defaultCacheTime,
-        cacheUnit: DurationUnit = defaultCacheTimeUnit,
+        cacheDurationUnit: DurationUnit = defaultCacheDurationUnit,
         timeout: Long = defaultTimeOut,
         interceptor: Interceptor? = null,
         verify: Boolean = true,
@@ -163,14 +163,14 @@ open class Requests(
         cookies: Map<String, String> = emptyMap(),
         allowRedirects: Boolean = true,
         cacheTime: Int = defaultCacheTime,
-        cacheUnit: DurationUnit = defaultCacheTimeUnit,
+        cacheDurationUnit: DurationUnit = defaultCacheDurationUnit,
         timeout: Long = defaultTimeOut,
-        interceptor: Interceptor? = null,
+        newInterceptor: Interceptor? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom(
         "GET", url, headers, referer, params, cookies, null, null, null, null,
-        allowRedirects, cacheTime, cacheUnit, timeout, interceptor, verify, responseParser
+        allowRedirects, cacheTime, cacheDurationUnit, timeout, newInterceptor, verify, responseParser
     )
 
     suspend fun get(
@@ -189,6 +189,28 @@ open class Requests(
     ) = custom(
         "GET", url, headers, referer, params, cookies, null, null, null, null,
         allowRedirects, cacheTime, cacheUnit.toDurationUnit(), timeout, interceptor?.toInterceptor(), verify, responseParser
+    )
+
+    suspend fun post(
+        url: String,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        params: Map<String, String> = emptyMap(),
+        cookies: Map<String, String> = emptyMap(),
+        data: Map<String, String>? = defaultData,
+        files: List<NiceFile>? = null,
+        json: Any? = null,
+        newRequestBody: RequestBody? = null,
+        allowRedirects: Boolean = true,
+        cacheTime: Int = defaultCacheTime,
+        cacheDurationUnit: DurationUnit = defaultCacheDurationUnit,
+        timeout: Long = defaultTimeOut,
+        newInterceptor: Interceptor? = null,
+        verify: Boolean = true,
+        responseParser: ResponseParser? = this.responseParser,
+    ) = custom(
+        "POST", url, headers, referer, params, cookies, data, files, json, newRequestBody,
+        allowRedirects, cacheTime, cacheDurationUnit, timeout, newInterceptor, verify, responseParser
     )
 
     suspend fun post(
