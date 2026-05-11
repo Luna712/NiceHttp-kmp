@@ -52,7 +52,11 @@ class HeadersInterceptor(
 ) : Interceptor {
     override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
         headers.forEach { (k, v) ->
-            ctx.request.headers.remove(k)
+            // Remove existing headers with the same
+            // case-insensitive name first.
+            ctx.request.headers.entries()
+                .filter { it.key.equals(k, ignoreCase = true) }
+                .forEach { ctx.request.headers.remove(it.key) }
             ctx.request.headers.append(k, v)
         }
         return ctx.proceed()
