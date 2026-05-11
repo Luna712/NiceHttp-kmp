@@ -1,4 +1,4 @@
-package com.lagradost.nicehttp.kmp
+package com.lagradost.nicehttp
 
 import io.ktor.client.*
 import io.ktor.client.engine.winhttp.*

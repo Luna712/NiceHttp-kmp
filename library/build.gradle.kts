@@ -25,7 +25,7 @@ kotlin {
 
     // ── Android ───────────────────────────────────────────────────────────────
     android {
-        namespace = "com.lagradost.nicehttp.kmp"
+        namespace = "com.lagradost.nicehttp"
         compileSdk = 35
         minSdk = 21
         compilerOptions { jvmTarget.set(JvmTarget.JVM_1_8) }

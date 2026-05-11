@@ -1,4 +1,4 @@
-package com.lagradost.nicehttp.kmp
+package com.lagradost.nicehttp
 
 import io.ktor.http.Headers
 import okhttp3.CacheControl

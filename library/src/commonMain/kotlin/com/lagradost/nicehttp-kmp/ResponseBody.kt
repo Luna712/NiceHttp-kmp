@@ -1,4 +1,4 @@
-package com.lagradost.nicehttp.kmp
+package com.lagradost.nicehttp
 
 import okio.Buffer
 import okio.BufferedSource

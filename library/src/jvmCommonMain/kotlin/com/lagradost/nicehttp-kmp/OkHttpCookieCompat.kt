@@ -1,4 +1,4 @@
-package com.lagradost.nicehttp.kmp
+package com.lagradost.nicehttp
 
 /**
  * Restores original NiceHttp cookie extensions on okhttp3.Request and okhttp3.Response.

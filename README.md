@@ -62,8 +62,8 @@ dependencies {
 ## Quick start
 
 ```kotlin
-import com.lagradost.nicehttp.kmp.Requests
-import com.lagradost.nicehttp.kmp.SerializationResponseParser
+import com.lagradost.nicehttp.Requests
+import com.lagradost.nicehttp.SerializationResponseParser
 import kotlinx.serialization.Serializable
 
 val app = Requests(responseParser = SerializationResponseParser())
@@ -101,7 +101,7 @@ app.get("https://httpbin.org/delay/5", timeout = 10.seconds)
 ## Sessions (cookie persistence)
 
 ```kotlin
-import com.lagradost.nicehttp.kmp.Session
+import com.lagradost.nicehttp.Session
 
 val session = Session()
 session.post("https://example.com/login", data = mapOf("user" to "alice", "pass" to "s3cr3t"))
@@ -111,7 +111,7 @@ val profile = session.get("https://example.com/profile") // cookies sent automat
 ## Multipart / file upload
 
 ```kotlin
-import com.lagradost.nicehttp.kmp.NiceFile
+import com.lagradost.nicehttp.NiceFile
 
 val imageBytes: ByteArray = /* ... */
 app.post(
@@ -128,8 +128,8 @@ app.post(
 The JVM and Android source sets expose helpers that work with the underlying OkHttp client:
 
 ```kotlin
-import com.lagradost.nicehttp.kmp.addGenericDns
-import com.lagradost.nicehttp.kmp.defaultHttpClient
+import com.lagradost.nicehttp.addGenericDns
+import com.lagradost.nicehttp.defaultHttpClient
 import io.ktor.client.engine.okhttp.*
 import okhttp3.OkHttpClient
 

@@ -1,4 +1,4 @@
-package com.lagradost.nicehttp.kmp
+package com.lagradost.nicehttp
 
 /**
  * Platform-agnostic file descriptor used in multipart uploads.

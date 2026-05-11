@@ -1,4 +1,4 @@
-package com.lagradost.nicehttp.kmp
+package com.lagradost.nicehttp
 
 expect abstract class PlatformInputStream {
     abstract fun read(): Int
