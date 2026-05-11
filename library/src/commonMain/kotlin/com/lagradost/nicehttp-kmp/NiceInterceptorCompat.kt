@@ -1,4 +1,4 @@
 package com.lagradost.nicehttp
 
-expect class NiceInterceptorCompat
+expect interface NiceInterceptorCompat
 internal expect fun NiceInterceptorCompat.toInterceptor(): Interceptor

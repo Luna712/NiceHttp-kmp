@@ -1,4 +1,8 @@
 package com.lagradost.nicehttp
 
-actual class NiceInterceptorCompat(val interceptor: Interceptor)
-internal actual fun NiceInterceptorCompat.toInterceptor(): Interceptor = interceptor
+actual interface NiceInterceptorCompat
+internal actual fun NiceInterceptorCompat.toInterceptor(): Interceptor =
+    this as? Interceptor ?: throw UnsupportedOperationException(
+        "NiceInterceptorCompat must be an Interceptor on non-JVM platforms"
+    )
+

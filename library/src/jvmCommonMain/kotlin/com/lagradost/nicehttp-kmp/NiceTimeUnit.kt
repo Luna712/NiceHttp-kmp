@@ -10,5 +10,4 @@ internal actual fun NiceTimeUnit.toDurationUnit(): kotlin.time.DurationUnit = wh
     java.util.concurrent.TimeUnit.MINUTES      -> kotlin.time.DurationUnit.MINUTES
     java.util.concurrent.TimeUnit.HOURS        -> kotlin.time.DurationUnit.HOURS
     java.util.concurrent.TimeUnit.DAYS         -> kotlin.time.DurationUnit.DAYS
-    else -> kotlin.time.DurationUnit.MINUTES
 }
