@@ -34,7 +34,7 @@ import kotlin.time.DurationUnit
  */
 open class Requests(
     var baseClient: HttpClient = defaultHttpClient(),
-    var defaultHeaders: Map<String, String> = mapOf("user-agent" to "NiceHttp"),
+    var defaultHeaders: Map<String, String> = mapOf("User-Agent" to "NiceHttp"),
     var defaultReferer: String? = null,
     var defaultData: Map<String, String> = emptyMap(),
     var defaultCookies: Map<String, String> = emptyMap(),
@@ -155,7 +155,23 @@ open class Requests(
         return NiceResponse(response, responseParser)
     }
 
-    // ── Verb shortcuts ────────────────────────────────────────────────────────
+    suspend fun get(
+        url: String,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        params: Map<String, String> = emptyMap(),
+        cookies: Map<String, String> = emptyMap(),
+        allowRedirects: Boolean = true,
+        cacheTime: Int = defaultCacheTime,
+        cacheUnit: DurationUnit = defaultCacheTimeUnit,
+        timeout: Long = defaultTimeOut,
+        interceptor: Interceptor? = null,
+        verify: Boolean = true,
+        responseParser: ResponseParser? = this.responseParser,
+    ) = custom(
+        "GET", url, headers, referer, params, cookies, null, null, null, null,
+        allowRedirects, cacheTime, cacheUnit, timeout, interceptor, verify, responseParser
+    )
 
     suspend fun get(
         url: String,
@@ -303,8 +319,6 @@ open class Requests(
         allowRedirects, cacheTime, cacheUnit.toDurationUnit(), timeout, interceptor?.toInterceptor(), verify, responseParser
     )
 }
-
-// ── Body builder ──────────────────────────────────────────────────────────────
 
 private val NO_BODY_METHODS = setOf("GET", "HEAD")
 private val MUST_HAVE_BODY  = setOf("POST", "PUT")
