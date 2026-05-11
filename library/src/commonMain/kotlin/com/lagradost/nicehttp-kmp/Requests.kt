@@ -347,7 +347,7 @@ internal fun buildBody(
         }
 
         !files.isNullOrEmpty() -> {
-            RequestBody(
+            RequestBody.of(
                 MultiPartFormDataContent(
                     formData {
                         files.forEach { file ->
