@@ -101,6 +101,7 @@ kotlin {
                 // Expose OkHttp extras so callers can still configure DNS-over-HTTPS, etc.
                 api(libs.okhttp)
                 api(libs.okhttp.dnsoverhttps)
+                api(libs.jsoup)
             }
         }
 

@@ -57,8 +57,11 @@ class NiceResponse(
     /** Same as [text] but without the size guard. Cached after first call. */
     val textLarge: String by lazy { runBlockingCompat { response.bodyAsText() } }
 
-    val document: Document by lazy { Ksoup.parse(text) }
-    val documentLarge: Document by lazy { Ksoup.parse(textLarge) }
+    val document: NiceDocument by lazy { parseDocument(text) }
+    val documentLarge: NiceDocument by lazy { parseDocument(textLarge) }
+
+    val ksoupDocument: Document by lazy { Ksoup.parse(text) }
+    val ksoupDocumentLarge: Document by lazy { Ksoup.parse(textLarge) }
 
     /** Response body. Call .bytes() or .string() to read. Call .close() when done (no-op here). */
     val body: ResponseBody by lazy {
