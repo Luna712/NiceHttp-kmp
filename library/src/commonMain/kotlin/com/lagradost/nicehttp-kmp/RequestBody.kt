@@ -9,7 +9,7 @@ import io.ktor.http.content.*
  * Wraps an [OutgoingContent] so it works on all targets without OkHttp dependency.
  * On JVM/Android, okhttp3.RequestBody can be converted via .toNiceRequestBody().
  */
-class RequestBody(
+abstract class RequestBody(
     val content: OutgoingContent,
 ) {
     companion object {
