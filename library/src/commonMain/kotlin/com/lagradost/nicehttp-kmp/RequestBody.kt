@@ -19,12 +19,16 @@ abstract class RequestBody {
             contentType: String = "application/octet-stream",
         ): RequestBody = BytesRequestBody(bytes, contentType)
 
+        /** Plain text or JSON body. */
         fun text(
             text: String,
             contentType: String = RequestBodyTypes.TEXT,
         ): RequestBody = TextRequestBody(text, contentType)
 
+        /** URL-encoded form body. */
         fun form(params: Map<String, String>): RequestBody = FormRequestBody(params)
+
+        /** Wraps a pre-built [OutgoingContent] directly. Use for multipart or custom body types. */
         fun of(content: OutgoingContent): RequestBody = OutgoingContentRequestBody(content)
     }
 }
@@ -53,3 +57,7 @@ private class FormRequestBody(
             params.forEach { (k, v) -> append(k, v) }
         })
 }
+
+private class OutgoingContentRequestBody(
+    override val content: OutgoingContent,
+) : RequestBody()
