@@ -165,14 +165,14 @@ open class Requests(
         cookies: Map<String, String> = emptyMap(),
         allowRedirects: Boolean = true,
         cacheTime: Int = defaultCacheTime,
-        cacheUnit: DurationUnit = defaultCacheTimeUnit,
+        cacheUnit: NiceTimeUnit = NiceTimeUnit.MINUTES,
         timeout: Long = defaultTimeOut,
-        interceptor: Interceptor? = null,
+        interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom(
         "GET", url, headers, referer, params, cookies, null, null, null, null,
-        allowRedirects, cacheTime, cacheUnit, timeout, interceptor, verify, responseParser
+        allowRedirects, cacheTime, cacheUnit.toDurationUnit(), timeout, interceptor?.toInterceptor(), verify, responseParser
     )
 
     suspend fun post(
@@ -184,17 +184,17 @@ open class Requests(
         data: Map<String, String>? = defaultData,
         files: List<NiceFile>? = null,
         json: Any? = null,
-        requestBody: RequestBody? = null,
+        requestBody: NiceRequestBodyCompat? = null,
         allowRedirects: Boolean = true,
         cacheTime: Int = defaultCacheTime,
-        cacheUnit: DurationUnit = defaultCacheTimeUnit,
+        cacheUnit: NiceTimeUnit = NiceTimeUnit.MINUTES,
         timeout: Long = defaultTimeOut,
-        interceptor: Interceptor? = null,
+        interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom(
-        "POST", url, headers, referer, params, cookies, data, files, json, requestBody,
-        allowRedirects, cacheTime, cacheUnit, timeout, interceptor, verify, responseParser
+        "POST", url, headers, referer, params, cookies, data, files, json, requestBody?.toRequestBody(),
+        allowRedirects, cacheTime, cacheUnit.toDurationUnit(), timeout, interceptor?.toInterceptor(), verify, responseParser
     )
 
     suspend fun put(
@@ -206,17 +206,17 @@ open class Requests(
         data: Map<String, String>? = defaultData,
         files: List<NiceFile>? = null,
         json: Any? = null,
-        requestBody: RequestBody? = null,
+        requestBody: NiceRequestBodyCompat? = null,
         allowRedirects: Boolean = true,
         cacheTime: Int = defaultCacheTime,
-        cacheUnit: DurationUnit = defaultCacheTimeUnit,
+        cacheUnit: NiceTimeUnit = NiceTimeUnit.MINUTES,
         timeout: Long = defaultTimeOut,
-        interceptor: Interceptor? = null,
+        interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom(
-        "PUT", url, headers, referer, params, cookies, data, files, json, requestBody,
-        allowRedirects, cacheTime, cacheUnit, timeout, interceptor, verify, responseParser
+        "PUT", url, headers, referer, params, cookies, data, files, json, requestBody?.toRequestBody(),
+        allowRedirects, cacheTime, cacheUnit.toDurationUnit(), timeout, interceptor?.toInterceptor(), verify, responseParser
     )
 
     suspend fun delete(
@@ -228,17 +228,17 @@ open class Requests(
         data: Map<String, String>? = defaultData,
         files: List<NiceFile>? = null,
         json: Any? = null,
-        requestBody: RequestBody? = null,
+        requestBody: NiceRequestBodyCompat? = null,
         allowRedirects: Boolean = true,
         cacheTime: Int = defaultCacheTime,
-        cacheUnit: DurationUnit = defaultCacheTimeUnit,
+        cacheUnit: NiceTimeUnit = NiceTimeUnit.MINUTES,
         timeout: Long = defaultTimeOut,
-        interceptor: Interceptor? = null,
+        interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom(
-        "DELETE", url, headers, referer, params, cookies, data, files, json, requestBody,
-        allowRedirects, cacheTime, cacheUnit, timeout, interceptor, verify, responseParser
+        "DELETE", url, headers, referer, params, cookies, data, files, json, requestBody?.toRequestBody(),
+        allowRedirects, cacheTime, cacheUnit.toDurationUnit(), timeout, interceptor?.toInterceptor(), verify, responseParser
     )
 
     suspend fun head(
@@ -249,14 +249,14 @@ open class Requests(
         cookies: Map<String, String> = emptyMap(),
         allowRedirects: Boolean = true,
         cacheTime: Int = defaultCacheTime,
-        cacheUnit: DurationUnit = defaultCacheTimeUnit,
+        cacheUnit: NiceTimeUnit = NiceTimeUnit.MINUTES,
         timeout: Long = defaultTimeOut,
-        interceptor: Interceptor? = null,
+        interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom(
         "HEAD", url, headers, referer, params, cookies, null, null, null, null,
-        allowRedirects, cacheTime, cacheUnit, timeout, interceptor, verify, responseParser
+        allowRedirects, cacheTime, cacheUnit.toDurationUnit(), timeout, interceptor?.toInterceptor(), verify, responseParser
     )
 
     suspend fun patch(
@@ -268,17 +268,17 @@ open class Requests(
         data: Map<String, String>? = defaultData,
         files: List<NiceFile>? = null,
         json: Any? = null,
-        requestBody: RequestBody? = null,
+        requestBody: NiceRequestBodyCompat? = null,
         allowRedirects: Boolean = true,
         cacheTime: Int = defaultCacheTime,
-        cacheUnit: DurationUnit = defaultCacheTimeUnit,
+        cacheUnit: NiceTimeUnit = NiceTimeUnit.MINUTES,
         timeout: Long = defaultTimeOut,
-        interceptor: Interceptor? = null,
+        interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom(
-        "PATCH", url, headers, referer, params, cookies, data, files, json, requestBody,
-        allowRedirects, cacheTime, cacheUnit, timeout, interceptor, verify, responseParser
+        "PATCH", url, headers, referer, params, cookies, data, files, json, requestBody?.toRequestBody(),
+        allowRedirects, cacheTime, cacheUnit.toDurationUnit(), timeout, interceptor?.toInterceptor(), verify, responseParser
     )
 
     suspend fun options(
@@ -290,17 +290,17 @@ open class Requests(
         data: Map<String, String>? = defaultData,
         files: List<NiceFile>? = null,
         json: Any? = null,
-        requestBody: RequestBody? = null,
+        requestBody: NiceRequestBodyCompat? = null,
         allowRedirects: Boolean = true,
         cacheTime: Int = defaultCacheTime,
-        cacheUnit: DurationUnit = defaultCacheTimeUnit,
+        cacheUnit: NiceTimeUnit = NiceTimeUnit.MINUTES,
         timeout: Long = defaultTimeOut,
-        interceptor: Interceptor? = null,
+        interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom(
-        "OPTIONS", url, headers, referer, params, cookies, data, files, json, requestBody,
-        allowRedirects, cacheTime, cacheUnit, timeout, interceptor, verify, responseParser
+        "OPTIONS", url, headers, referer, params, cookies, data, files, json, requestBody?.toRequestBody(),
+        allowRedirects, cacheTime, cacheUnit.toDurationUnit(), timeout, interceptor?.toInterceptor(), verify, responseParser
     )
 }
 

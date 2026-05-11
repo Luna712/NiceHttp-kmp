@@ -106,6 +106,10 @@ kotlin {
             }
         }
 
+        val nonJvmMain by creating {
+            dependsOn(commonMain)
+        }
+
         val androidMain by getting {
             dependsOn(jvmCommonMain)
         }
@@ -116,6 +120,7 @@ kotlin {
 
         // JS: browser/Node.js Ktor engine
         val jsMain by getting {
+            dependsOn(nonJvmMain)
             dependencies {
                 api(libs.ktor.client.js)
             }
@@ -123,6 +128,7 @@ kotlin {
 
         // WASM/JS: browser/Node.js Ktor engine
         val wasmJsMain by getting {
+            dependsOn(nonJvmMain)
             dependencies {
                 api(libs.ktor.client.js)
             }
@@ -130,6 +136,7 @@ kotlin {
 
         // Apple targets (Darwin engine covers iOS/macOS/tvOS/watchOS)
         val appleMain by getting {
+            dependsOn(nonJvmMain)
             dependencies {
                 api(libs.ktor.client.darwin)
             }
@@ -137,6 +144,7 @@ kotlin {
 
         // Linux targets
         val linuxMain by getting {
+            dependsOn(nonJvmMain)
             dependencies {
                 api(libs.ktor.client.curl)
             }
@@ -144,6 +152,7 @@ kotlin {
 
         // Windows targets
         val mingwMain by getting {
+            dependsOn(nonJvmMain)
             dependencies {
                 api(libs.ktor.client.winhttp)
             }
