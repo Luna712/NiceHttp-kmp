@@ -281,7 +281,7 @@ app.initClient(context, ignoreSSL = true)
 | `response.document` | `org.jsoup.Document` on JVM/Android, ksoup on others |
 | `response.headers.toMap()` | `response.headers.toMap()` - no import needed via `NiceHeaders` |
 | `body.byteStream()` | `body.byteStream()` - `InputStream` on JVM, `PlatformInputStream` on others |
-| `body.source()` | `body.source()` - `BufferedSource` on JVM, `PlatformSource` on others |
+| `body.source()` | `body.source()` - `BufferedSource` |
 
 ## Back compat - will eventually be removed
 
