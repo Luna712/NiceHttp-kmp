@@ -14,7 +14,6 @@ group = "com.lagradost"
 version = "1.0.0"
 
 kotlin {
-    // ── JVM ──────────────────────────────────────────────────────────────────
     jvm {
         compilations.all {
             compilerOptions.configure {
@@ -23,15 +22,14 @@ kotlin {
         }
     }
 
-    // ── Android ───────────────────────────────────────────────────────────────
     android {
         namespace = "com.lagradost.nicehttp"
-        compileSdk = 35
-        minSdk = 21
+        compileSdk = 36
+        minSdk = 23
         compilerOptions { jvmTarget.set(JvmTarget.JVM_1_8) }
     }
 
-    // ── JS (browser + Node.js) ───────────────────────────────────────────────
+    // JS (browser + Node.js)
     js(IR) {
         browser {
             commonWebpackConfig {
@@ -44,7 +42,7 @@ kotlin {
         binaries.library()
     }
 
-    // ── WASM/JS ───────────────────────────────────────────────────────────────
+    // WASM/JS
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         browser()
@@ -52,7 +50,7 @@ kotlin {
         binaries.library()
     }
 
-    // ── Native: Apple ─────────────────────────────────────────────────────────
+    // Native: Apple
     iosArm64()
     iosX64()
     iosSimulatorArm64()
@@ -63,18 +61,18 @@ kotlin {
     watchosArm64()
     watchosSimulatorArm64()
 
-    // ── Native: Linux ─────────────────────────────────────────────────────────
+    // Native: Linux
     linuxX64()
     linuxArm64()
 
-    // ── Native: Windows ───────────────────────────────────────────────────────
+    // Native: Windows
     mingwX64()
 
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
 
-    // ── Source sets ──────────────────────────────────────────────────────────
+    // Source sets
     applyDefaultHierarchyTemplate()
 
     sourceSets {

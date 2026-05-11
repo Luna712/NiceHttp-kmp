@@ -1,4 +1,4 @@
-# NiceHttp — Kotlin Multiplatform Edition
+# NiceHttp KMP
 
 A full KMP port of [NiceHttp](https://github.com/Blatzar/NiceHttp) that runs on every
 Kotlin target: **JVM, Android, JS (browser + Node.js), WASM/JS, iOS, macOS, tvOS, watchOS,
@@ -16,22 +16,9 @@ Linux, and Windows**.
 | Linux (x64, arm64)                     | Curl        |
 | Windows (mingwX64)                     | WinHttp     |
 
-## What changed from the original
-
-| Original                      | KMP version                                                  |
-|-------------------------------|--------------------------------------------------------------|
-| `OkHttpClient` directly       | `HttpClient` (Ktor) — engine chosen per platform             |
-| `java.util.concurrent.TimeUnit` | `kotlin.time.Duration`                                     |
-| `Jsoup.parse()`               | `Ksoup.parse()` (KMP-compatible ksoup library)              |
-| `org.json.JSONObject/Array`   | `kotlinx-serialization` + `SerializationResponseParser`     |
-| `java.io.File` in `NiceFile`  | `ByteArray` (works everywhere)                               |
-| `.text` / `.document` (lazy val) | `suspend fun text()` / `suspend fun document()`          |
-| `javax.net.ssl` SSL bypass    | JVM/Android only via `OkHttpExtras.kt`                      |
-| DNS-over-HTTPS                | JVM/Android only via `OkHttpExtras.kt`                      |
-
 ## Installation
 
-### JitPack (recommended for Android/JVM projects)
+### JitPack
 
 ```kotlin
 // settings.gradle.kts
@@ -40,62 +27,89 @@ repositories {
 }
 
 // build.gradle.kts
+
+// Non-KMP Android/JVM app:
 dependencies {
-    implementation("com.github.YourFork:NiceHttp:<tag>")
+    implementation("com.github.Luna712.NiceHttp-kmp:library-android:TAG")
 }
-```
 
-### Local Maven
-
-```bash
-./gradlew :library:publishToMavenLocal
-```
-
-Then in your project:
-
-```kotlin
+// KMP project:
 dependencies {
-    implementation("com.lagradost:nicehttp:1.0.0")
+    implementation("com.github.Luna712.NiceHttp-kmp:library:TAG")
 }
 ```
 
 ## Quick start
 
+### New builder API
+
 ```kotlin
 import com.lagradost.nicehttp.Requests
-import com.lagradost.nicehttp.SerializationResponseParser
-import kotlinx.serialization.Serializable
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.seconds
 
-val app = Requests(responseParser = SerializationResponseParser())
+val app = Requests()
 
-// Simple GET
-val response = app.get("https://httpbin.org/get")
-println(response.code)           // 200
-println(response.text())         // body as String
-println(response.document())     // parsed as HTML Document (ksoup)
+// GET
+val response = app.get("https://httpbin.org/get") {
+    headers = mapOf("X-Custom" to "header")
+    params = mapOf("page" to "2")
+    timeout = 30.seconds
+    cacheTime = 1.days
+    verify = false
+}
 
-// Typed JSON parsing
+println(response.code)          // 200
+println(response.text)          // body as String
+println(response.ksoupDocument) // parsed as ksoup Document (all platforms)
+println(response.document)      // org.jsoup.Document on JVM/Android, ksoup on others
+
+// POST with JSON
+app.post("https://httpbin.org/post") {
+    json = JsonAsString("""{"name":"Alice"}""")
+    timeout = 10.seconds
+}
+
+// POST with form data
+app.post("https://httpbin.org/post") {
+    data = mapOf("key" to "value")
+}
+
+// POST with typed JSON via SerializationResponseParser
+@Serializable data class Payload(val name: String)
+app.post("https://httpbin.org/post") {
+    json = Payload("Alice")
+}
+
+// Typed JSON response parsing
 @Serializable data class Bin(val origin: String)
 val bin = app.get("https://httpbin.org/get").parsed<Bin>()
 println(bin.origin)
+```
 
-// POST with form data
-app.post("https://httpbin.org/post", data = mapOf("key" to "value"))
+### Original NiceHttp API (back-compat; deprecated, JVM/Android)
 
-// POST with JSON
-@Serializable data class Payload(val name: String)
-app.post("https://httpbin.org/post", json = Payload("Alice"))
+All original call sites work unchanged:
 
-// Custom headers + query params
+```kotlin
+import java.util.concurrent.TimeUnit
+import okhttp3.Interceptor
+
+// Original API still works on JVM/Android
 app.get(
-    "https://httpbin.org/get",
+    url,
     headers = mapOf("X-Custom" to "header"),
-    params  = mapOf("page" to "2"),
+    cacheTime = 1,
+    cacheUnit = TimeUnit.DAYS,
+    timeout = 30L,
+    interceptor = myOkHttpInterceptor,
 )
 
-// With timeout (kotlin.time.Duration)
-import kotlin.time.Duration.Companion.seconds
-app.get("https://httpbin.org/delay/5", timeout = 10.seconds)
+app.post(
+    url,
+    requestBody = "{}".toRequestBody("application/json".toMediaType()),
+    interceptor = myOkHttpInterceptor,
+)
 ```
 
 ## Sessions (cookie persistence)
@@ -104,39 +118,136 @@ app.get("https://httpbin.org/delay/5", timeout = 10.seconds)
 import com.lagradost.nicehttp.Session
 
 val session = Session()
-session.post("https://example.com/login", data = mapOf("user" to "alice", "pass" to "s3cr3t"))
+session.post("https://example.com/login") {
+    data = mapOf("user" to "alice", "pass" to "s3cr3t")
+}
 val profile = session.get("https://example.com/profile") // cookies sent automatically
+```
+
+## Interceptors
+
+### Built-in interceptors
+
+```kotlin
+// Retry failed requests
+app.addInterceptor(RetryInterceptor(maxRetries = 3))
+
+// Add headers to every request
+app.addInterceptor(HeadersInterceptor(mapOf("Authorization" to "Bearer $token")))
+
+// Log requests and responses
+app.addInterceptor(LoggingInterceptor())
+
+// Fallback to a different URL on failure
+app.addInterceptor(FallbackUrlInterceptor(primaryUrl, fallbackUrl))
+
+// Per-request interceptor
+app.get(url) {
+    interceptor = LoggingInterceptor()
+}
+```
+
+### Custom KMP interceptor
+
+```kotlin
+class MyInterceptor : Interceptor {
+    override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
+        ctx.request.headers.append("X-Custom", "value")
+        val call = ctx.proceed()
+        println("Response: ${call.response.status.value}")
+        return call
+    }
+}
+```
+
+### OkHttp interceptor bridge (JVM/Android)
+
+These should be considered deprecated and will eventually be removed.
+
+```kotlin
+// Convert okhttp3.Interceptor to KMP Interceptor (may not always work for complex interceptors)
+val kmpInterceptor = myOkHttpInterceptor.toNiceInterceptor()
+
+// Convert KMP Interceptor to okhttp3.Interceptor
+val okHttpInterceptor = myKmpInterceptor.toOkHttpInterceptor()
 ```
 
 ## Multipart / file upload
 
 ```kotlin
-import com.lagradost.nicehttp.NiceFile
-
-val imageBytes: ByteArray = /* ... */
-app.post(
-    "https://httpbin.org/post",
+app.post("https://httpbin.org/post") {
     files = listOf(
         NiceFile(name = "photo", fileName = "cat.png", bytes = imageBytes, fileType = "image/png"),
         NiceFile(name = "caption", value = "My cat"),
     )
-)
+}
+```
+
+## Response
+
+```kotlin
+val response = app.get(url)
+
+response.code           // Int - HTTP status code
+response.text           // String - body (cached, guarded at 5MB)
+response.textLarge      // String - body without size guard
+response.body.bytes()   // ByteArray
+response.body.string()  // String
+response.body.source()  // okio.BufferedSource on JVM, PlatformSource on others
+response.cookies        // Map<String, String>
+response.headers        // NiceHeaders - ktor Headers but also includes .toMap(), .toMultiMap() for back-compat
+response.header("Content-Type") // String? - convenience header access for back-compat
+response.isSuccessful   // Boolean - true if 2xx
+response.url            // String - final URL after redirects
+
+// HTML parsing
+response.document           // org.jsoup.Document on JVM/Android, ksoup on others
+response.documentLarge      // same but without size guard
+response.ksoupDocument      // always com.fleeksoft.ksoup.nodes.Document
+response.ksoupDocumentLarge // same but without size guard
+
+// JSON parsing (requires SerializationResponseParser)
+response.parsed<MyClass>()
+response.parsedSafe<MyClass>()
+response.parsedLarge<MyClass>()
+response.parsedSafeLarge<MyClass>()
+```
+
+## JSON parsing
+
+```kotlin
+val app = Requests(responseParser = SerializationResponseParser())
+
+@Serializable data class Repo(val name: String, val stargazers_count: Int)
+
+val repo = app.get("https://api.github.com/repos/Kotlin/kotlinx.coroutines")
+              .parsed<Repo>()
+```
+
+Custom parser:
+
+```kotlin
+class GsonParser : ResponseParser {
+    private val gson = Gson()
+    override fun <T : Any> parse(text: String, kClass: KClass<T>): T =
+        gson.fromJson(text, kClass.java)
+    override fun <T : Any> parseSafe(text: String, kClass: KClass<T>): T? =
+        runCatching { gson.fromJson(text, kClass.java) }.getOrNull()
+    override fun writeValueAsString(obj: Any): String = gson.toJson(obj)
+}
 ```
 
 ## JVM/Android: OkHttp extras
 
-The JVM and Android source sets expose helpers that work with the underlying OkHttp client:
-
 ```kotlin
 import com.lagradost.nicehttp.addGenericDns
-import com.lagradost.nicehttp.defaultHttpClient
 import io.ktor.client.engine.okhttp.*
 import okhttp3.OkHttpClient
 
 val okClient = OkHttpClient.Builder()
     .addGenericDns(
-        url  = "https://dns.cloudflare.com/dns-query",
-        ips  = listOf("1.1.1.1", "1.0.0.1"),
+        url = "https://dns.cloudflare.com/dns-query",
+        ips = listOf("1.1.1.1", "1.0.0.1"),
     )
     .build()
 
@@ -147,61 +258,36 @@ val app = Requests(
 )
 ```
 
-## Bringing your own parser
+## Android: initialization with context
 
 ```kotlin
-class GsonParser : ResponseParser {
-    private val gson = Gson()
-    override fun <T : Any> parse(text: String, kClass: KClass<T>): T =
-        gson.fromJson(text, kClass.java)
-    override fun <T : Any> parseSafe(text: String, kClass: KClass<T>): T? =
-        runCatching { gson.fromJson(text, kClass.java) }.getOrNull()
-    override fun writeValueAsString(obj: Any): String =
-        gson.toJson(obj)
-}
+// In Application.onCreate() or similar
+app.initClient(context)
 
-val app = Requests(responseParser = GsonParser())
+// With SSL bypass (debug only)
+app.initClient(context, ignoreSSL = true)
 ```
 
-## Key API differences from the original
+## What changed from the original
 
-### Body reading is now `suspend`
+| Original | KMP version |
+|---|---|
+| `OkHttpClient` directly | `HttpClient` (Ktor) - engine chosen per platform |
+| `java.util.concurrent.TimeUnit` | `kotlin.time.Duration` (new API) / `NiceTimeUnit` (compat) |
+| `okhttp3.Interceptor` | KMP `Interceptor` (new API) / `NiceInterceptorCompat` (compat) |
+| `okhttp3.RequestBody` | KMP `RequestBody` (new API) / `NiceRequestBodyCompat` (compat) |
+| `Jsoup.parse()` | `Ksoup.parse()` on all platforms, `Jsoup.parse()` on JVM via `.document` |
+| `response.text` (lazy val) | `response.text` (lazy val, same API) |
+| `response.document` | `org.jsoup.Document` on JVM/Android, ksoup on others |
+| `response.headers.toMap()` | `response.headers.toMap()` - no import needed via `NiceHeaders` |
+| `body.byteStream()` | `body.byteStream()` - `InputStream` on JVM, `PlatformInputStream` on others |
+| `body.source()` | `body.source()` - `BufferedSource` on JVM, `PlatformSource` on others |
 
-The original library used lazy `val` properties backed by OkHttp's synchronous APIs.
-In KMP, Ktor body reading is always suspending:
+## Back compat - will eventually be removed
 
-```kotlin
-// original
-val body = response.text
+All original NiceHttp call sites work unchanged on JVM/Android via compat types:
+- `NiceTimeUnit` = `java.util.concurrent.TimeUnit` on JVM, `kotlin.time.DurationUnit` on others
+- `NiceInterceptorCompat` = `okhttp3.Interceptor` on JVM, KMP `Interceptor` on others
+- `NiceRequestBodyCompat` = `okhttp3.RequestBody` on JVM, KMP `RequestBody` on others
 
-// KMP
-val body = response.text()   // must be called inside a coroutine
-```
-
-### `Duration` instead of `TimeUnit`
-
-```kotlin
-// original
-app.get(url, timeout = 30L, cacheUnit = TimeUnit.SECONDS)
-
-// KMP
-import kotlin.time.Duration.Companion.seconds
-app.get(url, timeout = 30.seconds)
-```
-
-### No `verify = false` on non-JVM
-
-SSL bypass (`ignoreAllSSLErrors`) relies on `javax.net.ssl` and is only available on
-JVM/Android.  On other platforms configure the engine directly (e.g. Darwin lets you
-set `handleChallenge` in its config block).
-
-## Dependencies
-
-| Library                              | Version  | Purpose                          |
-|--------------------------------------|----------|----------------------------------|
-| `io.ktor:ktor-client-core`           | 3.1.x    | HTTP client core                 |
-| `org.jetbrains.kotlinx:kotlinx-coroutines-core` | 1.10.x | Coroutines         |
-| `org.jetbrains.kotlinx:kotlinx-serialization-json` | 1.8.x | JSON (optional) |
-| `com.fleeksoft.ksoup:ksoup`          | 0.4.x    | HTML parsing (KMP Jsoup port)    |
-| `com.squareup.okhttp3:okhttp`        | 5.x      | JVM/Android engine               |
-| `com.squareup.okhttp3:okhttp-dnsoverhttps` | 5.x | JVM/Android DNS-over-HTTPS  |
+These will be removed in a future version once all call sites are migrated.

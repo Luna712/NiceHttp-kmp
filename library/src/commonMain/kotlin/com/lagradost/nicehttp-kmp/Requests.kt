@@ -90,7 +90,7 @@ open class Requests(
     }
 
     /**
-     * Generic request method – all verb shortcuts delegate here.
+     * Generic request method. All method shortcuts delegate here.
      *
      * @param method         HTTP method string ("GET", "POST", …).
      * @param url            Target URL.

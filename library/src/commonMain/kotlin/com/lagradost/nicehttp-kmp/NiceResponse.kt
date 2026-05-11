@@ -28,7 +28,7 @@ class NiceResponse(
     /** Final URL after any redirects */
     val url: String get() = response.request.url.toString()
 
-    /** `true` if [code] is in 200–299 */
+    /** `true` if [code] is in 200-299 */
     val isSuccessful: Boolean get() = response.status.isSuccess()
 
     /** Content-Length as reported by the server, or null if absent */
@@ -37,7 +37,9 @@ class NiceResponse(
     /** All cookies sent by the server for this response */
     val cookies: Map<String, String> get() = response.headers.getSetCookies()
 
-    // ── Compatibility layers for old NiceHttp ─────────────────────────────────────
+    /**
+     * Compatibility layers for old NiceHttp
+     */
 
     /** Reads the body as a string. Cached after first call. */
     val text: String by lazy {
@@ -68,8 +70,6 @@ class NiceResponse(
 
     /** Returns the value of the header with the given [name], or null if absent. */
     fun header(name: String): String? = headers[name]
-
-    // ── Body helpers ─────────────────────────────────────────────────────────
 
     /**
      * Reads the response body as a string. Throws [IllegalStateException] if the body exceeds

@@ -10,13 +10,12 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
-// ── DNS-over-HTTPS ────────────────────────────────────────────────────────────
+// DNS-over-HTTPS
 
 /**
  * Attaches a DNS-over-HTTPS resolver to this [OkHttpClient.Builder].
  *
  * Passes through to Ktor's OkHttp engine via the `engine { preconfigured = … }` block:
- * ```kotlin
  * val client = HttpClient(OkHttp) {
  *     engine {
  *         preconfigured = OkHttpClient.Builder()
@@ -28,7 +27,6 @@ import javax.net.ssl.X509TrustManager
  *     }
  * }
  * val requests = Requests(baseClient = client)
- * ```
  */
 fun OkHttpClient.Builder.addGenericDns(url: String, ips: List<String>): OkHttpClient.Builder =
     dns(
@@ -39,12 +37,10 @@ fun OkHttpClient.Builder.addGenericDns(url: String, ips: List<String>): OkHttpCl
             .build()
     )
 
-// ── SSL bypass ────────────────────────────────────────────────────────────────
+// SSL bypass
 
 /**
  * Disables all SSL certificate verification on this [OkHttpClient.Builder].
- *
- * **Use only for debugging – never in production.**
  */
 @Suppress("CustomX509TrustManager")
 fun OkHttpClient.Builder.ignoreAllSSLErrors(): OkHttpClient.Builder {

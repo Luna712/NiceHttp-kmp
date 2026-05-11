@@ -2,8 +2,6 @@ package com.lagradost.nicehttp
 
 import io.ktor.http.*
 
-// ── URL helpers ───────────────────────────────────────────────────────────────
-
 /**
  * Appends query-string parameters to [url].
  *
@@ -17,8 +15,6 @@ internal fun addParamsToUrl(url: String, params: Map<String, String?>): String {
     }
     return builder.buildString()
 }
-
-// ── Header helpers ────────────────────────────────────────────────────────────
 
 /**
  * Builds the final [Headers] object for a request.
