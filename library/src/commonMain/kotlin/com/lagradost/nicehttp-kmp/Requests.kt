@@ -185,9 +185,8 @@ open class Requests(
         val builder = RequestBuilder(this).apply(block)
         return custom(
             HttpMethod.Get, url, builder.headers, builder.referer, builder.params, builder.cookies,
-            null, null, null, null, builder.allowRedirects,
-            builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
-            builder.responseParser,
+            null, null, null, null, builder.allowRedirects, builder.cacheTime, builder.timeout,
+            builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
@@ -237,9 +236,8 @@ open class Requests(
         val builder = RequestBuilder(this).apply(block)
         return custom(
             HttpMethod.Head, url, builder.headers, builder.referer, builder.params, builder.cookies,
-            null, null, null, null, builder.allowRedirects,
-            builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
-            builder.responseParser,
+            null, null, null, null, builder.allowRedirects, builder.cacheTime, builder.timeout,
+            builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
@@ -263,9 +261,8 @@ open class Requests(
         val builder = RequestBuilder(this).apply(block)
         return custom(
             HttpMethod.Options, url, builder.headers, builder.referer, builder.params, builder.cookies,
-            builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
-            builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
-            builder.responseParser,
+            null, null, null, null, builder.allowRedirects, builder.cacheTime, builder.timeout,
+            builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
