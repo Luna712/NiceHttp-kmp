@@ -437,8 +437,7 @@ open class Requests(
     )
 }
 
-private val NO_BODY_METHODS = setOf("GET", "HEAD")
-private val MUST_HAVE_BODY  = setOf("POST", "PUT")
+private val MUST_HAVE_BODY  = setOf(HttpMethod.Post, HttpMethod.Put)
 
 /**
  * Constructs the [RequestBody] for the request, following the same priority rules
@@ -452,15 +451,14 @@ private val MUST_HAVE_BODY  = setOf("POST", "PUT")
  * 6. null for GET/HEAD/etc.
  */
 internal fun buildBody(
-    method: String,
+    method: HttpMethod,
     data: Map<String, String>?,
     files: List<NiceFile>?,
     json: Any?,
     requestBody: RequestBody?,
     responseParser: ResponseParser?,
 ): RequestBody? {
-    val upper = method.uppercase()
-    if (upper in NO_BODY_METHODS) return null
+    if (!method.supportsRequestBody) return null
     if (requestBody != null) return requestBody
 
     return when {
@@ -503,8 +501,8 @@ internal fun buildBody(
             )
         }
 
-        // POST/PUT must always have a body even if empty
-        upper in MUST_HAVE_BODY -> RequestBody.form(emptyMap())
+        // These methods must always have a body even if empty
+        method in MUST_HAVE_BODY -> RequestBody.form(emptyMap())
 
         else -> null
     }
