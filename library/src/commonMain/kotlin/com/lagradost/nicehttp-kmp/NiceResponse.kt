@@ -166,9 +166,8 @@ fun Headers.getRequestCookies(): Map<String, String> =
         ?.toMap()
         ?: emptyMap()
 
-suspend fun ByteReadChannel.readTextLimited(
+private suspend fun ByteReadChannel.readTextLimited(
     charset: Charset = Charsets.UTF_8,
-    maxBytes: Long = MAX_TEXT_BYTES,
 ): String {
     val buffer = Buffer()
     var bytesRead = 0L
@@ -178,10 +177,10 @@ suspend fun ByteReadChannel.readTextLimited(
         if (n < 0) break
         if (n == 0) continue
         bytesRead += n
-        if (bytesRead > maxBytes) {
+        if (bytesRead > MAX_TEXT_BYTES) {
             cancel()
             throw IllegalStateException(
-                "Response exceeded $maxBytes bytes. Use .textLarge instead."
+                "Response exceeded $MAX_TEXT_BYTES bytes. Use .textLarge instead."
             )
         }
         buffer.write(chunk, 0, n)
