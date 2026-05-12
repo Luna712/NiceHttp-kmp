@@ -20,10 +20,12 @@ class NiceFile(
     /** Plain string form field */
     constructor(name: String, value: String) : this(name, value, null, null)
 
-    /**
-     * Back-compat with original NiceFile(name, file, fileType).
-     * On JVM/Android [PlatformFile] is [java.io.File].
-     */
+    @Deprecated(
+        "Passing a File directly is deprecated because it is inconsistent across platforms. " +
+            "Read the file bytes yourself and use NiceFile(name, fileName, bytes, fileType) directly.",
+        ReplaceWith("NiceFile(name, fileName, bytes, fileType)"),
+        DeprecationLevel.WARNING,
+    )
     constructor(
         name: String,
         file: PlatformFile,
@@ -35,17 +37,20 @@ class NiceFile(
         fileType = fileType,
     )
 
-    /**
-     * Back-compat with original NiceFile(name, file).
-     * On JVM/Android [PlatformFile] is [java.io.File].
-     */
+    @Deprecated(
+        "Passing a File directly is deprecated because it is inconsistent across platforms. " +
+            "Read the file bytes yourself and use NiceFile(name, fileName, bytes) directly.",
+        ReplaceWith("NiceFile(name, fileName, bytes)"),
+        DeprecationLevel.WARNING,
+    )
     constructor(name: String, file: PlatformFile) : this(name, file, null)
 
-    /**
-     * Back-compat with original NiceFile(file).
-     * Uses the file name as the form field name.
-     * On JVM/Android [PlatformFile] is [java.io.File].
-     */
+    @Deprecated(
+        "Passing a File directly is deprecated because it is inconsistent across platforms. " +
+            "Read the file bytes yourself and use NiceFile(fileName, fileName, bytes) directly.",
+        ReplaceWith("NiceFile(fileName, fileName, bytes)"),
+        DeprecationLevel.WARNING,
+    )
     constructor(file: PlatformFile) : this(file.toFileName(), file, null)
 }
 
