@@ -9,6 +9,7 @@ actual fun defaultHttpClient(): HttpClient = HttpClient(OkHttp) {
     install(HttpTimeout)
     install(HttpCache)
     install(HttpRequestRetry) { noRetry() }
+    engine { addNetworkInterceptor(CacheNetworkInterceptor) }
     // OkHttp engine exposes the raw builder via `engine { preconfigured = ... }`
     // so callers can still attach DNS-over-HTTPS, custom interceptors, etc.
 }
@@ -18,8 +19,7 @@ actual fun insecureHttpClient(): HttpClient = HttpClient(OkHttp) {
     install(HttpCache)
     install(HttpRequestRetry) { noRetry() }
     engine {
-        config {
-            ignoreAllSSLErrors()
-        }
+        config { ignoreAllSSLErrors() }
+        addNetworkInterceptor(CacheNetworkInterceptor)
     }
 }
