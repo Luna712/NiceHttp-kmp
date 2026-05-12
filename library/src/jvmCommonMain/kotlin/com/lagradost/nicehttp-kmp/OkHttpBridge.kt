@@ -9,6 +9,8 @@ import okio.Buffer
 /**
  * Converts an [okhttp3.RequestBody] to a NiceHttp [RequestBody].
  * Reads the OkHttp body into a byte array via Okio then wraps it.
+ *
+ * TODO: Deprecate
  */
 fun okhttp3.RequestBody.toNiceRequestBody(): RequestBody {
     val buffer = Buffer()
@@ -21,6 +23,8 @@ fun okhttp3.RequestBody.toNiceRequestBody(): RequestBody {
 /**
  * Converts a NiceHttp [RequestBody] to an [okhttp3.RequestBody].
  * Used when passing a KMP request body into raw OkHttp code.
+ *
+ * TODO: Deprecate
  */
 fun RequestBody.toOkHttpRequestBody(): okhttp3.RequestBody {
     return when (val c = content) {
