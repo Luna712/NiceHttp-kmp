@@ -108,6 +108,25 @@ class HeadersInterceptor(
 }
 
 /**
+ * Retries failed requests up to [maxRetries] times.
+ * @param shouldRetry called with each [HttpClientCall]; return true to retry.
+ */
+class RetryInterceptor(
+    private val maxRetries: Int = 3,
+    private val shouldRetry: (HttpClientCall) -> Boolean = { !it.response.status.isSuccess() },
+) : Interceptor {
+    override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
+        var call = ctx.proceed()
+        var retries = 0
+        while (shouldRetry(call) && retries < maxRetries) {
+            retries++
+            call = ctx.proceed()
+        }
+        return call
+    }
+}
+
+/**
  * Retries a failed request against a fallback URL.
  * Replaces the first occurrence of [primaryUrl] with [fallbackUrl] in the request URL.
  * @param shouldFallback called with each [HttpClientCall]; return true to use fallback.
@@ -138,25 +157,6 @@ class HeadersInterceptor(
         }
     }
 }*/
-
-/**
- * Retries failed requests up to [maxRetries] times.
- * @param shouldRetry called with each [HttpClientCall]; return true to retry.
- */
-class RetryInterceptor(
-    private val maxRetries: Int = 3,
-    private val shouldRetry: (HttpClientCall) -> Boolean = { !it.response.status.isSuccess() },
-) : Interceptor {
-    override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
-        var call = ctx.proceed()
-        var retries = 0
-        while (shouldRetry(call) && retries < maxRetries) {
-            retries++
-            call = ctx.proceed()
-        }
-        return call
-    }
-}
 
 /**
  * Logs request and response details.
