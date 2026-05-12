@@ -46,11 +46,55 @@ class HttpSendInterceptorContext(
 /**
  * Adds or replaces headers on every request.
  * Existing headers with the same name are removed first.
+ * Values are converted to strings via [Any.toString], so typed Ktor
+ * header values like [CacheControl] work directly.
+ *
+ * Construct via the DSL builder:
+ * ```kotlin
+ * HeadersInterceptor {
+ *     header(HttpHeaders.CacheControl, CacheControl.MaxAge(maxAgeSeconds = 300))
+ *     header(HttpHeaders.Accept, ContentType.Application.Json)
+ *     remove(HttpHeaders.UserAgent)
+ * }
+ * ```
  */
 class HeadersInterceptor(
-    private val headers: Map<String, String>,
+    private val headers: List<Pair<String, String>>,
+    private val removals: List<String>,
 ) : Interceptor {
+
+    class Builder {
+        private val headers = mutableListOf<Pair<String, String>>()
+        private val removals = mutableListOf<String>()
+
+        /** Add or replace a header. Mirrors Ktor's own [header] naming. */
+        fun header(name: String, value: Any) { headers.add(name to value.toString()) }
+        /** Add a header, communicating intent to insert a new value. */
+        fun add(name: String, value: Any) { headers.add(name to value.toString()) }
+        /** Set a header, communicating intent to assign a value regardless of existing. */
+        fun set(name: String, value: Any) { headers.add(name to value.toString()) }
+        /** Replace a header, communicating intent to overwrite an existing value. */
+        fun replace(name: String, value: Any) { headers.add(name to value.toString()) }
+        /** Remove a header entirely from the request. */
+        fun remove(name: String) { removals.add(name) }
+
+        internal fun buildHeaders() = headers.toList()
+        internal fun buildRemovals() = removals.toList()
+    }
+
+    companion object {
+        operator fun invoke(block: Builder.() -> Unit): HeadersInterceptor {
+            val builder = Builder().apply(block)
+            return HeadersInterceptor(builder.buildHeaders(), builder.buildRemovals())
+        }
+    }
+
     override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
+        removals.forEach { k ->
+            ctx.request.headers.entries()
+                .filter { it.key.equals(k, ignoreCase = true) }
+                .forEach { ctx.request.headers.remove(it.key) }
+        }
         headers.forEach { (k, v) ->
             // Remove existing headers with the same
             // case-insensitive name first.
@@ -81,38 +125,6 @@ class RetryInterceptor(
         return call
     }
 }
-
-/**
- * Retries a failed request against a fallback URL.
- * Replaces the first occurrence of [primaryUrl] with [fallbackUrl] in the request URL.
- * @param shouldFallback called with each [HttpClientCall]; return true to use fallback.
- */
-/*class FallbackUrlInterceptor(
-    private val primaryUrl: String,
-    private val fallbackUrl: String,
-    private val shouldFallback: (HttpClientCall) -> Boolean = { !it.response.status.isSuccess() },
-) : Interceptor {
-    override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
-        try {
-            val call = ctx.proceed()
-            if (!shouldFallback(call)) return call
-        } catch (_: Exception) {
-        }
-
-        val newUrl = ctx.request.url.buildString().replaceFirst(primaryUrl, fallbackUrl)
-        val parsed = Url(newUrl)
-        return ctx.proceed {
-            url.protocol = parsed.protocol
-            url.host = parsed.host
-            url.port = parsed.port
-            url.pathSegments = parsed.pathSegments
-            url.parameters.clear()
-            parsed.parameters.forEach { key, values ->
-                values.forEach { url.parameters.append(key, it) }
-            }
-        }
-    }
-}*/
 
 /**
  * Logs request and response details.
