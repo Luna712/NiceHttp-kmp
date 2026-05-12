@@ -6,10 +6,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.cancel
-import io.ktor.utils.io.charsets.Charset
-import io.ktor.utils.io.charsets.Charsets
-import io.ktor.utils.io.readAtMostTo
-import kotlinx.io.Buffer
+import io.ktor.utils.io.readRemaining
 import kotlinx.io.readString
 
 /** Maximum byte count read by [NiceResponse.text] before an [IllegalStateException] is thrown. */
@@ -57,9 +54,7 @@ class NiceResponse(
                     "Called .text on a response with Content-Length $len > $MAX_TEXT_BYTES bytes. Use .textLarge instead."
                 )
             }
-            response.bodyAsChannel().readTextLimited(
-                charset = response.charset() ?: Charsets.UTF_8,
-            )
+            response.bodyAsChannel().readTextLimited()
         }
     }
 
@@ -96,9 +91,7 @@ class NiceResponse(
             )
         }
 
-        return response.bodyAsChannel().readTextLimited(
-            charset = response.charset() ?: Charsets.UTF_8,
-        )
+        return response.bodyAsChannel().readTextLimited()
     }
 
     /** Response body. Call .bytes() or .string() to read. Call .close() when done (no-op here). */
@@ -166,20 +159,13 @@ fun Headers.getRequestCookies(): Map<String, String> =
         ?.toMap()
         ?: emptyMap()
 
-private suspend fun ByteReadChannel.readTextLimited(
-    charset: Charset = Charsets.UTF_8,
-): String {
-    val buffer = Buffer()
-    while (!isClosedForRead) {
-        val before = buffer.size
-        readAtMostTo(buffer, 8192)
-        if (buffer.size == before) continue
-        if (buffer.size > MAX_TEXT_BYTES) {
-            cancel()
-            throw IllegalStateException(
-                "Response exceeded $MAX_TEXT_BYTES bytes. Use .textLarge instead."
-            )
-        }
+private suspend fun ByteReadChannel.readTextLimited(): String {
+    val buffer = readRemaining(MAX_TEXT_BYTES + 1)
+    if (buffer.size > MAX_TEXT_BYTES) {
+        cancel()
+        throw IllegalStateException(
+            "Response exceeded $MAX_TEXT_BYTES bytes. Use .textLarge instead."
+        )
     }
     return buffer.readString()
 }
