@@ -32,7 +32,7 @@ fun buildHeaders(
     referer: String?,
     cookie: Map<String, String>,
 ): Headers = Headers.build {
-    referer?.let { append(HttpHeaders.Referer, it) }
+    referer?.let { append(HttpHeaders.Referrer, it) }
     if (cookie.isNotEmpty()) {
         append(HttpHeaders.Cookie, cookie.entries.joinToString("; ") { "${it.key}=${it.value}" })
     }
