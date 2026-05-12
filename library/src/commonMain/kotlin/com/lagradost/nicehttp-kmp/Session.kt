@@ -14,7 +14,7 @@ import io.ktor.http.*
  * Example:
  * ```kotlin
  * val session = Session()
- * session.post("https://example.com/login", data = mapOf("user" to "alice", "pass" to "secret"))
+ * session.post("https://example.com/login") { data = mapOf("user" to "alice", "pass" to "secret") }
  * val profile = session.get("https://example.com/profile") // session cookie is sent automatically
  * ```
  */
