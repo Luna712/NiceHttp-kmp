@@ -11,6 +11,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 /**
  * Multiplatform HTTP client modelled after the original NiceHttp [Requests] class.
@@ -66,8 +67,7 @@ open class Requests(
         defaultReferer = defaultReferer,
         defaultData = defaultData,
         defaultCookies = defaultCookies,
-        defaultCacheTime = if (defaultCacheTime <= 0) Duration.ZERO
-            else defaultCacheTime.toLong().toDuration(defaultCacheTimeUnit.toDurationUnit()),
+        defaultCacheTime = defaultCacheTime.toLong().toDuration(defaultCacheTimeUnit.toDurationUnit()),
         defaultTimeout = if (defaultTimeOut <= 0L) Duration.ZERO
             else defaultTimeOut.seconds,
         responseParser = responseParser,
@@ -282,7 +282,7 @@ open class Requests(
     ) = custom(
         HttpMethod.Get, url, headers, referer, params, cookies,
         null, null, null, null, allowRedirects,
-        cacheTime.toDuration(cacheUnit.toDurationUnit()),
+        cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
         timeout.seconds,
         interceptor?.toInterceptor(), verify, responseParser,
     )
@@ -307,7 +307,7 @@ open class Requests(
     ) = custom(
         HttpMethod.Post, url, headers, referer, params, cookies,
         data, files, json, requestBody?.toRequestBody(), allowRedirects,
-        cacheTime.toDuration(cacheUnit.toDurationUnit()),
+        cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
         timeout.seconds,
         interceptor?.toInterceptor(), verify, responseParser,
     )
@@ -332,7 +332,7 @@ open class Requests(
     ) = custom(
         HttpMethod.Put, url, headers, referer, params, cookies,
         data, files, json, requestBody?.toRequestBody(), allowRedirects,
-        cacheTime.toDuration(cacheUnit.toDurationUnit()),
+        cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
         timeout.seconds,
         interceptor?.toInterceptor(), verify, responseParser,
     )
@@ -357,7 +357,7 @@ open class Requests(
     ) = custom(
         HttpMethod.Delete, url, headers, referer, params, cookies,
         data, files, json, requestBody?.toRequestBody(), allowRedirects,
-        cacheTime.toDuration(cacheUnit.toDurationUnit()),
+        cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
         timeout.seconds,
         interceptor?.toInterceptor(), verify, responseParser,
     )
@@ -378,7 +378,7 @@ open class Requests(
     ) = custom(
         HttpMethod.Head, url, headers, referer, params, cookies,
         null, null, null, null, allowRedirects,
-        cacheTime.toDuration(cacheUnit.toDurationUnit()),
+        cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
         timeout.seconds,
         interceptor?.toInterceptor(), verify, responseParser,
     )
@@ -403,7 +403,7 @@ open class Requests(
     ) = custom(
         HttpMethod.Patch, url, headers, referer, params, cookies,
         data, files, json, requestBody?.toRequestBody(), allowRedirects,
-        cacheTime.toDuration(cacheUnit.toDurationUnit()),
+        cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
         timeout.seconds,
         interceptor?.toInterceptor(), verify, responseParser,
     )
@@ -428,7 +428,7 @@ open class Requests(
     ) = custom(
         HttpMethod.Options, url, headers, referer, params, cookies,
         data, files, json, requestBody?.toRequestBody(), allowRedirects,
-        cacheTime.toDuration(cacheUnit.toDurationUnit()),
+        cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
         timeout.seconds,
         interceptor?.toInterceptor(), verify, responseParser,
     )
@@ -510,9 +510,3 @@ internal fun buildBody(
         else -> null
     }
 }
-
-private fun Int.toDuration(unit: DurationUnit): Duration =
-    if (this <= 0) Duration.ZERO else this.toLong().toDuration(unit)
-
-private fun Long.toDuration(unit: DurationUnit): Duration =
-    if (this <= 0L) Duration.ZERO else this.toDuration(unit)
