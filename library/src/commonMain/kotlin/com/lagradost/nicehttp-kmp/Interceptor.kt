@@ -115,35 +115,6 @@ class RetryInterceptor(
 }*/
 
 /**
- * Equivalent of original NiceHttp's CacheInterceptor.
- * Strips server cache headers and forces Ktor's [HttpCache] to serve from cache.
- * Applied automatically to every request in [Requests.custom].
- */
-object CacheInterceptor : Interceptor {
-    override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
-        // Try cache first
-        ctx.request.headers.apply {
-            remove("Cache-Control")
-            remove("Pragma")
-            append("Cache-Control", "only-if-cached, max-stale=${Int.MAX_VALUE}")
-        }
-
-        val cachedCall = ctx.proceed()
-
-        // 504 means no cache available - fall back to normal online request
-        if (cachedCall.response.status.value == 504) {
-            ctx.request.headers.apply {
-                remove("Cache-Control")
-                remove("Pragma")
-            }
-            return ctx.proceed()
-        }
-
-        return cachedCall
-    }
-}
-
-/**
  * Logs request and response details.
  * @param log logging function, defaults to [println].
  */
