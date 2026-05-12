@@ -9,6 +9,10 @@ import okhttp3.RequestBody as OkRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
 
+@Deprecated(
+    "OkHttp back-compat shim. Use the Ktor-based request builder instead.",
+    level = DeprecationLevel.WARNING,
+)
 fun requestCreator(
     method: String,
     url: String,
@@ -77,10 +81,4 @@ fun requestCreator(
             }
         }
         .build()
-}
-
-/** Restores verify=false SSL bypass for back-compat */
-fun OkHttpClient.Builder.applyVerify(verify: Boolean): OkHttpClient.Builder {
-    if (!verify) ignoreAllSSLErrors()
-    return this
 }
