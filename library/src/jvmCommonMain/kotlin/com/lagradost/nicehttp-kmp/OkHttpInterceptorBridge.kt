@@ -33,6 +33,19 @@ import okio.Buffer
  *   Use when passing a KMP interceptor into raw OkHttp client config.
  *   The suspend chain is bridged via runBlocking.
  */
+
+/**
+ * Signals that this interceptor has already been migrated to the NiceHttp KMP [Interceptor] type
+ * and no longer needs to be converted. Remove the [toNiceInterceptor] call.
+ */
+@Deprecated(
+    "This interceptor has already been migrated to the NiceHttp KMP Interceptor. Remove the .toNiceInterceptor() call.",
+    ReplaceWith("this"),
+    level = DeprecationLevel.ERROR,
+)
+fun Interceptor.toNiceInterceptor(): Interceptor = this
+
+// TODO: Deprecate
 fun okhttp3.Interceptor.toNiceInterceptor(): Interceptor = Interceptor { ctx ->
     val okRequest = ctx.request.toOkHttpRequest()
 
@@ -95,6 +108,7 @@ fun okhttp3.Interceptor.toNiceInterceptor(): Interceptor = Interceptor { ctx ->
     okResponse.toKtorCall(ctx.request)
 }
 
+// TODO: Deprecate
 fun Interceptor.toOkHttpInterceptor(): okhttp3.Interceptor = okhttp3.Interceptor { chain ->
     val ktorBuilder = chain.request().toKtorRequestBuilder()
     val call = runBlocking {
