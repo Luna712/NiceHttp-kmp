@@ -438,6 +438,12 @@ open class Requests(
 }
 
 private val MUST_HAVE_BODY  = setOf(HttpMethod.Post, HttpMethod.Put)
+private val NO_BODY_METHODS = setOf(
+    HttpMethod.Get,
+    HttpMethod.Head,
+    HttpMethod.Options,
+    HttpMethod.Trace,
+)
 
 /**
  * Constructs the [RequestBody] for the request, following the same priority rules
@@ -458,7 +464,7 @@ internal fun buildBody(
     requestBody: RequestBody?,
     responseParser: ResponseParser?,
 ): RequestBody? {
-    if (!method.supportsRequestBody) return null
+    if (method in NO_BODY_METHODS) return null
     if (requestBody != null) return requestBody
 
     return when {
