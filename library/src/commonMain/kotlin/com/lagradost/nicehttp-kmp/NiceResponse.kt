@@ -166,8 +166,7 @@ fun Headers.getRequestCookies(): Map<String, String> =
         ?.toMap()
         ?: emptyMap()
 
-
-private suspend fun ByteReadChannel.readTextLimited(
+suspend fun ByteReadChannel.readTextLimited(
     charset: Charset = Charsets.UTF_8,
     maxBytes: Long = MAX_TEXT_BYTES,
 ): String {
@@ -176,7 +175,8 @@ private suspend fun ByteReadChannel.readTextLimited(
     val chunk = ByteArray(8192)
     while (!isClosedForRead) {
         val n = readAvailable(chunk)
-        if (n <= 0) continue
+        if (n < 0) break
+        if (n == 0) continue
         bytesRead += n
         if (bytesRead > maxBytes) {
             cancel()
