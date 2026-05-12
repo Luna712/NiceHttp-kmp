@@ -48,8 +48,15 @@ open class Requests(
 ) {
     /**
      * Back-compatible constructor accepting the original NiceHttp parameter types.
-     * TODO: Deprecate this
+     * Use the primary constructor with [Duration] and [Interceptor] directly instead.
      */
+    @Deprecated(
+        "Use the primary constructor with Duration and Interceptor instead. " +
+            "Replace defaultCacheTime/defaultCacheTimeUnit with a Duration (e.g. defaultCacheTime.minutes), " +
+            "defaultTimeOut with a Duration (e.g. defaultTimeOut.seconds), " +
+            "and OkHttp Interceptor with Interceptor from NiceHttp.",
+        level = DeprecationLevel.WARNING,
+    )
     constructor(
         baseClient: HttpClient = defaultHttpClient(),
         defaultHeaders: Map<String, String> = mapOf("User-Agent" to "NiceHttp"),
@@ -266,6 +273,13 @@ open class Requests(
         )
     }
 
+    @Deprecated(
+        "Use get(url) { } with a RequestBuilder block instead. " +
+            "Replace cacheTime/cacheUnit with cacheTime = n.minutes (or other Duration), " +
+            "timeout with timeout = n.seconds, and OkHttp Interceptor with Interceptor " +
+            "from NiceHttp.",
+        level = DeprecationLevel.WARNING,
+    )
     suspend fun get(
         url: String,
         headers: Map<String, String> = emptyMap(),
@@ -287,6 +301,13 @@ open class Requests(
         interceptor?.toInterceptor(), verify, responseParser,
     )
 
+    @Deprecated(
+        "Use post(url) { } with a RequestBuilder block instead. " +
+            "Replace cacheTime/cacheUnit with cacheTime = n.minutes (or other Duration), " +
+            "timeout with timeout = n.seconds, OkHttp Interceptor with Interceptor " +
+            "from NiceHttp, and OkHttp RequestBody with RequestBody from NiceHttp.",
+        level = DeprecationLevel.WARNING,
+    )
     suspend fun post(
         url: String,
         headers: Map<String, String> = emptyMap(),
@@ -312,6 +333,13 @@ open class Requests(
         interceptor?.toInterceptor(), verify, responseParser,
     )
 
+    @Deprecated(
+        "Use put(url) { } with a RequestBuilder block instead. " +
+            "Replace cacheTime/cacheUnit with cacheTime = n.minutes (or other Duration), " +
+            "timeout with timeout = n.seconds, OkHttp Interceptor with Interceptor " +
+            "from NiceHttp, and OkHttp RequestBody with RequestBody from NiceHttp.",
+        level = DeprecationLevel.WARNING,
+    )
     suspend fun put(
         url: String,
         headers: Map<String, String> = emptyMap(),
@@ -337,6 +365,13 @@ open class Requests(
         interceptor?.toInterceptor(), verify, responseParser,
     )
 
+    @Deprecated(
+        "Use delete(url) { } with a RequestBuilder block instead. " +
+            "Replace cacheTime/cacheUnit with cacheTime = n.minutes (or other Duration), " +
+            "timeout with timeout = n.seconds, OkHttp Interceptor with Interceptor " +
+            "from NiceHttp, and OkHttp RequestBody with RequestBody from NiceHttp.",
+        level = DeprecationLevel.WARNING,
+    )
     suspend fun delete(
         url: String,
         headers: Map<String, String> = emptyMap(),
@@ -362,6 +397,13 @@ open class Requests(
         interceptor?.toInterceptor(), verify, responseParser,
     )
 
+    @Deprecated(
+        "Use head(url) { } with a RequestBuilder block instead. " +
+            "Replace cacheTime/cacheUnit with cacheTime = n.minutes (or other Duration), " +
+            "timeout with timeout = n.seconds, and OkHttp Interceptor with Interceptor " +
+            "from NiceHttp.",
+        level = DeprecationLevel.WARNING,
+    )
     suspend fun head(
         url: String,
         headers: Map<String, String> = emptyMap(),
@@ -383,6 +425,13 @@ open class Requests(
         interceptor?.toInterceptor(), verify, responseParser,
     )
 
+    @Deprecated(
+        "Use patch(url) { } with a RequestBuilder block instead. " +
+            "Replace cacheTime/cacheUnit with cacheTime = n.minutes (or other Duration), " +
+            "timeout with timeout = n.seconds, OkHttp Interceptor with Interceptor " +
+            "From NiceHttp, and OkHttp RequestBody with RequestBody from NiceHttp.",
+        level = DeprecationLevel.WARNING,
+    )
     suspend fun patch(
         url: String,
         headers: Map<String, String> = emptyMap(),
@@ -408,6 +457,13 @@ open class Requests(
         interceptor?.toInterceptor(), verify, responseParser,
     )
 
+    @Deprecated(
+        "Use options(url) { } with a RequestBuilder block instead. " +
+            "Replace cacheTime/cacheUnit with cacheTime = n.minutes (or other Duration), " +
+            "timeout with timeout = n.seconds, OkHttp Interceptor with Interceptor " +
+            "from NiceHttp, and OkHttp RequestBody with RequestBody from NiceHttp.",
+        level = DeprecationLevel.WARNING,
+    )
     suspend fun options(
         url: String,
         headers: Map<String, String> = emptyMap(),
