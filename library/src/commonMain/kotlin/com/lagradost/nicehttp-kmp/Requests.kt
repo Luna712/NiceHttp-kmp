@@ -97,7 +97,7 @@ open class Requests(
     }
 
     /**
-     * Generic request method. All method shortcuts delegate here.
+     * Make requests and return NiceResponse. All method shortcuts delegate here.
      *
      * @param method         HTTP method from [HttpMethod].
      * @param url            Target URL.
@@ -119,7 +119,7 @@ open class Requests(
      *                       Silently ignored on JS/WASM.
      * @param responseParser Overrides [this.responseParser] for this call.
      */
-    internal open suspend fun custom(
+    private suspend fun request(
         method: HttpMethod,
         url: String,
         headers: Map<String, String> = emptyMap(),
@@ -194,12 +194,38 @@ open class Requests(
         return NiceResponse(response, responseParser)
     }
 
+    @Deprecated(
+        "Use one of the named builder methods instead: get(url) { }, post(url) { }, put(url) { }, etc.",
+        level = DeprecationLevel.WARNING,
+    )
+    open suspend fun custom(
+        method: HttpMethod,
+        url: String,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        params: Map<String, String> = emptyMap(),
+        cookies: Map<String, String> = emptyMap(),
+        data: Map<String, String>? = defaultData,
+        files: List<NiceFile>? = null,
+        json: Any? = null,
+        requestBody: RequestBody? = null,
+        allowRedirects: Boolean = true,
+        cacheTime: Duration = defaultCacheTime,
+        timeout: Duration = defaultTimeout,
+        interceptor: Interceptor? = null,
+        verify: Boolean = true,
+        responseParser: ResponseParser? = this.responseParser,
+    ): NiceResponse = request(
+        method, url, headers, referer, params, cookies, data, files, json, requestBody,
+        allowRedirects, cacheTime, timeout, interceptor, verify, responseParser,
+    )
+
     suspend fun get(
         url: String,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
         val builder = RequestBuilder(this).apply(block)
-        return custom(
+        return request(
             HttpMethod.Get, url, builder.headers, builder.referer, builder.params, builder.cookies,
             null, null, null, null, builder.allowRedirects, builder.cacheTime, builder.timeout,
             builder.interceptor, builder.verify, builder.responseParser,
@@ -211,7 +237,7 @@ open class Requests(
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
         val builder = RequestBuilder(this).apply(block)
-        return custom(
+        return request(
             HttpMethod.Post, url, builder.headers, builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
             builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
@@ -224,7 +250,7 @@ open class Requests(
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
         val builder = RequestBuilder(this).apply(block)
-        return custom(
+        return request(
             HttpMethod.Put, url, builder.headers, builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
             builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
@@ -237,7 +263,7 @@ open class Requests(
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
         val builder = RequestBuilder(this).apply(block)
-        return custom(
+        return request(
             HttpMethod.Delete, url, builder.headers, builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
             builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
@@ -250,7 +276,7 @@ open class Requests(
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
         val builder = RequestBuilder(this).apply(block)
-        return custom(
+        return request(
             HttpMethod.Head, url, builder.headers, builder.referer, builder.params, builder.cookies,
             null, null, null, null, builder.allowRedirects, builder.cacheTime, builder.timeout,
             builder.interceptor, builder.verify, builder.responseParser,
@@ -262,7 +288,7 @@ open class Requests(
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
         val builder = RequestBuilder(this).apply(block)
-        return custom(
+        return request(
             HttpMethod.Patch, url, builder.headers, builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
             builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
@@ -275,7 +301,7 @@ open class Requests(
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
         val builder = RequestBuilder(this).apply(block)
-        return custom(
+        return request(
             HttpMethod.Options, url, builder.headers, builder.referer, builder.params, builder.cookies,
             null, null, null, null, builder.allowRedirects, builder.cacheTime, builder.timeout,
             builder.interceptor, builder.verify, builder.responseParser,
@@ -438,7 +464,7 @@ open class Requests(
         "Use patch(url) { } with a RequestBuilder block instead. " +
             "Replace cacheTime/cacheUnit with cacheTime = n.minutes (or other Duration), " +
             "timeout with timeout = n.seconds, OkHttp Interceptor with Interceptor " +
-            "From NiceHttp, and OkHttp RequestBody with RequestBody from NiceHttp.",
+            "from NiceHttp, and OkHttp RequestBody with RequestBody from NiceHttp.",
         level = DeprecationLevel.WARNING,
     )
     suspend fun patch(
