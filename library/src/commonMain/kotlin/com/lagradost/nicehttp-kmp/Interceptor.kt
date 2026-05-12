@@ -108,6 +108,38 @@ class HeadersInterceptor(
 }
 
 /**
+ * Retries a failed request against a fallback URL.
+ * Replaces the first occurrence of [primaryUrl] with [fallbackUrl] in the request URL.
+ * @param shouldFallback called with each [HttpClientCall]; return true to use fallback.
+ */
+/*class FallbackUrlInterceptor(
+    private val primaryUrl: String,
+    private val fallbackUrl: String,
+    private val shouldFallback: (HttpClientCall) -> Boolean = { !it.response.status.isSuccess() },
+) : Interceptor {
+    override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
+        try {
+            val call = ctx.proceed()
+            if (!shouldFallback(call)) return call
+        } catch (_: Exception) {
+        }
+
+        val newUrl = ctx.request.url.buildString().replaceFirst(primaryUrl, fallbackUrl)
+        val parsed = Url(newUrl)
+        return ctx.proceed {
+            url.protocol = parsed.protocol
+            url.host = parsed.host
+            url.port = parsed.port
+            url.pathSegments = parsed.pathSegments
+            url.parameters.clear()
+            parsed.parameters.forEach { key, values ->
+                values.forEach { url.parameters.append(key, it) }
+            }
+        }
+    }
+}*/
+
+/**
  * Retries failed requests up to [maxRetries] times.
  * @param shouldRetry called with each [HttpClientCall]; return true to retry.
  */
