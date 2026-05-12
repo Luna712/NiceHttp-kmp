@@ -6,6 +6,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.cancel
+import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.readBuffer
 import kotlinx.io.readString
 
@@ -54,7 +55,9 @@ class NiceResponse(
                     "Called .text on a response with Content-Length $len > $MAX_TEXT_BYTES bytes. Use .textLarge instead."
                 )
             }
-            response.bodyAsChannel().readTextLimited()
+            response.bodyAsChannel().readTextLimited(
+                response.charset() ?: Charsets.UTF_8
+            )
         }
     }
 
@@ -91,7 +94,9 @@ class NiceResponse(
             )
         }
 
-        return response.bodyAsChannel().readTextLimited()
+        return response.bodyAsChannel().readTextLimited(
+            response.charset() ?: Charsets.UTF_8
+        )
     }
 
     /** Response body. Call .bytes() or .string() to read. Call .close() when done (no-op here). */
@@ -159,7 +164,7 @@ fun Headers.getRequestCookies(): Map<String, String> =
         ?.toMap()
         ?: emptyMap()
 
-private suspend fun ByteReadChannel.readTextLimited(): String {
+private suspend fun ByteReadChannel.readTextLimited(charset: Charset): String {
     val buffer = readBuffer((MAX_TEXT_BYTES + 1).toInt())
     if (buffer.size > MAX_TEXT_BYTES) {
         cancel()
@@ -167,5 +172,5 @@ private suspend fun ByteReadChannel.readTextLimited(): String {
             "Response exceeded $MAX_TEXT_BYTES bytes. Use .textLarge instead."
         )
     }
-    return buffer.readString()
+    return charset.newDecoder().decode(buffer)
 }
