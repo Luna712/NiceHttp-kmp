@@ -2,6 +2,7 @@ package com.lagradost.nicehttp
 
 import io.ktor.client.*
 import io.ktor.client.plugins.cookies.*
+import io.ktor.http.*
 
 /**
  * A [Requests] subclass that automatically persists cookies across all requests,
@@ -19,7 +20,7 @@ import io.ktor.client.plugins.cookies.*
  */
 class Session(
     client: HttpClient = defaultHttpClient(),
-    defaultHeaders: Map<String, String> = mapOf("user-agent" to "NiceHttp"),
+    defaultHeaders: Map<String, String> = mapOf(HttpHeaders.UserAgent to "NiceHttp"),
 ) : Requests(
     baseClient = client.config {
         install(HttpCookies) {
