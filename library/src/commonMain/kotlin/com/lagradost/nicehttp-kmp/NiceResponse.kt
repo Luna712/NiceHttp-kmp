@@ -5,13 +5,12 @@ import com.fleeksoft.ksoup.nodes.Document
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.core.BytePacketBuilder
-import io.ktor.utils.io.core.readText
-import io.ktor.utils.io.core.release
-import io.ktor.utils.io.readAvailable
 import io.ktor.utils.io.cancel
 import io.ktor.utils.io.charsets.Charset
 import io.ktor.utils.io.charsets.Charsets
+import io.ktor.utils.io.readAvailable
+import kotlinx.io.Buffer
+import kotlinx.io.readString
 
 /** Maximum byte count read by [NiceResponse.text] before an [IllegalStateException] is thrown. */
 const val MAX_TEXT_BYTES: Long = 5_000_000L // 5 MB
@@ -172,7 +171,7 @@ private suspend fun ByteReadChannel.readTextLimited(
     charset: Charset = Charsets.UTF_8,
     maxBytes: Long = MAX_TEXT_BYTES,
 ): String {
-    val buffer = BytePacketBuilder()
+    val buffer = Buffer()
     var bytesRead = 0L
     val chunk = ByteArray(8192)
     while (!isClosedForRead) {
@@ -180,13 +179,12 @@ private suspend fun ByteReadChannel.readTextLimited(
         if (n <= 0) continue
         bytesRead += n
         if (bytesRead > maxBytes) {
-            buffer.release()
             cancel()
             throw IllegalStateException(
                 "Response exceeded $maxBytes bytes. Use .textLarge instead."
             )
         }
-        buffer.writeFully(chunk, 0, n)
+        buffer.write(chunk, 0, n)
     }
-    return buffer.build().readText(charset)
+    return buffer.readString()
 }
