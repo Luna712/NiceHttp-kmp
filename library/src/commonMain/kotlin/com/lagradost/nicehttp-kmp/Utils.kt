@@ -34,9 +34,9 @@ fun buildHeaders(
     referer: String?,
     cookie: Map<String, String>,
 ): Headers = Headers.build {
-    referer?.let { append("referer", it) }
+    referer?.let { append(HttpHeaders.Referer, it) }
     if (cookie.isNotEmpty()) {
-        append("Cookie", cookie.entries.joinToString("; ") { "${it.key}=${it.value}" })
+        append(HttpHeaders.Cookie, cookie.entries.joinToString("; ") { "${it.key}=${it.value}" })
     }
     headers.forEach { (k, v) -> append(k, v) }
 }
@@ -47,7 +47,7 @@ fun buildHeaders(
  * so no [Requests] instance is needed.
  */
 class StandaloneRequestBuilder {
-    var headers: Map<String, String> = mapOf("User-Agent" to "NiceHttp")
+    var headers: Map<String, String> = mapOf(HttpHeaders.UserAgent to "NiceHttp")
     var referer: String? = null
     var cookies: Map<String, String> = emptyMap()
     var data: Map<String, String>? = null
@@ -91,7 +91,7 @@ fun requestCreator(
         if (builder.cacheTime > Duration.ZERO) {
             header(
                 HttpHeaders.CacheControl,
-                CacheControl.MaxAge(builder.cacheTime.inWholeSeconds)
+                CacheControl.MaxAge(builder.cacheTime.inWholeSeconds.toInt())
             )
         }
         if (builder.timeout > Duration.ZERO) {
