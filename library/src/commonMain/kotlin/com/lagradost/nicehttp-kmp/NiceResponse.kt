@@ -8,7 +8,6 @@ import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.readText
 import kotlinx.io.Buffer
-import kotlinx.io.transferFrom
 
 /** Maximum byte count read by [NiceResponse.text] before an [IllegalStateException] is thrown. */
 const val MAX_TEXT_BYTES: Long = 5_000_000L // 5 MB
