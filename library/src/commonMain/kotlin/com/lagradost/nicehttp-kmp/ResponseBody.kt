@@ -11,8 +11,8 @@ import okio.BufferedSource
  *  [bytes], [string], [contentLength], [byteStream], and [source] suspend functions.
  *  The channel can then be read lazily on demand, avoiding the eager copy done here.
  *
- * TODO: Deprecate source() and replace with a new method that returns a [kotlinx.io.Source].
- * This would make it more compatible with the default ktor API.
+ * TODO: Deprecate [source] and replace with a new method that returns a [kotlinx.io.Source].
+ *  This would make it more compatible with the default ktor API.
  *
  * We only keep the current methods for back-compat with OkHttp. 
  */
