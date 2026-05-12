@@ -323,7 +323,7 @@ open class Requests(
         interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ) = custom(
+    ) = request(
         HttpMethod.Get, url, headers, referer, params, cookies,
         null, null, null, null, allowRedirects,
         cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
@@ -355,7 +355,7 @@ open class Requests(
         interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ) = custom(
+    ) = request(
         HttpMethod.Post, url, headers, referer, params, cookies,
         data, files, json, requestBody?.toRequestBody(), allowRedirects,
         cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
@@ -387,7 +387,7 @@ open class Requests(
         interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ) = custom(
+    ) = request(
         HttpMethod.Put, url, headers, referer, params, cookies,
         data, files, json, requestBody?.toRequestBody(), allowRedirects,
         cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
@@ -419,7 +419,7 @@ open class Requests(
         interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ) = custom(
+    ) = request(
         HttpMethod.Delete, url, headers, referer, params, cookies,
         data, files, json, requestBody?.toRequestBody(), allowRedirects,
         cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
@@ -447,7 +447,7 @@ open class Requests(
         interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ) = custom(
+    ) = request(
         HttpMethod.Head, url, headers, referer, params, cookies,
         null, null, null, null, allowRedirects,
         cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
@@ -479,7 +479,7 @@ open class Requests(
         interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ) = custom(
+    ) = request(
         HttpMethod.Patch, url, headers, referer, params, cookies,
         data, files, json, requestBody?.toRequestBody(), allowRedirects,
         cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
@@ -511,7 +511,7 @@ open class Requests(
         interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ) = custom(
+    ) = request(
         HttpMethod.Options, url, headers, referer, params, cookies,
         data, files, json, requestBody?.toRequestBody(), allowRedirects,
         cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
