@@ -4,10 +4,8 @@ import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.nodes.Document
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.cancel
+import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
-import io.ktor.utils.io.readBuffer
 import kotlinx.io.readString
 
 /** Maximum byte count read by [NiceResponse.text] before an [IllegalStateException] is thrown. */
