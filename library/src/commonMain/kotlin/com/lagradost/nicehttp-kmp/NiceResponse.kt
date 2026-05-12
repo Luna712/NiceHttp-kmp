@@ -77,6 +77,7 @@ class NiceResponse(
             "Migrate call sites to use the ksoup API.",
         ReplaceWith("document()"),
     )
+    @Suppress("DEPRECATION")
     val document: NiceDocument by lazy { parseDocument(text) }
 
     @Deprecated(
@@ -86,6 +87,7 @@ class NiceResponse(
         ReplaceWith("documentLarge()"),
         DeprecationLevel.WARNING,
     )
+    @Suppress("DEPRECATION")
     val documentLarge: NiceDocument by lazy { parseDocument(textLarge) }
 
     @Deprecated(
