@@ -4,6 +4,14 @@ import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.nodes.Document
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.core.BytePacketBuilder
+import io.ktor.utils.io.core.readText
+import io.ktor.utils.io.core.release
+import io.ktor.utils.io.readAvailable
+import io.ktor.utils.io.cancel
+import io.ktor.utils.io.charsets.Charset
+import io.ktor.utils.io.charsets.Charsets
 
 /** Maximum byte count read by [NiceResponse.text] before an [IllegalStateException] is thrown. */
 const val MAX_TEXT_BYTES: Long = 5_000_000L // 5 MB
@@ -44,13 +52,15 @@ class NiceResponse(
     /** Reads the body as a string. Cached after first call. */
     val text: String by lazy {
         runBlockingCompat {
-            val raw = response.bodyAsText()
-            if (raw.length.toLong() > MAX_TEXT_BYTES) {
+            val len = size
+            if (len != null && len > MAX_TEXT_BYTES) {
                 throw IllegalStateException(
-                    "Called .text on a response exceeding $MAX_TEXT_BYTES bytes. Use .textLarge instead."
+                    "Called .text on a response with Content-Length $len > $MAX_TEXT_BYTES bytes. Use .textLarge instead."
                 )
             }
-            raw
+            response.bodyAsChannel().readTextLimited(
+                charset = response.charset() ?: Charsets.UTF_8,
+            )
         }
     }
 
@@ -86,13 +96,10 @@ class NiceResponse(
                     "Use .textLarge() if you intentionally want to read a large body."
             )
         }
-        val raw = response.bodyAsText()
-        if (raw.length.toLong() > MAX_TEXT_BYTES) {
-            throw IllegalStateException(
-                "Called .text() and the body exceeded $MAX_TEXT_BYTES bytes. Use .textLarge()."
-            )
-        }
-        return raw
+
+        return response.bodyAsChannel().readTextLimited(
+            charset = response.charset() ?: Charsets.UTF_8,
+        )
     }
 
     /** Response body. Call .bytes() or .string() to read. Call .close() when done (no-op here). */
@@ -159,3 +166,27 @@ fun Headers.getRequestCookies(): Map<String, String> =
         }
         ?.toMap()
         ?: emptyMap()
+
+
+private suspend fun ByteReadChannel.readTextLimited(
+    charset: Charset = Charsets.UTF_8,
+    maxBytes: Long = MAX_TEXT_BYTES,
+): String {
+    val buffer = BytePacketBuilder()
+    var bytesRead = 0L
+    val chunk = ByteArray(8192)
+    while (!isClosedForRead) {
+        val n = readAvailable(chunk)
+        if (n <= 0) continue
+        bytesRead += n
+        if (bytesRead > maxBytes) {
+            buffer.release()
+            cancel()
+            throw IllegalStateException(
+                "Response exceeded $maxBytes bytes. Use .textLarge instead."
+            )
+        }
+        buffer.writeFully(chunk, 0, n)
+    }
+    return buffer.build().readText(charset)
+}
