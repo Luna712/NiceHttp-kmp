@@ -8,7 +8,7 @@ import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.cancel
 import io.ktor.utils.io.charsets.Charset
 import io.ktor.utils.io.charsets.Charsets
-import io.ktor.utils.io.readAvailable
+import io.ktor.utils.io.readAtMostTo
 import kotlinx.io.Buffer
 import kotlinx.io.readString
 
@@ -170,20 +170,16 @@ private suspend fun ByteReadChannel.readTextLimited(
     charset: Charset = Charsets.UTF_8,
 ): String {
     val buffer = Buffer()
-    var bytesRead = 0L
-    val chunk = ByteArray(8192)
     while (!isClosedForRead) {
-        val n = readAvailable(chunk)
-        if (n < 0) break
-        if (n == 0) continue
-        bytesRead += n
-        if (bytesRead > MAX_TEXT_BYTES) {
+        val before = buffer.size
+        readAtMostTo(buffer, 8192)
+        if (buffer.size == before) continue
+        if (buffer.size > MAX_TEXT_BYTES) {
             cancel()
             throw IllegalStateException(
                 "Response exceeded $MAX_TEXT_BYTES bytes. Use .textLarge instead."
             )
         }
-        buffer.write(chunk, 0, n)
     }
     return buffer.readString()
 }
