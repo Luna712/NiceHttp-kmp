@@ -37,7 +37,7 @@ import kotlin.time.toDuration
  */
 open class Requests(
     var baseClient: HttpClient = defaultHttpClient(),
-    var defaultHeaders: Map<String, String> = mapOf("User-Agent" to "NiceHttp"),
+    var defaultHeaders: Map<String, String> = mapOf(HttpHeaders.UserAgent to "NiceHttp"),
     var defaultReferer: String? = null,
     var defaultData: Map<String, String> = emptyMap(),
     var defaultCookies: Map<String, String> = emptyMap(),
@@ -59,7 +59,7 @@ open class Requests(
     )
     constructor(
         baseClient: HttpClient = defaultHttpClient(),
-        defaultHeaders: Map<String, String> = mapOf("User-Agent" to "NiceHttp"),
+        defaultHeaders: Map<String, String> = mapOf(HttpHeaders.UserAgent to "NiceHttp"),
         defaultReferer: String? = null,
         defaultData: Map<String, String> = emptyMap(),
         defaultCookies: Map<String, String> = emptyMap(),
@@ -149,11 +149,20 @@ open class Requests(
         val allInterceptors = interceptors.toMutableList()
         allInterceptors.add(0, LoggingInterceptor())
         if (cacheTime > Duration.ZERO) {
-            allInterceptors.add(0, HeadersInterceptor(
-                mapOf("Cache-Control" to "max-age=${cacheTime.inWholeSeconds}")
-            ))
+            allInterceptors.add(0, HeadersInterceptor {
+                remove(HttpHeaders.Pragma)
+                header(
+                    HttpHeaders.CacheControl,
+                    CacheControl.MaxAge(cacheTime.inWholeSeconds.toInt())
+                )
+            })
+        } else {
+            allInterceptors.add(0, HeadersInterceptor {
+                remove(HttpHeaders.Pragma)
+                header(HttpHeaders.CacheControl, CacheControl.NoCache)
+            })
         }
-        // allInterceptors.add(0, CacheInterceptor)
+
         if (interceptor != null) allInterceptors.add(interceptor)
 
         // Pick base client
