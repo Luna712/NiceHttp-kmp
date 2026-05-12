@@ -122,20 +122,20 @@ open class Requests(
     private suspend fun request(
         method: HttpMethod,
         url: String,
-        headers: Map<String, String> = emptyMap(),
-        referer: String? = null,
-        params: Map<String, String> = emptyMap(),
-        cookies: Map<String, String> = emptyMap(),
-        data: Map<String, String>? = defaultData,
-        files: List<NiceFile>? = null,
-        json: Any? = null,
-        requestBody: RequestBody? = null,
-        allowRedirects: Boolean = true,
+        headers: Map<String, String>,
+        referer: String?,
+        params: Map<String, String>,
+        cookies: Map<String, String>,
+        data: Map<String, String>?,
+        files: List<NiceFile>?,
+        json: Any?,
+        requestBody: RequestBody?,
+        allowRedirects: Boolean,
         cacheTime: Duration = defaultCacheTime,
         timeout: Duration = defaultTimeout,
-        interceptor: Interceptor? = null,
-        verify: Boolean = true,
-        responseParser: ResponseParser? = this.responseParser,
+        interceptor: Interceptor?,
+        verify: Boolean,
+        responseParser: ResponseParser?,
     ): NiceResponse {
         val finalUrl = addParamsToUrl(url, params)
         val finalHeaders = buildHeaders(
@@ -155,11 +155,6 @@ open class Requests(
                     HttpHeaders.CacheControl,
                     CacheControl.MaxAge(cacheTime.inWholeSeconds.toInt())
                 )
-            })
-        } else {
-            allInterceptors.add(0, HeadersInterceptor {
-                remove(HttpHeaders.Pragma)
-                header(HttpHeaders.CacheControl, CacheControl.NoCache)
             })
         }
 
