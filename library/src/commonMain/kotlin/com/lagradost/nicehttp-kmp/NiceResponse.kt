@@ -42,10 +42,14 @@ class NiceResponse(
     val cookies: Map<String, String> get() = response.headers.getSetCookies()
 
     /**
-     * Compatibility layers for old NiceHttp
+     * Compatibility layers for old NiceHttp (all are deprecated)
      */
 
-    /** Reads the body as a string. Cached after first call. */
+    @Deprecated(
+        "Use suspend fun text() instead.",
+        ReplaceWith("text()"),
+        DeprecationLevel.WARNING,
+    )
     val text: String by lazy {
         runBlockingCompat {
             val len = size
@@ -60,24 +64,53 @@ class NiceResponse(
         }
     }
 
-    /** Same as [text] but without the size guard. Cached after first call. */
+    @Deprecated(
+        "Use suspend fun textLarge() instead.",
+        ReplaceWith("textLarge()"),
+        DeprecationLevel.WARNING,
+    )
     val textLarge: String by lazy { runBlockingCompat { response.bodyAsText() } }
 
+    @Deprecated(
+        "Returns a jsoup Document on Android/JVM (for back-compat) but ksoup on other platforms. " +
+            "Use suspend fun document() which always returns a ksoup Document. " +
+            "Migrate call sites to use the ksoup API.",
+        ReplaceWith("document()"),
+    )
     val document: NiceDocument by lazy { parseDocument(text) }
+
+    @Deprecated(
+        "Returns a jsoup Document on Android/JVM (for back-compat) but ksoup on other platforms. " +
+            "Use suspend fun documentLarge() which always returns a ksoup Document. " +
+            "Migrate call sites to use the ksoup API.",
+        ReplaceWith("documentLarge()"),
+        DeprecationLevel.WARNING,
+    )
     val documentLarge: NiceDocument by lazy { parseDocument(textLarge) }
 
-    val ksoupDocument: Document by lazy { Ksoup.parse(text) }
-    val ksoupDocumentLarge: Document by lazy { Ksoup.parse(textLarge) }
-
-    /** Response body. Call .bytes() or .string() to read. Call .close() when done (no-op here). */
+    @Deprecated(
+        "Use suspend fun body() instead.",
+        ReplaceWith("body()"),
+        DeprecationLevel.WARNING,
+    )
     val body: ResponseBody by lazy {
         ResponseBody(runBlockingCompat { response.readRawBytes() })
     }
 
     /** Alias for [NiceResponse] for source compatibility with original NiceHttp */
+    @Deprecated(
+        "OkHttp compatibility shim, no longer needed. Use the NiceResponse directly.",
+        ReplaceWith("this"),
+        DeprecationLevel.WARNING,
+    )
     val okhttpResponse: NiceResponse get() = this
 
     /** Returns the value of the header with the given [name], or null if absent. */
+    @Deprecated(
+        "Exists for back-compat. Use headers[name] directly.",
+        ReplaceWith("headers[name]"),
+        DeprecationLevel.WARNING,
+    )
     fun header(name: String): String? = headers[name]
 
     /**
