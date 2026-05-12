@@ -6,7 +6,6 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
-import kotlinx.io.readString
 
 /** Maximum byte count read by [NiceResponse.text] before an [IllegalStateException] is thrown. */
 const val MAX_TEXT_BYTES: Long = 5_000_000L // 5 MB
@@ -162,13 +161,28 @@ fun Headers.getRequestCookies(): Map<String, String> =
         ?.toMap()
         ?: emptyMap()
 
+@OptIn(InternalAPI::class) // readBuffer property is internal but no public API can get a Source (needed for decoder) without an intermediate allocation
+private suspend fun ByteReadChannel.readTo(dst: StringBuilder, charset: Charset, max: Long): Long {
+    var consumed = 0L
+    val decoder = charset.newDecoder()
+    while (!isClosedForRead) {
+        awaitContent()
+        val before = dst.length
+        decoder.decode(readBuffer, dst, (max - consumed).toInt())
+        consumed += dst.length - before
+        if (consumed >= max) break
+    }
+    return consumed
+}
+
 private suspend fun ByteReadChannel.readTextLimited(charset: Charset): String {
-    val buffer = readBuffer((MAX_TEXT_BYTES + 1).toInt())
-    if (buffer.size > MAX_TEXT_BYTES) {
+    val builder = StringBuilder()
+    val read = readTo(builder, charset, MAX_TEXT_BYTES)
+    if (read >= MAX_TEXT_BYTES) {
         cancel()
         throw IllegalStateException(
             "Response exceeded $MAX_TEXT_BYTES bytes. Use .textLarge instead."
         )
     }
-    return charset.newDecoder().decode(buffer)
+    return builder.toString()
 }
