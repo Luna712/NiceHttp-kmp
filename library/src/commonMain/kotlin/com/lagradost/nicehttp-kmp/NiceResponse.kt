@@ -6,8 +6,6 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
-import io.ktor.utils.io.core.readText
-import kotlinx.io.Buffer
 
 /** Maximum byte count read by [NiceResponse.text] before an [IllegalStateException] is thrown. */
 const val MAX_TEXT_BYTES: Long = 5_000_000L // 5 MB
@@ -58,6 +56,7 @@ class NiceResponse(
                     "Called .text on a response with Content-Length $len > $MAX_TEXT_BYTES bytes. Use .textLarge instead."
                 )
             }
+
             response.bodyAsChannel().readTextLimited(
                 response.charset() ?: Charsets.UTF_8
             )
@@ -198,18 +197,31 @@ fun Headers.getRequestCookies(): Map<String, String> =
         ?.toMap()
         ?: emptyMap()
 
-@OptIn(InternalAPI::class)
-private suspend fun ByteReadChannel.readTextLimited(charset: Charset): String {
-    val buffer = Buffer()
+private suspend fun ByteReadChannel.readTo(dst: StringBuilder, charset: Charset, max: Long): Long {
+    var consumed = 0L
+    val decoder = charset.newDecoder()
     while (!isClosedForRead) {
         awaitContent()
-        buffer.transferFrom(readBuffer)
-        if (buffer.size > MAX_TEXT_BYTES) {
-            cancel()
-            throw IllegalStateException(
-                "Response exceeded $MAX_TEXT_BYTES bytes. Use .textLarge instead."
-            )
-        }
+        val before = dst.length
+        // readBuffer property is internal but no public API can
+        // get a Source (needed for decoder) without an
+        // intermediate allocation.
+        @OptIn(InternalAPI::class)
+        decoder.decode(readBuffer, dst, (max - consumed).toInt())
+        consumed += dst.length - before
+        if (consumed >= max) break
     }
-    return buffer.readText(charset)
+    return consumed
+}
+
+private suspend fun ByteReadChannel.readTextLimited(charset: Charset): String {
+    val builder = StringBuilder()
+    val read = readTo(builder, charset, MAX_TEXT_BYTES)
+    if (read >= MAX_TEXT_BYTES) {
+        cancel()
+        throw IllegalStateException(
+            "Response exceeded $MAX_TEXT_BYTES bytes. Use .textLarge instead."
+        )
+    }
+    return builder.toString()
 }
