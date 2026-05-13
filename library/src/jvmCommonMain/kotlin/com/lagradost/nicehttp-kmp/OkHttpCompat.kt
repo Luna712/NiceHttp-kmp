@@ -94,7 +94,7 @@ fun requestCreator(
 }
 
 // Provides async-able Calls
-class ContinuationCallback(
+private class ContinuationCallback(
     private val call: Call,
     private val continuation: CancellableContinuation<Response>
 ) : Callback, CompletionHandler {
@@ -127,7 +127,6 @@ class ContinuationCallback(
     }
 }
 
-suspend fun Requests.Companion.await(call: Call): Response = call.await()
 suspend fun Call.await(): Response {
     return suspendCancellableCoroutine { continuation ->
         val callback = ContinuationCallback(this, continuation)
