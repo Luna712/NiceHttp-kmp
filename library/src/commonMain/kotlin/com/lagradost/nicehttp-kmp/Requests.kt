@@ -219,7 +219,7 @@ open class Requests(
         url: String,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
-        val builder = RequestBuilder(this).apply(block)
+        val builder = RequestBuilder(this, block)
         return request(
             HttpMethod.Get, url, builder.headers, builder.referer, builder.params, builder.cookies,
             null, null, null, null, builder.allowRedirects, builder.cacheTime, builder.timeout,
@@ -231,7 +231,7 @@ open class Requests(
         url: String,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
-        val builder = RequestBuilder(this).apply(block)
+        val builder = RequestBuilder(this, block)
         return request(
             HttpMethod.Post, url, builder.headers, builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
@@ -244,7 +244,7 @@ open class Requests(
         url: String,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
-        val builder = RequestBuilder(this).apply(block)
+        val builder = RequestBuilder(this, block)
         return request(
             HttpMethod.Put, url, builder.headers, builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
@@ -257,7 +257,7 @@ open class Requests(
         url: String,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
-        val builder = RequestBuilder(this).apply(block)
+        val builder = RequestBuilder(this, block)
         return request(
             HttpMethod.Delete, url, builder.headers, builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
@@ -270,7 +270,7 @@ open class Requests(
         url: String,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
-        val builder = RequestBuilder(this).apply(block)
+        val builder = RequestBuilder(this, block)
         return request(
             HttpMethod.Head, url, builder.headers, builder.referer, builder.params, builder.cookies,
             null, null, null, null, builder.allowRedirects, builder.cacheTime, builder.timeout,
@@ -282,7 +282,7 @@ open class Requests(
         url: String,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
-        val builder = RequestBuilder(this).apply(block)
+        val builder = RequestBuilder(this, block)
         return request(
             HttpMethod.Patch, url, builder.headers, builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
@@ -295,7 +295,7 @@ open class Requests(
         url: String,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
-        val builder = RequestBuilder(this).apply(block)
+        val builder = RequestBuilder(this, block)
         return request(
             HttpMethod.Options, url, builder.headers, builder.referer, builder.params, builder.cookies,
             null, null, null, null, builder.allowRedirects, builder.cacheTime, builder.timeout,
