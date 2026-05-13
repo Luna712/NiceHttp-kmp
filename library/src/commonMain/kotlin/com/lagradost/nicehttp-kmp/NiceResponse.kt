@@ -39,9 +39,6 @@ class NiceResponse(
     /** All cookies sent by the server for this response */
     val cookies: Map<String, String> get() = response.headers.getSetCookies()
 
-    /** Raw [ByteReadChannel] for incremental reads */
-    val channel: ByteReadChannel get() = response.bodyAsChannel()
-
     /**
      * Compatibility layers for old NiceHttp (all are deprecated)
      */
@@ -137,6 +134,9 @@ class NiceResponse(
 
     /** Response body. Call .bytes() or .string() to read. Call .close() when done (no-op here). */
     suspend fun body(): ResponseBody = ResponseBody(response.readRawBytes())
+
+    /** Raw [ByteReadChannel] for incremental reads */
+    suspend fun channel(): ByteReadChannel get() = response.bodyAsChannel()
 
     /** Reads the response body without the size guard. */
     suspend fun textLarge(): String = response.bodyAsText()
