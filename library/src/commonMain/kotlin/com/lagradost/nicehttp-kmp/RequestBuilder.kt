@@ -65,6 +65,27 @@ class RequestBuilder private constructor(private val requests: Requests) {
     var json: Any? = null
     var requestBody: RequestBody? = null
 
+    /** Adds a single header, merging with any already set. */
+    fun header(key: String, value: String) {
+        _headers = ((_headers ?: requests.defaultHeaders) + (key to value))
+    }
+
+    /** Adds a single query parameter, merging with any already set. */
+    fun param(key: String, value: String) {
+        params = params + (key to value)
+    }
+
+    /** Adds a single cookie, merging with any already set. */
+    fun cookie(key: String, value: String) {
+        _cookies = ((_cookies ?: requests.defaultCookies) + (key to value))
+    }
+
+    /** Adds a single form data entry, merging with any already set. */
+    fun data(key: String, value: String) {
+        _dataSet = true
+        _data = ((_data ?: requests.defaultData) + (key to value))
+    }
+
     internal companion object {
         operator fun invoke(
             requests: Requests,
