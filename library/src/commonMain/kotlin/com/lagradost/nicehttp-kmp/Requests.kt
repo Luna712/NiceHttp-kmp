@@ -576,7 +576,10 @@ internal fun buildBody(
                                     headers = Headers.build {
                                         append(
                                             HttpHeaders.ContentDisposition,
-                                            "form-data; name=\"${file.name}\"; filename=\"${file.fileName}\""
+                                            ContentDisposition("form-data")
+                                                .withParameter(ContentDisposition.Parameters.Name, file.name)
+                                                .withParameter(ContentDisposition.Parameters.FileName, file.fileName)
+                                                .toString()
                                         )
                                         file.fileType?.let { append(HttpHeaders.ContentType, it) }
                                     }
