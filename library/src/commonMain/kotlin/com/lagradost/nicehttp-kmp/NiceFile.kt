@@ -43,6 +43,7 @@ class NiceFile(
         ReplaceWith("NiceFile(name, fileName, bytes)"),
         DeprecationLevel.WARNING,
     )
+    @Suppress("DEPRECATION")
     constructor(name: String, file: PlatformFile) : this(name, file, null)
 
     @Deprecated(
@@ -51,6 +52,7 @@ class NiceFile(
         ReplaceWith("NiceFile(fileName, fileName, bytes)"),
         DeprecationLevel.WARNING,
     )
+    @Suppress("DEPRECATION")
     constructor(file: PlatformFile) : this(file.toFileName(), file, null)
 }
 
