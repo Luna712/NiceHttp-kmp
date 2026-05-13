@@ -312,6 +312,42 @@ open class Requests(
         }
     }
 
+    /**
+     * Builds and returns a prepared [HttpStatement] without executing it.
+     * Skips caching (meaningless for raw statements) but applies the full interceptor chain,
+     * client selection, and header/cookie merging identically to [request].
+     */
+    private suspend fun prepareStatement(
+        method: HttpMethod,
+        url: String,
+        headers: Map<String, String>,
+        referer: String?,
+        params: Map<String, String>,
+        cookies: Map<String, String>,
+        data: Map<String, String>?,
+        files: List<NiceFile>?,
+        json: Any?,
+        requestBody: RequestBody?,
+        allowRedirects: Boolean,
+        timeout: Duration = Duration.ZERO,
+        interceptor: Interceptor?,
+        verify: Boolean,
+        responseParser: ResponseParser?,
+    ): HttpStatement {
+        val finalUrl = addParamsToUrl(url, params)
+        val finalHeaders = buildHeaders(
+            defaultHeaders + headers,
+            referer ?: defaultReferer,
+            defaultCookies + cookies,
+        )
+        val body = buildBody(method, data, files, json, requestBody, responseParser)
+        val allInterceptors = buildInterceptorChain(cacheTime = Duration.ZERO, interceptor)
+        val client = selectClient(verify, allowRedirects).withInterceptors(allInterceptors)
+        return client.prepareRequest {
+            configureRequest(method, finalUrl, finalHeaders, body, timeout)
+        }
+    }
+
     @Deprecated(
         "Use one of the named builder methods instead: get(url) { }, post(url) { }, put(url) { }, etc.",
         level = DeprecationLevel.WARNING,
@@ -437,9 +473,9 @@ open class Requests(
      * Example reading a video stream in chunks:
      * ```kotlin
      * app.streamGet("https://cdn.example.com/video.mp4", {
-     *     header("Range", "bytes=0-")
+     *     header(HttpHeaders.Range, "bytes=0-")
      * }) { response ->
-     *     val channel = response.response.bodyAsChannel()
+     *     val channel = response.channel
      *     while (!channel.isClosedForRead) { /* read chunks */ }
      * }
      * ```
@@ -485,68 +521,34 @@ open class Requests(
     }
 
     /**
-     * Opens a streaming PUT request. Useful when the server responds with a long-lived
-     * chunked body after a resource update (rare, but valid per HTTP spec).
-     *
-     * @param url         Target URL.
-     * @param block       Optional [RequestBuilder] configuration lambda.
-     * @param streamBlock Suspend lambda that receives the live [NiceResponse] and returns [T].
-     * @return Whatever [streamBlock] returns.
+     * Returns a prepared [HttpStatement] for a GET request without executing it.
+     * Useful for Media3's KtorDataSource which manages its own execution and byte-range handling.
      */
-    suspend fun <T> streamPut(
+    suspend fun prepareGet(
         url: String,
         block: RequestBuilder.() -> Unit = {},
-        streamBlock: suspend (NiceResponse) -> T,
-    ): T {
+    ): HttpStatement {
         val builder = RequestBuilder(this, block)
-        return stream(
-            HttpMethod.Put, url, builder.headers, builder.referer, builder.params, builder.cookies,
-            builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
-            builder.timeout, builder.interceptor, builder.verify, builder.responseParser, streamBlock,
+        return prepareStatement(
+            HttpMethod.Get, url, builder.headers, builder.referer, builder.params, builder.cookies,
+            null, null, null, null, builder.allowRedirects, builder.timeout,
+            builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
     /**
-     * Opens a streaming DELETE request. Uncommon, but included for completeness and
-     * parity with the other streaming shortcuts.
-     *
-     * @param url         Target URL.
-     * @param block       Optional [RequestBuilder] configuration lambda.
-     * @param streamBlock Suspend lambda that receives the live [NiceResponse] and returns [T].
-     * @return Whatever [streamBlock] returns.
+     * Returns a prepared [HttpStatement] for a POST request without executing it.
+     * Useful for Media3's KtorDataSource which manages its own execution and byte-range handling.
      */
-    suspend fun <T> streamDelete(
+    suspend fun preparePost(
         url: String,
         block: RequestBuilder.() -> Unit = {},
-        streamBlock: suspend (NiceResponse) -> T,
-    ): T {
+    ): HttpStatement {
         val builder = RequestBuilder(this, block)
-        return stream(
-            HttpMethod.Delete, url, builder.headers, builder.referer, builder.params, builder.cookies,
+        return prepareStatement(
+            HttpMethod.Post, url, builder.headers, builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
-            builder.timeout, builder.interceptor, builder.verify, builder.responseParser, streamBlock,
-        )
-    }
-
-    /**
-     * Opens a streaming PATCH request. Useful for SSE endpoints updated via PATCH,
-     * or for receiving a live diff-stream in response to a partial update.
-     *
-     * @param url         Target URL.
-     * @param block       Optional [RequestBuilder] configuration lambda.
-     * @param streamBlock Suspend lambda that receives the live [NiceResponse] and returns [T].
-     * @return Whatever [streamBlock] returns.
-     */
-    suspend fun <T> streamPatch(
-        url: String,
-        block: RequestBuilder.() -> Unit = {},
-        streamBlock: suspend (NiceResponse) -> T,
-    ): T {
-        val builder = RequestBuilder(this, block)
-        return stream(
-            HttpMethod.Patch, url, builder.headers, builder.referer, builder.params, builder.cookies,
-            builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
-            builder.timeout, builder.interceptor, builder.verify, builder.responseParser, streamBlock,
+            builder.timeout, builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
