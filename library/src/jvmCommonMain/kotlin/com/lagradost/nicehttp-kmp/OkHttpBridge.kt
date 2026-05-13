@@ -3,9 +3,9 @@ package com.lagradost.nicehttp
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.http.content.*
-import kotlinx.io.Buffer
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
+import okio.Buffer
 
 /**
  * Converts an [okhttp3.RequestBody] to a NiceHttp [RequestBody].
