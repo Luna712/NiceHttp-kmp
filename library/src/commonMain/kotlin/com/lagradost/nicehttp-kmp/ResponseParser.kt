@@ -1,7 +1,5 @@
 package com.lagradost.nicehttp
 
-import io.ktor.http.*
-import io.ktor.utils.io.charsets.*
 import kotlin.reflect.KClass
 
 /**
