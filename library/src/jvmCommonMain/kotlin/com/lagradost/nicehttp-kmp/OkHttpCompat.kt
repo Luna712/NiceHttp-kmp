@@ -127,18 +127,16 @@ internal class ContinuationCallback(
     }
 }
 
-@Deprecated(
-    "OkHttp back-compat shim. Use the Ktor-based request builder instead.",
-    level = DeprecationLevel.ERROR,
-)
-class RequestsCompat {
-    companion object {
-        suspend inline fun Call.await(): Response {
-            return suspendCancellableCoroutine { continuation ->
-                val callback = ContinuationCallback(this, continuation)
-                enqueue(callback)
-                continuation.invokeOnCancellation(callback)
-            }
+object RequestsCompat {
+    @Deprecated(
+        "OkHttp back-compat shim. Use the Ktor-based request builder instead.",
+        level = DeprecationLevel.ERROR,
+    )
+    suspend inline fun Call.await(): Response {
+        return suspendCancellableCoroutine { continuation ->
+            val callback = ContinuationCallback(this, continuation)
+            enqueue(callback)
+            continuation.invokeOnCancellation(callback)
         }
     }
 }
