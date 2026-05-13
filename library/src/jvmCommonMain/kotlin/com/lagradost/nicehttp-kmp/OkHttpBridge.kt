@@ -1,10 +1,11 @@
 package com.lagradost.nicehttp
 
-import io.ktor.http.content.*
 import io.ktor.client.request.forms.*
+import io.ktor.http.*
+import io.ktor.http.content.*
+import kotlinx.io.Buffer
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
-import okio.Buffer
 
 /**
  * Converts an [okhttp3.RequestBody] to a NiceHttp [RequestBody].
@@ -16,7 +17,7 @@ fun okhttp3.RequestBody.toNiceRequestBody(): RequestBody {
     val buffer = Buffer()
     writeTo(buffer)
     val bytes = buffer.readByteArray()
-    val ct = contentType()?.toString() ?: "application/octet-stream"
+    val ct = ContentType.parse(contentType()?.toString() ?: "application/octet-stream")
     return RequestBody.bytes(bytes, ct)
 }
 
