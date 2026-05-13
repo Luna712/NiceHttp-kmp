@@ -94,9 +94,9 @@ fun requestCreator(
 }
 
 // Provides async-able Calls
-private class ContinuationCallback(
+internal class ContinuationCallback(
     private val call: Call,
-    private val continuation: CancellableContinuation<Response>
+    private val continuation: CancellableContinuation<Response>,
 ) : Callback, CompletionHandler {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -131,10 +131,14 @@ private class ContinuationCallback(
     "OkHttp back-compat shim. Use the Ktor-based request builder instead.",
     level = DeprecationLevel.ERROR,
 )
-suspend fun Call.await(): Response {
-    return suspendCancellableCoroutine { continuation ->
-        val callback = ContinuationCallback(this, continuation)
-        enqueue(callback)
-        continuation.invokeOnCancellation(callback)
+class RequestsCompat {
+    companion object {
+        suspend inline fun Call.await(): Response {
+            return suspendCancellableCoroutine { continuation ->
+                val callback = ContinuationCallback(this, continuation)
+                enqueue(callback)
+                continuation.invokeOnCancellation(callback)
+            }
+        }
     }
 }
