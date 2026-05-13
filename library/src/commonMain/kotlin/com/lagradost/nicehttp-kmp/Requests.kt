@@ -7,6 +7,7 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.utils.io.charsets.*
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -560,8 +561,8 @@ internal fun buildBody(
                 responseParser != null -> responseParser.writeValueAsString(json)
                 else                   -> json.toString()
             }
-            val ct = if (json is String) RequestBodyTypes.TEXT else RequestBodyTypes.JSON
-            RequestBody.text(jsonString, ct)
+            val ct = if (json is String) ContentType.Text.Plain else ContentType.Application.Json
+            RequestBody.text(jsonString, ct.withCharset(Charsets.UTF_8))
         }
 
         !files.isNullOrEmpty() -> {
@@ -581,7 +582,7 @@ internal fun buildBody(
                                                 .withParameter(ContentDisposition.Parameters.FileName, file.fileName)
                                                 .toString()
                                         )
-                                        file.fileType?.let { append(HttpHeaders.ContentType, it) }
+                                        file.fileType?.let { append(HttpHeaders.ContentType, ContentType.parse(it)) }
                                     }
                                 )
                             } else {
