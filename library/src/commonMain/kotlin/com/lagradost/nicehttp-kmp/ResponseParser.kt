@@ -1,5 +1,7 @@
 package com.lagradost.nicehttp
 
+import io.ktor.http.*
+import io.ktor.utils.io.charsets.*
 import kotlin.reflect.KClass
 
 /**
@@ -13,18 +15,18 @@ interface ResponseParser {
     /** Same as [parse] but returns null on failure instead of throwing. */
     fun <T : Any> parseSafe(text: String, kClass: KClass<T>): T?
 
-    /** Serialise [obj] to a JSON string (used when passing `json = someObject` to requests). */
+    /** Serialize [obj] to a JSON string (used when passing `json = someObject` to requests). */
     fun writeValueAsString(obj: Any): String
 }
 
 /**
  * Wraps a raw JSON string so it is sent as `application/json` even though it is already
- * serialised, e.g. `post(url, json = JsonAsString(myRawJson))`.
+ * serialized, e.g. `post(url, json = JsonAsString(myRawJson))`.
  */
 data class JsonAsString(val string: String)
 
 /** Common content-type constants used when building request bodies. */
 object RequestBodyTypes {
-    const val JSON = "application/json;charset=utf-8"
-    const val TEXT = "text/plain;charset=utf-8"
+    const val JSON = ContentType.Application.Json.withCharset(Charsets.UTF_8)
+    const val TEXT = ContentType.Application.Json.withCharset(Charsets.UTF_8)
 }
