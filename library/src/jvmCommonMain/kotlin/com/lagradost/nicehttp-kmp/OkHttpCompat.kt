@@ -101,7 +101,7 @@ private class ContinuationCallback(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun onResponse(call: Call, response: Response) {
-        continuation.resume(response) { _, _, _ -> call.cancel() }
+        continuation.resume(response) { _, _, _ -> }
     }
 
     override fun onFailure(call: Call, e: IOException) {
