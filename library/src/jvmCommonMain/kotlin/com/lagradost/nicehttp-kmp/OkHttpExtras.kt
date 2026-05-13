@@ -16,6 +16,7 @@ import javax.net.ssl.X509TrustManager
  * Attaches a DNS-over-HTTPS resolver to this [OkHttpClient.Builder].
  *
  * Passes through to Ktor's OkHttp engine via the `engine { preconfigured = … }` block:
+ * ```kotlin
  * val client = HttpClient(OkHttp) {
  *     engine {
  *         preconfigured = OkHttpClient.Builder()
@@ -27,6 +28,7 @@ import javax.net.ssl.X509TrustManager
  *     }
  * }
  * val requests = Requests(baseClient = client)
+ * ```
  */
 fun OkHttpClient.Builder.addGenericDns(url: String, ips: List<String>): OkHttpClient.Builder =
     dns(
