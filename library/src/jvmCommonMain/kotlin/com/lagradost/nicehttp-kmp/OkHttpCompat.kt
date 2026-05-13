@@ -10,6 +10,7 @@ import okhttp3.Request
 import okhttp3.RequestBody as OkRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import okhttp3.call
 import java.io.IOException
 import java.io.InterruptedIOException
 import java.util.concurrent.TimeUnit
