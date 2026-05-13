@@ -39,6 +39,9 @@ class NiceResponse(
     /** All cookies sent by the server for this response */
     val cookies: Map<String, String> get() = response.headers.getSetCookies()
 
+    /** Raw [ByteReadChannel] for incremental reads */
+    val channel: ByteReadChannel get() = response.bodyAsChannel()
+
     /**
      * Compatibility layers for old NiceHttp (all are deprecated)
      */
@@ -57,7 +60,7 @@ class NiceResponse(
                 )
             }
 
-            response.bodyAsChannel().readTextLimited(
+            channel.readTextLimited(
                 response.charset() ?: Charsets.UTF_8
             )
         }
@@ -127,7 +130,7 @@ class NiceResponse(
             )
         }
 
-        return response.bodyAsChannel().readTextLimited(
+        return channel.readTextLimited(
             response.charset() ?: Charsets.UTF_8
         )
     }
