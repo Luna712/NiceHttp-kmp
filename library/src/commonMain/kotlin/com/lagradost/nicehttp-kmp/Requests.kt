@@ -47,6 +47,9 @@ open class Requests(
     var responseParser: ResponseParser? = null,
     var interceptors: MutableList<Interceptor> = mutableListOf(),
 ) {
+
+    companion object // Remove when we remove Call.await from jvmCommonMain
+
     /**
      * Back-compatible constructor accepting the original NiceHttp parameter types.
      * Use the primary constructor with [Duration] and [Interceptor] directly instead.
