@@ -136,7 +136,7 @@ class NiceResponse(
     suspend fun body(): ResponseBody = ResponseBody(response.readRawBytes())
 
     /** Raw [ByteReadChannel] for incremental reads */
-    suspend fun channel(): ByteReadChannel get() = response.bodyAsChannel()
+    suspend fun channel(): ByteReadChannel = response.bodyAsChannel()
 
     /** Reads the response body without the size guard. */
     suspend fun textLarge(): String = response.bodyAsText()
