@@ -3,6 +3,7 @@ package com.lagradost.nicehttp
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.utils.io.charsets.*
 
 /**
  * KMP replacement for okhttp3.RequestBody.
@@ -22,7 +23,7 @@ abstract class RequestBody {
         /** Plain text or JSON body. */
         fun text(
             text: String,
-            contentType: ContentType = RequestBodyTypes.TEXT,
+            contentType: ContentType = ContentType.Text.Plain.withCharset(Charsets.UTF_8),
         ): RequestBody = TextRequestBody(text, contentType)
 
         /** URL-encoded form body. */
