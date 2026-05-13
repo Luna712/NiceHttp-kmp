@@ -2,9 +2,22 @@ package com.lagradost.nicehttp
 
 import kotlin.time.Duration
 
-class RequestBuilder internal constructor(
-    private val requests: Requests,
-) {
+/**
+ * DSL builder for configuring a single HTTP request.
+ * Constructed internally by [Requests] - use via the lambda block on each method:
+ *
+ * ```kotlin
+ * app.get("https://example.com") {
+ *     timeout = 30.seconds
+ *     headers = mapOf("X-Foo" to "bar")
+ *     json = myObject
+ * }
+ * ```
+ *
+ * Properties fall back to [Requests] defaults when not explicitly set.
+ * New convenience methods can be added here over time without breaking existing usage.
+ */
+class RequestBuilder private constructor(private val requests: Requests) {
 
     private var _headers: Map<String, String>? = null
     var headers: Map<String, String>
@@ -51,4 +64,11 @@ class RequestBuilder internal constructor(
     var files: List<NiceFile>? = null
     var json: Any? = null
     var requestBody: RequestBody? = null
+
+    internal companion object {
+        operator fun invoke(
+            requests: Requests,
+            block: RequestBuilder.() -> Unit,
+        ): RequestBuilder = RequestBuilder(requests).apply(block)
+    }
 }
