@@ -57,7 +57,7 @@ class NiceResponse(
                 )
             }
 
-            channel.readTextLimited(
+            channel().readTextLimited(
                 response.charset() ?: Charsets.UTF_8
             )
         }
@@ -127,7 +127,7 @@ class NiceResponse(
             )
         }
 
-        return channel.readTextLimited(
+        return channel().readTextLimited(
             response.charset() ?: Charsets.UTF_8
         )
     }
