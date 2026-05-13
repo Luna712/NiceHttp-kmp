@@ -27,6 +27,6 @@ data class JsonAsString(val string: String)
 
 /** Common content-type constants used when building request bodies. */
 object RequestBodyTypes {
-    val JSON = ContentType.Application.Json.withCharset(Charsets.UTF_8)
-    val TEXT = ContentType.Application.Json.withCharset(Charsets.UTF_8)
+    const val JSON = "application/json;charset=utf-8"
+    const val TEXT = "text/plain;charset=utf-8"
 }
