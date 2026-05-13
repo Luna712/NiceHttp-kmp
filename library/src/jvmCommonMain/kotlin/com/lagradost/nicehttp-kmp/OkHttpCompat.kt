@@ -2,12 +2,22 @@ package com.lagradost.nicehttp
 
 import io.ktor.http.Headers
 import okhttp3.CacheControl
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody as OkRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import java.io.IOException
+import java.io.InterruptedIOException
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.CompletionHandler
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 @Deprecated(
     "OkHttp back-compat shim. Use the Ktor-based request builder instead.",
@@ -81,4 +91,47 @@ fun requestCreator(
             }
         }
         .build()
+}
+
+// Provides async-able Calls
+class ContinuationCallback(
+    private val call: Call,
+    private val continuation: CancellableContinuation<Response>
+) : Callback, CompletionHandler {
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun onResponse(call: Call, response: Response) {
+        continuation.resume(response, null)
+    }
+
+    override fun onFailure(call: Call, e: IOException) {
+        // Cannot throw exception on SocketException since that can lead to un-catchable crashes
+        // when you exit an activity as a request
+        println("Exception in NiceHttp: ${e.javaClass.name} ${e.message}")
+        if (call.isCanceled()) {
+            // Must be able to throw errors, for example timeouts
+            if (e is InterruptedIOException)
+                continuation.cancel(e)
+            else
+                e.printStackTrace()
+        } else {
+            continuation.resumeWithException(e)
+        }
+    }
+
+    override fun invoke(cause: Throwable?) {
+        try {
+            call.cancel()
+        } catch (_: Throwable) {
+        }
+    }
+}
+
+suspend fun Requests.Companion.await(call: Call): Response = call.await()
+suspend fun Call.await(): Response {
+    return suspendCancellableCoroutine { continuation ->
+        val callback = ContinuationCallback(this, continuation)
+        call.enqueue(callback)
+        continuation.invokeOnCancellation(callback)
+    }
 }
