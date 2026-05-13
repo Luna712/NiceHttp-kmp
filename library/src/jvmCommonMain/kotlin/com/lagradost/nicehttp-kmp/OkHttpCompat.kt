@@ -127,6 +127,10 @@ private class ContinuationCallback(
     }
 }
 
+@Deprecated(
+    "OkHttp back-compat shim. Use the Ktor-based request builder instead.",
+    level = DeprecationLevel.ERROR,
+)
 suspend fun Call.await(): Response {
     return suspendCancellableCoroutine { continuation ->
         val callback = ContinuationCallback(this, continuation)
