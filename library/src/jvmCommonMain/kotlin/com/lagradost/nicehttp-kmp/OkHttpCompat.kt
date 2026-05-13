@@ -138,7 +138,7 @@ object RequestsCompat {
     )
     suspend inline fun Call.await(): Response {
         return suspendCancellableCoroutine { continuation ->
-            @Suppress("DEPRECATION_ERRROR")
+            @Suppress("DEPRECATION_ERROR")
             val callback = ContinuationCallback(this, continuation)
             enqueue(callback)
             continuation.invokeOnCancellation(callback)
