@@ -16,8 +16,10 @@ version = "1.0.0"
 kotlin {
     jvm {
         compilations.all {
-            compilerOptions.configure {
-                jvmTarget.set(JvmTarget.JVM_1_8)
+            compileTaskProvider.configure {
+                compilerOptions {
+                    jvmTarget.set(JvmTarget.JVM_1_8)
+                }
             }
         }
     }
