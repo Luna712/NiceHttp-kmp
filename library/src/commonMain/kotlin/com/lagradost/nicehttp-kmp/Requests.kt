@@ -11,6 +11,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 /**
  * Multiplatform HTTP client modelled after the original NiceHttp [Requests] class.
@@ -66,8 +67,7 @@ open class Requests(
         defaultReferer = defaultReferer,
         defaultData = defaultData,
         defaultCookies = defaultCookies,
-        defaultCacheTime = if (defaultCacheTime <= 0) Duration.ZERO
-            else defaultCacheTime.toLong().toDuration(defaultCacheTimeUnit.toDurationUnit()),
+        defaultCacheTime = defaultCacheTime.toLong().toDuration(defaultCacheTimeUnit.toDurationUnit()),
         defaultTimeout = if (defaultTimeOut <= 0L) Duration.ZERO
             else defaultTimeOut.seconds,
         responseParser = responseParser,
@@ -92,7 +92,7 @@ open class Requests(
     /**
      * Generic request method. All method shortcuts delegate here.
      *
-     * @param method         HTTP method string ("GET", "POST", …).
+     * @param method         HTTP method from [HttpMethod].
      * @param url            Target URL.
      * @param headers        Extra headers merged on top of [defaultHeaders].
      * @param referer        Overrides [defaultReferer] for this call.
@@ -112,8 +112,8 @@ open class Requests(
      *                       Silently ignored on JS/WASM.
      * @param responseParser Overrides [this.responseParser] for this call.
      */
-    open suspend fun custom(
-        method: String,
+    internal open suspend fun custom(
+        method: HttpMethod,
         url: String,
         headers: Map<String, String> = emptyMap(),
         referer: String? = null,
@@ -152,16 +152,16 @@ open class Requests(
         // Pick base client
         val clientToUse = when {
             !verify && !allowRedirects -> insecureNoRedirectClient
-            !verify                   -> insecureClient
-            !allowRedirects           -> noRedirectClient
-            else                      -> baseClient
+            !verify                    -> insecureClient
+            !allowRedirects            -> noRedirectClient
+            else                       -> baseClient
         }
 
         // Install interceptors via HttpSend
         val client = clientToUse.withInterceptors(allInterceptors)
 
         val response = client.request {
-            this.method = HttpMethod(method.uppercase())
+            this.method = method
             url(finalUrl)
             finalHeaders.forEach { k, values -> values.forEach { v -> header(k, v) } }
             body?.let { setBody(it.content) }
@@ -184,10 +184,9 @@ open class Requests(
     ): NiceResponse {
         val builder = RequestBuilder(this).apply(block)
         return custom(
-            "GET", url, builder.headers, builder.referer, builder.params, builder.cookies,
-            null, null, null, null, builder.allowRedirects,
-            builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
-            builder.responseParser,
+            HttpMethod.Get, url, builder.headers, builder.referer, builder.params, builder.cookies,
+            null, null, null, null, builder.allowRedirects, builder.cacheTime, builder.timeout,
+            builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
@@ -197,7 +196,7 @@ open class Requests(
     ): NiceResponse {
         val builder = RequestBuilder(this).apply(block)
         return custom(
-            "POST", url, builder.headers, builder.referer, builder.params, builder.cookies,
+            HttpMethod.Post, url, builder.headers, builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
             builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
             builder.responseParser,
@@ -210,7 +209,7 @@ open class Requests(
     ): NiceResponse {
         val builder = RequestBuilder(this).apply(block)
         return custom(
-            "PUT", url, builder.headers, builder.referer, builder.params, builder.cookies,
+            HttpMethod.Put, url, builder.headers, builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
             builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
             builder.responseParser,
@@ -223,7 +222,7 @@ open class Requests(
     ): NiceResponse {
         val builder = RequestBuilder(this).apply(block)
         return custom(
-            "DELETE", url, builder.headers, builder.referer, builder.params, builder.cookies,
+            HttpMethod.Delete, url, builder.headers, builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
             builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
             builder.responseParser,
@@ -236,10 +235,9 @@ open class Requests(
     ): NiceResponse {
         val builder = RequestBuilder(this).apply(block)
         return custom(
-            "HEAD", url, builder.headers, builder.referer, builder.params, builder.cookies,
-            null, null, null, null, builder.allowRedirects,
-            builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
-            builder.responseParser,
+            HttpMethod.Head, url, builder.headers, builder.referer, builder.params, builder.cookies,
+            null, null, null, null, builder.allowRedirects, builder.cacheTime, builder.timeout,
+            builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
@@ -249,7 +247,7 @@ open class Requests(
     ): NiceResponse {
         val builder = RequestBuilder(this).apply(block)
         return custom(
-            "PATCH", url, builder.headers, builder.referer, builder.params, builder.cookies,
+            HttpMethod.Patch, url, builder.headers, builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
             builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
             builder.responseParser,
@@ -262,10 +260,9 @@ open class Requests(
     ): NiceResponse {
         val builder = RequestBuilder(this).apply(block)
         return custom(
-            "OPTIONS", url, builder.headers, builder.referer, builder.params, builder.cookies,
-            builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
-            builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
-            builder.responseParser,
+            HttpMethod.Options, url, builder.headers, builder.referer, builder.params, builder.cookies,
+            null, null, null, null, builder.allowRedirects, builder.cacheTime, builder.timeout,
+            builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
@@ -283,9 +280,9 @@ open class Requests(
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom(
-        "GET", url, headers, referer, params, cookies,
+        HttpMethod.Get, url, headers, referer, params, cookies,
         null, null, null, null, allowRedirects,
-        cacheTime.toDuration(cacheUnit.toDurationUnit()),
+        cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
         timeout.seconds,
         interceptor?.toInterceptor(), verify, responseParser,
     )
@@ -308,9 +305,9 @@ open class Requests(
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom(
-        "POST", url, headers, referer, params, cookies,
+        HttpMethod.Post, url, headers, referer, params, cookies,
         data, files, json, requestBody?.toRequestBody(), allowRedirects,
-        cacheTime.toDuration(cacheUnit.toDurationUnit()),
+        cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
         timeout.seconds,
         interceptor?.toInterceptor(), verify, responseParser,
     )
@@ -333,9 +330,9 @@ open class Requests(
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom(
-        "PUT", url, headers, referer, params, cookies,
+        HttpMethod.Put, url, headers, referer, params, cookies,
         data, files, json, requestBody?.toRequestBody(), allowRedirects,
-        cacheTime.toDuration(cacheUnit.toDurationUnit()),
+        cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
         timeout.seconds,
         interceptor?.toInterceptor(), verify, responseParser,
     )
@@ -358,9 +355,9 @@ open class Requests(
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom(
-        "DELETE", url, headers, referer, params, cookies,
+        HttpMethod.Delete, url, headers, referer, params, cookies,
         data, files, json, requestBody?.toRequestBody(), allowRedirects,
-        cacheTime.toDuration(cacheUnit.toDurationUnit()),
+        cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
         timeout.seconds,
         interceptor?.toInterceptor(), verify, responseParser,
     )
@@ -379,9 +376,9 @@ open class Requests(
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom(
-        "HEAD", url, headers, referer, params, cookies,
+        HttpMethod.Head, url, headers, referer, params, cookies,
         null, null, null, null, allowRedirects,
-        cacheTime.toDuration(cacheUnit.toDurationUnit()),
+        cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
         timeout.seconds,
         interceptor?.toInterceptor(), verify, responseParser,
     )
@@ -404,9 +401,9 @@ open class Requests(
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom(
-        "PATCH", url, headers, referer, params, cookies,
+        HttpMethod.Patch, url, headers, referer, params, cookies,
         data, files, json, requestBody?.toRequestBody(), allowRedirects,
-        cacheTime.toDuration(cacheUnit.toDurationUnit()),
+        cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
         timeout.seconds,
         interceptor?.toInterceptor(), verify, responseParser,
     )
@@ -429,16 +426,21 @@ open class Requests(
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
     ) = custom(
-        "OPTIONS", url, headers, referer, params, cookies,
+        HttpMethod.Options, url, headers, referer, params, cookies,
         data, files, json, requestBody?.toRequestBody(), allowRedirects,
-        cacheTime.toDuration(cacheUnit.toDurationUnit()),
+        cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
         timeout.seconds,
         interceptor?.toInterceptor(), verify, responseParser,
     )
 }
 
-private val NO_BODY_METHODS = setOf("GET", "HEAD")
-private val MUST_HAVE_BODY  = setOf("POST", "PUT")
+private val MUST_HAVE_BODY  = setOf(HttpMethod.Post, HttpMethod.Put)
+private val NO_BODY_METHODS = setOf(
+    HttpMethod.Get,
+    HttpMethod.Head,
+    HttpMethod.Options,
+    HttpMethod.Trace,
+)
 
 /**
  * Constructs the [RequestBody] for the request, following the same priority rules
@@ -452,15 +454,14 @@ private val MUST_HAVE_BODY  = setOf("POST", "PUT")
  * 6. null for GET/HEAD/etc.
  */
 internal fun buildBody(
-    method: String,
+    method: HttpMethod,
     data: Map<String, String>?,
     files: List<NiceFile>?,
     json: Any?,
     requestBody: RequestBody?,
     responseParser: ResponseParser?,
 ): RequestBody? {
-    val upper = method.uppercase()
-    if (upper in NO_BODY_METHODS) return null
+    if (method in NO_BODY_METHODS) return null
     if (requestBody != null) return requestBody
 
     return when {
@@ -503,15 +504,9 @@ internal fun buildBody(
             )
         }
 
-        // POST/PUT must always have a body even if empty
-        upper in MUST_HAVE_BODY -> RequestBody.form(emptyMap())
+        // These methods must always have a body even if empty
+        method in MUST_HAVE_BODY -> RequestBody.form(emptyMap())
 
         else -> null
     }
 }
-
-private fun Int.toDuration(unit: DurationUnit): Duration =
-    if (this <= 0) Duration.ZERO else this.toLong().toDuration(unit)
-
-private fun Long.toDuration(unit: DurationUnit): Duration =
-    if (this <= 0L) Duration.ZERO else this.toDuration(unit)
