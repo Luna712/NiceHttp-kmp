@@ -49,12 +49,13 @@ open class Requests(
 ) {
     /**
      * Back-compatible constructor accepting the original NiceHttp parameter types.
-     * Use the primary constructor with [Duration] directly instead.
+     * Use the primary constructor with [Duration] and [Interceptor] directly instead.
      */
     @Deprecated(
         "Use the primary constructor with Duration and Interceptor instead. " +
             "Replace defaultCacheTime/defaultCacheTimeUnit with a Duration (e.g. defaultCacheTime.minutes), " +
-            "and defaultTimeOut with a Duration (e.g. defaultTimeOut.seconds).",
+            "defaultTimeOut with a Duration (e.g. defaultTimeOut.seconds), " +
+            "and OkHttp Interceptor with Interceptor from NiceHttp.",
         level = DeprecationLevel.WARNING,
     )
     constructor(
@@ -67,6 +68,7 @@ open class Requests(
         defaultCacheTimeUnit: NiceTimeUnit = NiceTimeUnit.MINUTES,
         defaultTimeOut: Long = 0L,
         responseParser: ResponseParser? = null,
+        interceptors: MutableList<NiceInterceptorCompat> = mutableListOf(),
     ) : this(
         baseClient = baseClient,
         defaultHeaders = defaultHeaders,
@@ -77,6 +79,7 @@ open class Requests(
         defaultTimeout = if (defaultTimeOut <= 0L) Duration.ZERO
             else defaultTimeOut.seconds,
         responseParser = responseParser,
+        interceptors = interceptors.map { it.toInterceptor() }.toMutableList(),
     )
 
     fun addInterceptor(interceptor: Interceptor) = interceptors.add(interceptor)
