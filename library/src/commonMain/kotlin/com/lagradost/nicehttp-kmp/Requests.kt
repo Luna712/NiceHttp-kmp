@@ -7,6 +7,7 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.utils.io.charsets.*
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -37,7 +38,7 @@ import kotlin.time.toDuration
  */
 open class Requests(
     var baseClient: HttpClient = defaultHttpClient(),
-    var defaultHeaders: Map<String, String> = mapOf("User-Agent" to "NiceHttp"),
+    var defaultHeaders: Map<String, String> = mapOf(HttpHeaders.UserAgent to "NiceHttp"),
     var defaultReferer: String? = null,
     var defaultData: Map<String, String> = emptyMap(),
     var defaultCookies: Map<String, String> = emptyMap(),
@@ -48,11 +49,18 @@ open class Requests(
 ) {
     /**
      * Back-compatible constructor accepting the original NiceHttp parameter types.
-     * TODO: Deprecate this
+     * Use the primary constructor with [Duration] and [Interceptor] directly instead.
      */
+    @Deprecated(
+        "Use the primary constructor with Duration and Interceptor instead. " +
+            "Replace defaultCacheTime/defaultCacheTimeUnit with a Duration (e.g. defaultCacheTime.minutes), " +
+            "defaultTimeOut with a Duration (e.g. defaultTimeOut.seconds), " +
+            "and OkHttp Interceptor with Interceptor from NiceHttp.",
+        level = DeprecationLevel.WARNING,
+    )
     constructor(
         baseClient: HttpClient = defaultHttpClient(),
-        defaultHeaders: Map<String, String> = mapOf("User-Agent" to "NiceHttp"),
+        defaultHeaders: Map<String, String> = mapOf(HttpHeaders.UserAgent to "NiceHttp"),
         defaultReferer: String? = null,
         defaultData: Map<String, String> = emptyMap(),
         defaultCookies: Map<String, String> = emptyMap(),
@@ -90,7 +98,7 @@ open class Requests(
     }
 
     /**
-     * Generic request method. All method shortcuts delegate here.
+     * Make requests and return NiceResponse. All method shortcuts delegate here.
      *
      * @param method         HTTP method from [HttpMethod].
      * @param url            Target URL.
@@ -112,23 +120,23 @@ open class Requests(
      *                       Silently ignored on JS/WASM.
      * @param responseParser Overrides [this.responseParser] for this call.
      */
-    internal open suspend fun custom(
+    private suspend fun request(
         method: HttpMethod,
         url: String,
-        headers: Map<String, String> = emptyMap(),
-        referer: String? = null,
-        params: Map<String, String> = emptyMap(),
-        cookies: Map<String, String> = emptyMap(),
-        data: Map<String, String>? = defaultData,
-        files: List<NiceFile>? = null,
-        json: Any? = null,
-        requestBody: RequestBody? = null,
-        allowRedirects: Boolean = true,
+        headers: Map<String, String>,
+        referer: String?,
+        params: Map<String, String>,
+        cookies: Map<String, String>,
+        data: Map<String, String>?,
+        files: List<NiceFile>?,
+        json: Any?,
+        requestBody: RequestBody?,
+        allowRedirects: Boolean,
         cacheTime: Duration = defaultCacheTime,
         timeout: Duration = defaultTimeout,
-        interceptor: Interceptor? = null,
-        verify: Boolean = true,
-        responseParser: ResponseParser? = this.responseParser,
+        interceptor: Interceptor?,
+        verify: Boolean,
+        responseParser: ResponseParser?,
     ): NiceResponse {
         val finalUrl = addParamsToUrl(url, params)
         val finalHeaders = buildHeaders(
@@ -142,11 +150,15 @@ open class Requests(
         val allInterceptors = interceptors.toMutableList()
         allInterceptors.add(0, LoggingInterceptor())
         if (cacheTime > Duration.ZERO) {
-            allInterceptors.add(0, HeadersInterceptor(
-                mapOf("Cache-Control" to "max-age=${cacheTime.inWholeSeconds}")
-            ))
+            allInterceptors.add(0, HeadersInterceptor {
+                remove(HttpHeaders.Pragma)
+                header(
+                    HttpHeaders.CacheControl,
+                    CacheControl.MaxAge(cacheTime.inWholeSeconds.toInt())
+                )
+            })
         }
-        // allInterceptors.add(0, CacheInterceptor)
+
         if (interceptor != null) allInterceptors.add(interceptor)
 
         // Pick base client
@@ -178,12 +190,42 @@ open class Requests(
         return NiceResponse(response, responseParser)
     }
 
+    @Deprecated(
+        "Use one of the named builder methods instead: get(url) { }, post(url) { }, put(url) { }, etc.",
+        level = DeprecationLevel.WARNING,
+    )
+    open suspend fun custom(
+        method: String,
+        url: String,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        params: Map<String, String> = emptyMap(),
+        cookies: Map<String, String> = emptyMap(),
+        data: Map<String, String>? = defaultData,
+        files: List<NiceFile>? = null,
+        json: Any? = null,
+        requestBody: NiceRequestBodyCompat? = null,
+        allowRedirects: Boolean = true,
+        cacheTime: Int = 0,
+        cacheUnit: NiceTimeUnit = NiceTimeUnit.MINUTES,
+        timeout: Long = 0L,
+        interceptor: NiceInterceptorCompat? = null,
+        verify: Boolean = true,
+        responseParser: ResponseParser? = this.responseParser,
+    ): NiceResponse = request(
+        HttpMethod(method.uppercase()), url, headers, referer, params, cookies,
+        data, files, json, requestBody?.toRequestBody(), allowRedirects,
+        cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
+        timeout.seconds,
+        interceptor?.toInterceptor(), verify, responseParser,
+    )
+
     suspend fun get(
         url: String,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
-        val builder = RequestBuilder(this).apply(block)
-        return custom(
+        val builder = RequestBuilder(this, block)
+        return request(
             HttpMethod.Get, url, builder.headers, builder.referer, builder.params, builder.cookies,
             null, null, null, null, builder.allowRedirects, builder.cacheTime, builder.timeout,
             builder.interceptor, builder.verify, builder.responseParser,
@@ -194,8 +236,8 @@ open class Requests(
         url: String,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
-        val builder = RequestBuilder(this).apply(block)
-        return custom(
+        val builder = RequestBuilder(this, block)
+        return request(
             HttpMethod.Post, url, builder.headers, builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
             builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
@@ -207,8 +249,8 @@ open class Requests(
         url: String,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
-        val builder = RequestBuilder(this).apply(block)
-        return custom(
+        val builder = RequestBuilder(this, block)
+        return request(
             HttpMethod.Put, url, builder.headers, builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
             builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
@@ -220,8 +262,8 @@ open class Requests(
         url: String,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
-        val builder = RequestBuilder(this).apply(block)
-        return custom(
+        val builder = RequestBuilder(this, block)
+        return request(
             HttpMethod.Delete, url, builder.headers, builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
             builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
@@ -233,8 +275,8 @@ open class Requests(
         url: String,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
-        val builder = RequestBuilder(this).apply(block)
-        return custom(
+        val builder = RequestBuilder(this, block)
+        return request(
             HttpMethod.Head, url, builder.headers, builder.referer, builder.params, builder.cookies,
             null, null, null, null, builder.allowRedirects, builder.cacheTime, builder.timeout,
             builder.interceptor, builder.verify, builder.responseParser,
@@ -245,8 +287,8 @@ open class Requests(
         url: String,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
-        val builder = RequestBuilder(this).apply(block)
-        return custom(
+        val builder = RequestBuilder(this, block)
+        return request(
             HttpMethod.Patch, url, builder.headers, builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
             builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
@@ -258,14 +300,21 @@ open class Requests(
         url: String,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
-        val builder = RequestBuilder(this).apply(block)
-        return custom(
+        val builder = RequestBuilder(this, block)
+        return request(
             HttpMethod.Options, url, builder.headers, builder.referer, builder.params, builder.cookies,
             null, null, null, null, builder.allowRedirects, builder.cacheTime, builder.timeout,
             builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
+    @Deprecated(
+        "Use get(url) { } with a RequestBuilder block instead. " +
+            "Replace cacheTime/cacheUnit with cacheTime = n.minutes (or other Duration), " +
+            "timeout with timeout = n.seconds, and OkHttp Interceptor with Interceptor " +
+            "from NiceHttp.",
+        level = DeprecationLevel.WARNING,
+    )
     suspend fun get(
         url: String,
         headers: Map<String, String> = emptyMap(),
@@ -279,7 +328,7 @@ open class Requests(
         interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ) = custom(
+    ) = request(
         HttpMethod.Get, url, headers, referer, params, cookies,
         null, null, null, null, allowRedirects,
         cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
@@ -287,6 +336,13 @@ open class Requests(
         interceptor?.toInterceptor(), verify, responseParser,
     )
 
+    @Deprecated(
+        "Use post(url) { } with a RequestBuilder block instead. " +
+            "Replace cacheTime/cacheUnit with cacheTime = n.minutes (or other Duration), " +
+            "timeout with timeout = n.seconds, OkHttp Interceptor with Interceptor " +
+            "from NiceHttp, and OkHttp RequestBody with RequestBody from NiceHttp.",
+        level = DeprecationLevel.WARNING,
+    )
     suspend fun post(
         url: String,
         headers: Map<String, String> = emptyMap(),
@@ -304,7 +360,7 @@ open class Requests(
         interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ) = custom(
+    ) = request(
         HttpMethod.Post, url, headers, referer, params, cookies,
         data, files, json, requestBody?.toRequestBody(), allowRedirects,
         cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
@@ -312,6 +368,13 @@ open class Requests(
         interceptor?.toInterceptor(), verify, responseParser,
     )
 
+    @Deprecated(
+        "Use put(url) { } with a RequestBuilder block instead. " +
+            "Replace cacheTime/cacheUnit with cacheTime = n.minutes (or other Duration), " +
+            "timeout with timeout = n.seconds, OkHttp Interceptor with Interceptor " +
+            "from NiceHttp, and OkHttp RequestBody with RequestBody from NiceHttp.",
+        level = DeprecationLevel.WARNING,
+    )
     suspend fun put(
         url: String,
         headers: Map<String, String> = emptyMap(),
@@ -329,7 +392,7 @@ open class Requests(
         interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ) = custom(
+    ) = request(
         HttpMethod.Put, url, headers, referer, params, cookies,
         data, files, json, requestBody?.toRequestBody(), allowRedirects,
         cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
@@ -337,6 +400,13 @@ open class Requests(
         interceptor?.toInterceptor(), verify, responseParser,
     )
 
+    @Deprecated(
+        "Use delete(url) { } with a RequestBuilder block instead. " +
+            "Replace cacheTime/cacheUnit with cacheTime = n.minutes (or other Duration), " +
+            "timeout with timeout = n.seconds, OkHttp Interceptor with Interceptor " +
+            "from NiceHttp, and OkHttp RequestBody with RequestBody from NiceHttp.",
+        level = DeprecationLevel.WARNING,
+    )
     suspend fun delete(
         url: String,
         headers: Map<String, String> = emptyMap(),
@@ -354,7 +424,7 @@ open class Requests(
         interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ) = custom(
+    ) = request(
         HttpMethod.Delete, url, headers, referer, params, cookies,
         data, files, json, requestBody?.toRequestBody(), allowRedirects,
         cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
@@ -362,6 +432,13 @@ open class Requests(
         interceptor?.toInterceptor(), verify, responseParser,
     )
 
+    @Deprecated(
+        "Use head(url) { } with a RequestBuilder block instead. " +
+            "Replace cacheTime/cacheUnit with cacheTime = n.minutes (or other Duration), " +
+            "timeout with timeout = n.seconds, and OkHttp Interceptor with Interceptor " +
+            "from NiceHttp.",
+        level = DeprecationLevel.WARNING,
+    )
     suspend fun head(
         url: String,
         headers: Map<String, String> = emptyMap(),
@@ -375,7 +452,7 @@ open class Requests(
         interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ) = custom(
+    ) = request(
         HttpMethod.Head, url, headers, referer, params, cookies,
         null, null, null, null, allowRedirects,
         cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
@@ -383,6 +460,13 @@ open class Requests(
         interceptor?.toInterceptor(), verify, responseParser,
     )
 
+    @Deprecated(
+        "Use patch(url) { } with a RequestBuilder block instead. " +
+            "Replace cacheTime/cacheUnit with cacheTime = n.minutes (or other Duration), " +
+            "timeout with timeout = n.seconds, OkHttp Interceptor with Interceptor " +
+            "from NiceHttp, and OkHttp RequestBody with RequestBody from NiceHttp.",
+        level = DeprecationLevel.WARNING,
+    )
     suspend fun patch(
         url: String,
         headers: Map<String, String> = emptyMap(),
@@ -400,7 +484,7 @@ open class Requests(
         interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ) = custom(
+    ) = request(
         HttpMethod.Patch, url, headers, referer, params, cookies,
         data, files, json, requestBody?.toRequestBody(), allowRedirects,
         cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
@@ -408,6 +492,13 @@ open class Requests(
         interceptor?.toInterceptor(), verify, responseParser,
     )
 
+    @Deprecated(
+        "Use options(url) { } with a RequestBuilder block instead. " +
+            "Replace cacheTime/cacheUnit with cacheTime = n.minutes (or other Duration), " +
+            "timeout with timeout = n.seconds, OkHttp Interceptor with Interceptor " +
+            "from NiceHttp, and OkHttp RequestBody with RequestBody from NiceHttp.",
+        level = DeprecationLevel.WARNING,
+    )
     suspend fun options(
         url: String,
         headers: Map<String, String> = emptyMap(),
@@ -425,9 +516,9 @@ open class Requests(
         interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
-    ) = custom(
+    ) = request(
         HttpMethod.Options, url, headers, referer, params, cookies,
-        data, files, json, requestBody?.toRequestBody(), allowRedirects,
+        null, null, null, null, allowRedirects,
         cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
         timeout.seconds,
         interceptor?.toInterceptor(), verify, responseParser,
@@ -435,6 +526,8 @@ open class Requests(
 }
 
 private val MUST_HAVE_BODY  = setOf(HttpMethod.Post, HttpMethod.Put)
+
+// Keep in sync with https://github.com/ktorio/ktor/blob/245774a/ktor-http/common/src/io/ktor/http/HttpMethod.kt#L108-L113
 private val NO_BODY_METHODS = setOf(
     HttpMethod.Get,
     HttpMethod.Head,
@@ -450,7 +543,7 @@ private val NO_BODY_METHODS = setOf(
  * 2. [data] (URL-encoded form)
  * 3. [json] (JSON body)
  * 4. [files] (multipart)
- * 5. Empty form body for POST/PUT when nothing else is provided
+ * 5. Empty form body for methods in [MUST_HAVE_BODY] when nothing else is provided
  * 6. null for GET/HEAD/etc.
  */
 internal fun buildBody(
@@ -474,8 +567,8 @@ internal fun buildBody(
                 responseParser != null -> responseParser.writeValueAsString(json)
                 else                   -> json.toString()
             }
-            val ct = if (json is String) RequestBodyTypes.TEXT else RequestBodyTypes.JSON
-            RequestBody.text(jsonString, ct)
+            val ct = if (json is String) ContentType.Text.Plain else ContentType.Application.Json
+            RequestBody.text(jsonString, ct.withCharset(Charsets.UTF_8))
         }
 
         !files.isNullOrEmpty() -> {
@@ -490,9 +583,12 @@ internal fun buildBody(
                                     headers = Headers.build {
                                         append(
                                             HttpHeaders.ContentDisposition,
-                                            "form-data; name=\"${file.name}\"; filename=\"${file.fileName}\""
+                                            ContentDisposition("form-data")
+                                                .withParameter(ContentDisposition.Parameters.Name, file.name)
+                                                .withParameter(ContentDisposition.Parameters.FileName, file.fileName)
+                                                .toString()
                                         )
-                                        file.fileType?.let { append(HttpHeaders.ContentType, it) }
+                                        file.fileType?.let { append(HttpHeaders.ContentType, ContentType.parse(it)) }
                                     }
                                 )
                             } else {

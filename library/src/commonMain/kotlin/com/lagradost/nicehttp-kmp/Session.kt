@@ -2,6 +2,7 @@ package com.lagradost.nicehttp
 
 import io.ktor.client.*
 import io.ktor.client.plugins.cookies.*
+import io.ktor.http.*
 
 /**
  * A [Requests] subclass that automatically persists cookies across all requests,
@@ -13,13 +14,13 @@ import io.ktor.client.plugins.cookies.*
  * Example:
  * ```kotlin
  * val session = Session()
- * session.post("https://example.com/login", data = mapOf("user" to "alice", "pass" to "secret"))
+ * session.post("https://example.com/login") { data = mapOf("user" to "alice", "pass" to "secret") }
  * val profile = session.get("https://example.com/profile") // session cookie is sent automatically
  * ```
  */
 class Session(
     client: HttpClient = defaultHttpClient(),
-    defaultHeaders: Map<String, String> = mapOf("user-agent" to "NiceHttp"),
+    defaultHeaders: Map<String, String> = mapOf(HttpHeaders.UserAgent to "NiceHttp"),
 ) : Requests(
     baseClient = client.config {
         install(HttpCookies) {

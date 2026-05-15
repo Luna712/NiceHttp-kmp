@@ -46,11 +46,57 @@ class HttpSendInterceptorContext(
 /**
  * Adds or replaces headers on every request.
  * Existing headers with the same name are removed first.
+ * Values are converted to strings via [Any.toString], so typed Ktor
+ * header values like [CacheControl] work directly.
+ *
+ * Construct via the DSL builder:
+ * ```kotlin
+ * HeadersInterceptor {
+ *     header(HttpHeaders.CacheControl, CacheControl.MaxAge(maxAgeSeconds = 300))
+ *     header(HttpHeaders.Accept, ContentType.Application.Json)
+ *     remove(HttpHeaders.UserAgent)
+ * }
+ * ```
  */
 class HeadersInterceptor(
-    private val headers: Map<String, String>,
+    private val headers: List<Pair<String, String>>,
+    private val removals: List<String>,
 ) : Interceptor {
+
+    class Builder {
+        private val headers = mutableListOf<Pair<String, String>>()
+        private val removals = mutableListOf<String>()
+
+        /** Add or replace a header. Mirrors Ktor's own [header] naming. */
+        fun header(name: String, value: Any) { headers.add(name to value.toString()) }
+        /** Add a header, communicating intent to insert a new value. */
+        fun add(name: String, value: Any) { headers.add(name to value.toString()) }
+        /** Add a header, communicating intent to append a value. */
+        fun append(name: String, value: Any) { headers.add(name to value.toString()) }
+        /** Set a header, communicating intent to assign a value regardless of existing. */
+        fun set(name: String, value: Any) { headers.add(name to value.toString()) }
+        /** Replace a header, communicating intent to overwrite an existing value. */
+        fun replace(name: String, value: Any) { headers.add(name to value.toString()) }
+        /** Remove a header entirely from the request. */
+        fun remove(name: String) { removals.add(name) }
+
+        internal fun buildHeaders() = headers.toList()
+        internal fun buildRemovals() = removals.toList()
+    }
+
+    companion object {
+        operator fun invoke(block: Builder.() -> Unit): HeadersInterceptor {
+            val builder = Builder().apply(block)
+            return HeadersInterceptor(builder.buildHeaders(), builder.buildRemovals())
+        }
+    }
+
     override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
+        removals.forEach { k ->
+            ctx.request.headers.entries()
+                .filter { it.key.equals(k, ignoreCase = true) }
+                .forEach { ctx.request.headers.remove(it.key) }
+        }
         headers.forEach { (k, v) ->
             // Remove existing headers with the same
             // case-insensitive name first.
@@ -115,35 +161,6 @@ class RetryInterceptor(
 }*/
 
 /**
- * Equivalent of original NiceHttp's CacheInterceptor.
- * Strips server cache headers and forces Ktor's [HttpCache] to serve from cache.
- * Applied automatically to every request in [Requests.custom].
- */
-object CacheInterceptor : Interceptor {
-    override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
-        // Try cache first
-        ctx.request.headers.apply {
-            remove("Cache-Control")
-            remove("Pragma")
-            append("Cache-Control", "only-if-cached, max-stale=${Int.MAX_VALUE}")
-        }
-
-        val cachedCall = ctx.proceed()
-
-        // 504 means no cache available - fall back to normal online request
-        if (cachedCall.response.status.value == 504) {
-            ctx.request.headers.apply {
-                remove("Cache-Control")
-                remove("Pragma")
-            }
-            return ctx.proceed()
-        }
-
-        return cachedCall
-    }
-}
-
-/**
  * Logs request and response details.
  * @param log logging function, defaults to [println].
  */
@@ -153,11 +170,14 @@ class LoggingInterceptor(
     override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
         log("--> ${ctx.method} ${ctx.url}")
         ctx.headers.forEach { key, values ->
-            values.forEach { value -> log("$key: $value") }
+            values.forEach { value -> log("--> $key: $value") }
         }
 
         val call = ctx.proceed()
         log("<-- ${call.response.status.value} ${call.response.call.request.url}")
+        call.response.headers.forEach { key, values ->
+            values.forEach { value -> log("<-- $key: $value") }
+        }
 
         return call
     }

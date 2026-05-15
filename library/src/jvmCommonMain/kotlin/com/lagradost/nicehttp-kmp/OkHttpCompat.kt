@@ -2,13 +2,27 @@ package com.lagradost.nicehttp
 
 import io.ktor.http.Headers
 import okhttp3.CacheControl
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody as OkRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import java.io.IOException
+import java.io.InterruptedIOException
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.CompletionHandler
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.suspendCancellableCoroutine
 
+@Deprecated(
+    "OkHttp back-compat shim. Use the Ktor-based request builder instead.",
+    level = DeprecationLevel.WARNING,
+)
 fun requestCreator(
     method: String,
     url: String,
@@ -79,8 +93,55 @@ fun requestCreator(
         .build()
 }
 
-/** Restores verify=false SSL bypass for back-compat */
-fun OkHttpClient.Builder.applyVerify(verify: Boolean): OkHttpClient.Builder {
-    if (!verify) ignoreAllSSLErrors()
-    return this
+// Provides async-able Calls
+@Deprecated(
+    "OkHttp back-compat shim. Use the Ktor-based request builder instead.",
+    level = DeprecationLevel.ERROR,
+)
+class ContinuationCallback(
+    private val call: Call,
+    private val continuation: CancellableContinuation<Response>,
+) : Callback, CompletionHandler {
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun onResponse(call: Call, response: Response) {
+        continuation.resume(response) { _, _, _ -> }
+    }
+
+    override fun onFailure(call: Call, e: IOException) {
+        // Cannot throw exception on SocketException since that can lead to un-catchable crashes
+        // when you exit an activity as a request
+        println("Exception in NiceHttp: ${e.javaClass.name} ${e.message}")
+        if (call.isCanceled()) {
+            // Must be able to throw errors, for example timeouts
+            if (e is InterruptedIOException)
+                continuation.cancel(e)
+            else
+                e.printStackTrace()
+        } else {
+            continuation.resumeWithException(e)
+        }
+    }
+
+    override fun invoke(cause: Throwable?) {
+        try {
+            call.cancel()
+        } catch (_: Throwable) {
+        }
+    }
+}
+
+object RequestsCompat {
+    @Deprecated(
+        "OkHttp back-compat shim. Use the Ktor-based request builder instead.",
+        level = DeprecationLevel.ERROR,
+    )
+    suspend inline fun Call.await(): Response {
+        return suspendCancellableCoroutine { continuation ->
+            @Suppress("DEPRECATION_ERROR")
+            val callback = ContinuationCallback(this, continuation)
+            enqueue(callback)
+            continuation.invokeOnCancellation(callback)
+        }
+    }
 }

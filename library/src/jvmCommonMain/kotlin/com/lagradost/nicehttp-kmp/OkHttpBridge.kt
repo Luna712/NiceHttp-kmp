@@ -1,7 +1,8 @@
 package com.lagradost.nicehttp
 
-import io.ktor.http.content.*
 import io.ktor.client.request.forms.*
+import io.ktor.http.*
+import io.ktor.http.content.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import okio.Buffer
@@ -9,18 +10,22 @@ import okio.Buffer
 /**
  * Converts an [okhttp3.RequestBody] to a NiceHttp [RequestBody].
  * Reads the OkHttp body into a byte array via Okio then wraps it.
+ *
+ * TODO: Deprecate
  */
 fun okhttp3.RequestBody.toNiceRequestBody(): RequestBody {
     val buffer = Buffer()
     writeTo(buffer)
     val bytes = buffer.readByteArray()
-    val ct = contentType()?.toString() ?: "application/octet-stream"
+    val ct = ContentType.parse(contentType()?.toString() ?: "application/octet-stream")
     return RequestBody.bytes(bytes, ct)
 }
 
 /**
  * Converts a NiceHttp [RequestBody] to an [okhttp3.RequestBody].
  * Used when passing a KMP request body into raw OkHttp code.
+ *
+ * TODO: Deprecate
  */
 fun RequestBody.toOkHttpRequestBody(): okhttp3.RequestBody {
     return when (val c = content) {
