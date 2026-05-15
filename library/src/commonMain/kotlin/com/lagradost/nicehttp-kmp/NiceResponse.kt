@@ -221,10 +221,9 @@ private suspend fun ByteReadChannel.readTextLimited(charset: Charset): String {
     val builder = StringBuilder()
     val read = readTo(builder, charset, MAX_TEXT_BYTES)
     if (read >= MAX_TEXT_BYTES) {
-        cancel()
-        throw IllegalStateException(
-            "Response exceeded $MAX_TEXT_BYTES bytes. Use .textLarge instead."
-        )
+        cancel(IllegalStateException(
+            "Response exceeded $MAX_TEXT_BYTES bytes ($read). Use .textLarge instead."
+        ))
     }
     return builder.toString()
 }

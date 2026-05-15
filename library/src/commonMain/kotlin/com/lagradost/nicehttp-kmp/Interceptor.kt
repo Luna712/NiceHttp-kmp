@@ -5,6 +5,7 @@ import io.ktor.client.call.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.util.*
 
 /**
  * KMP interceptor backed by Ktor's [HttpSend] plugin.
@@ -44,67 +45,112 @@ class HttpSendInterceptorContext(
 }
 
 /**
- * Adds or replaces headers on every request.
- * Existing headers with the same name are removed first.
- * Values are converted to strings via [Any.toString], so typed Ktor
- * header values like [CacheControl] work directly.
+ * Intercepts outgoing requests to add, overwrite, append, or remove headers.
+ * Existing headers with the same name are removed before any overwrite operation.
+ * Values are converted to strings via [Any.toString], so typed Ktor values like
+ * [ContentType] and [CacheControl] work directly.
  *
- * Construct via the DSL builder:
  * ```kotlin
  * HeadersInterceptor {
- *     header(HttpHeaders.CacheControl, CacheControl.MaxAge(maxAgeSeconds = 300))
- *     header(HttpHeaders.Accept, ContentType.Application.Json)
- *     remove(HttpHeaders.UserAgent)
+ *     set(HttpHeaders.Authorization, "Bearer $token")
+ *     append(HttpHeaders.Accept, ContentType.Application.Json)
+ *     removeHeader(HttpHeaders.UserAgent)
+ *     headers(
+ *         HttpHeaders.XRequestId to requestId,
+ *         HttpHeaders.XForwardedFor to clientIp,
+ *     )
  * }
  * ```
  */
-class HeadersInterceptor(
-    private val headers: List<Pair<String, String>>,
-    private val removals: List<String>,
+class HeadersInterceptor private constructor(
+    private val actions: List<HeaderAction>,
 ) : Interceptor {
 
-    class Builder {
-        private val headers = mutableListOf<Pair<String, String>>()
-        private val removals = mutableListOf<String>()
+    private constructor(builder: Builder) : this(builder.buildActions())
 
-        /** Add or replace a header. Mirrors Ktor's own [header] naming. */
-        fun header(name: String, value: Any) { headers.add(name to value.toString()) }
-        /** Add a header, communicating intent to insert a new value. */
-        fun add(name: String, value: Any) { headers.add(name to value.toString()) }
-        /** Add a header, communicating intent to append a value. */
-        fun append(name: String, value: Any) { headers.add(name to value.toString()) }
-        /** Set a header, communicating intent to assign a value regardless of existing. */
-        fun set(name: String, value: Any) { headers.add(name to value.toString()) }
-        /** Replace a header, communicating intent to overwrite an existing value. */
-        fun replace(name: String, value: Any) { headers.add(name to value.toString()) }
-        /** Remove a header entirely from the request. */
-        fun remove(name: String) { removals.add(name) }
+    sealed class HeaderAction {
+        abstract val name: String
 
-        internal fun buildHeaders() = headers.toList()
-        internal fun buildRemovals() = removals.toList()
+        sealed class Mutation : HeaderAction() {
+            abstract val value: String
+            data class Overwrite(override val name: String, override val value: String) : Mutation()
+            data class Append(override val name: String, override val value: String) : Mutation()
+        }
+
+        data class Remove(override val name: String) : HeaderAction()
+        data class ReplaceAll(val headers: List<Pair<String, String>>) : HeaderAction() {
+            override val name get() = ""
+        }
     }
 
+    abstract class HeadersMutationBuilder {
+        internal val actions = mutableListOf<HeaderAction>()
+
+        /** Overwrites any existing header with the same name. Mirrors Ktor's own [header] naming. */
+        fun header(name: String, value: Any) { actions.add(HeaderAction.Mutation.Overwrite(name, value.toString())) }
+        /** Overwrites any existing header with the same name. */
+        fun set(name: String, value: Any) { actions.add(HeaderAction.Mutation.Overwrite(name, value.toString())) }
+        /** Overwrites any existing header with the same name. */
+        fun replace(name: String, value: Any) { actions.add(HeaderAction.Mutation.Overwrite(name, value.toString())) }
+        /** Appends a new value alongside any existing values for the same name. */
+        fun add(name: String, value: Any) { actions.add(HeaderAction.Mutation.Append(name, value.toString())) }
+        /** Appends a new value alongside any existing values for the same name. */
+        fun append(name: String, value: Any) { actions.add(HeaderAction.Mutation.Append(name, value.toString())) }
+        /** Appends a new value alongside any existing values for the same name. Mirrors OkHttp's [addHeader] naming. */
+        fun addHeader(name: String, value: Any) { actions.add(HeaderAction.Mutation.Append(name, value.toString())) }
+        /** Removes all values for the given header name. */
+        fun remove(name: String) { actions.add(HeaderAction.Remove(name)) }
+        /** Removes all values for the given header name. Mirrors OkHttp's [removeHeader] naming. */
+        fun removeHeader(name: String) { actions.add(HeaderAction.Remove(name)) }
+        /** Removes all existing headers and replaces them entirely with the given pairs. */
+        fun headers(vararg pairs: Pair<String, Any>) {
+            actions.add(HeaderAction.ReplaceAll(pairs.map { (name, value) -> name to value.toString() }))
+        }
+        /** Removes all existing headers and replaces them entirely with the given native Ktor [Headers] instance. */
+        fun headers(nativeHeaders: Headers) {
+            actions.add(HeaderAction.ReplaceAll(nativeHeaders.flattenEntries()))
+        }
+        /** Removes all existing headers and replaces them entirely using a native Ktor [HeadersBuilder] block. */
+        fun headers(block: HeadersBuilder.() -> Unit) {
+            actions.add(HeaderAction.ReplaceAll(Headers.build(block).flattenEntries()))
+        }
+
+        internal fun buildActions() = actions.toList()
+    }
+
+    /** Stable binary entry point. [invoke] always delegates here for binary compatibility. */
+    class Builder : HeadersMutationBuilder()
+
     companion object {
-        operator fun invoke(block: Builder.() -> Unit): HeadersInterceptor {
-            val builder = Builder().apply(block)
-            return HeadersInterceptor(builder.buildHeaders(), builder.buildRemovals())
+        operator fun invoke(block: Builder.() -> Unit): HeadersInterceptor =
+            HeadersInterceptor(Builder().apply(block))
+    }
+
+    private fun applyActions(actions: List<HeaderAction>, headers: HeadersBuilder) {
+        actions.forEach { action ->
+            when (action) {
+                is HeaderAction.Remove -> headers.entries()
+                    .filter { it.key.equals(action.name, ignoreCase = true) }
+                    .forEach { headers.remove(it.key) }
+                is HeaderAction.ReplaceAll -> {
+                    headers.clear()
+                    action.headers.forEach { (name, value) -> headers.append(name, value) }
+                }
+                is HeaderAction.Mutation.Overwrite -> {
+                    // Remove existing headers with the same
+                    // case-insensitive name first.
+                    headers.entries()
+                        .filter { it.key.equals(action.name, ignoreCase = true) }
+                        .forEach { headers.remove(it.key) }
+                    headers.append(action.name, action.value)
+                }
+                is HeaderAction.Mutation.Append -> headers.append(action.name, action.value)
+            }
         }
     }
 
     override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
-        removals.forEach { k ->
-            ctx.request.headers.entries()
-                .filter { it.key.equals(k, ignoreCase = true) }
-                .forEach { ctx.request.headers.remove(it.key) }
-        }
-        headers.forEach { (k, v) ->
-            // Remove existing headers with the same
-            // case-insensitive name first.
-            ctx.request.headers.entries()
-                .filter { it.key.equals(k, ignoreCase = true) }
-                .forEach { ctx.request.headers.remove(it.key) }
-            ctx.request.headers.append(k, v)
-        }
+        applyActions(actions, ctx.request.headers)
         return ctx.proceed()
     }
 }
@@ -133,7 +179,7 @@ class RetryInterceptor(
  * Replaces the first occurrence of [primaryUrl] with [fallbackUrl] in the request URL.
  * @param shouldFallback called with each [HttpClientCall]; return true to use fallback.
  */
-/*class FallbackUrlInterceptor(
+class FallbackUrlInterceptor(
     private val primaryUrl: String,
     private val fallbackUrl: String,
     private val shouldFallback: (HttpClientCall) -> Boolean = { !it.response.status.isSuccess() },
@@ -145,20 +191,12 @@ class RetryInterceptor(
         } catch (_: Exception) {
         }
 
-        val newUrl = ctx.request.url.buildString().replaceFirst(primaryUrl, fallbackUrl)
-        val parsed = Url(newUrl)
         return ctx.proceed {
-            url.protocol = parsed.protocol
-            url.host = parsed.host
-            url.port = parsed.port
-            url.pathSegments = parsed.pathSegments
-            url.parameters.clear()
-            parsed.parameters.forEach { key, values ->
-                values.forEach { url.parameters.append(key, it) }
-            }
+            val originalUrl = url.buildString()
+            url.takeFrom(originalUrl.replaceFirst(primaryUrl, fallbackUrl))
         }
     }
-}*/
+}
 
 /**
  * Logs request and response details.
