@@ -5,6 +5,7 @@ import io.ktor.client.call.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.util.*
 
 /**
  * KMP interceptor backed by Ktor's [HttpSend] plugin.
