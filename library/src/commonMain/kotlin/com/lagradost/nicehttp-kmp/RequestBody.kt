@@ -3,6 +3,7 @@ package com.lagradost.nicehttp
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.utils.io.charsets.*
 
 /**
  * KMP replacement for okhttp3.RequestBody.
@@ -16,13 +17,13 @@ abstract class RequestBody {
         /** Raw bytes body with the given content type. */
         fun bytes(
             bytes: ByteArray,
-            contentType: String = "application/octet-stream",
+            contentType: ContentType = ContentType.Application.OctetStream,
         ): RequestBody = BytesRequestBody(bytes, contentType)
 
         /** Plain text or JSON body. */
         fun text(
             text: String,
-            contentType: String = RequestBodyTypes.TEXT,
+            contentType: ContentType = ContentType.Text.Plain.withCharset(Charsets.UTF_8),
         ): RequestBody = TextRequestBody(text, contentType)
 
         /** URL-encoded form body. */
@@ -35,18 +36,18 @@ abstract class RequestBody {
 
 private class BytesRequestBody(
     private val bytes: ByteArray,
-    private val contentType: String,
+    private val contentType: ContentType,
 ) : RequestBody() {
     override val content: OutgoingContent =
-        ByteArrayContent(bytes, ContentType.parse(contentType))
+        ByteArrayContent(bytes, contentType)
 }
 
 private class TextRequestBody(
     private val text: String,
-    private val contentType: String,
+    private val contentType: ContentType,
 ) : RequestBody() {
     override val content: OutgoingContent =
-        TextContent(text, ContentType.parse(contentType))
+        TextContent(text, contentType)
 }
 
 private class FormRequestBody(

@@ -201,7 +201,7 @@ internal suspend fun HttpClientCall.toOkHttpResponse(request: okhttp3.Request): 
         .protocol(okhttp3.Protocol.HTTP_1_1)
         .code(response.status.value)
         .message("")
-        .body(bytes.toResponseBody(response.headers["content-type"]?.toMediaTypeOrNull()))
+        .body(bytes.toResponseBody(response.headers[HttpHeaders.ContentType]?.toMediaTypeOrNull()))
         .also { builder ->
             response.headers.forEach { k, values ->
                 values.forEach { v -> builder.addHeader(k, v) }

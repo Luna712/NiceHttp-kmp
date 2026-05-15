@@ -8,6 +8,7 @@ import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.utils.io.charsets.*
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -353,7 +354,7 @@ open class Requests(
         level = DeprecationLevel.WARNING,
     )
     open suspend fun custom(
-        method: HttpMethod,
+        method: String,
         url: String,
         headers: Map<String, String> = emptyMap(),
         referer: String? = null,
@@ -362,16 +363,20 @@ open class Requests(
         data: Map<String, String>? = defaultData,
         files: List<NiceFile>? = null,
         json: Any? = null,
-        requestBody: RequestBody? = null,
+        requestBody: NiceRequestBodyCompat? = null,
         allowRedirects: Boolean = true,
-        cacheTime: Duration = defaultCacheTime,
-        timeout: Duration = defaultTimeout,
-        interceptor: Interceptor? = null,
+        cacheTime: Int = 0,
+        cacheUnit: NiceTimeUnit = NiceTimeUnit.MINUTES,
+        timeout: Long = 0L,
+        interceptor: NiceInterceptorCompat? = null,
         verify: Boolean = true,
         responseParser: ResponseParser? = this.responseParser,
     ): NiceResponse = request(
-        method, url, headers, referer, params, cookies, data, files, json, requestBody,
-        allowRedirects, cacheTime, timeout, interceptor, verify, responseParser,
+        HttpMethod(method.uppercase()), url, headers, referer, params, cookies,
+        data, files, json, requestBody?.toRequestBody(), allowRedirects,
+        cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
+        timeout.seconds,
+        interceptor?.toInterceptor(), verify, responseParser,
     )
 
     suspend fun get(
@@ -762,7 +767,7 @@ open class Requests(
         responseParser: ResponseParser? = this.responseParser,
     ) = request(
         HttpMethod.Options, url, headers, referer, params, cookies,
-        data, files, json, requestBody?.toRequestBody(), allowRedirects,
+        null, null, null, null, allowRedirects,
         cacheTime.toLong().toDuration(cacheUnit.toDurationUnit()),
         timeout.seconds,
         interceptor?.toInterceptor(), verify, responseParser,
@@ -770,6 +775,8 @@ open class Requests(
 }
 
 private val MUST_HAVE_BODY  = setOf(HttpMethod.Post, HttpMethod.Put)
+
+// Keep in sync with https://github.com/ktorio/ktor/blob/245774a/ktor-http/common/src/io/ktor/http/HttpMethod.kt#L108-L113
 private val NO_BODY_METHODS = setOf(
     HttpMethod.Get,
     HttpMethod.Head,
@@ -785,7 +792,7 @@ private val NO_BODY_METHODS = setOf(
  * 2. [data] (URL-encoded form)
  * 3. [json] (JSON body)
  * 4. [files] (multipart)
- * 5. Empty form body for POST/PUT when nothing else is provided
+ * 5. Empty form body for methods in [MUST_HAVE_BODY] when nothing else is provided
  * 6. null for GET/HEAD/etc.
  */
 internal fun buildBody(
@@ -809,8 +816,8 @@ internal fun buildBody(
                 responseParser != null -> responseParser.writeValueAsString(json)
                 else                   -> json.toString()
             }
-            val ct = if (json is String) RequestBodyTypes.TEXT else RequestBodyTypes.JSON
-            RequestBody.text(jsonString, ct)
+            val ct = if (json is String) ContentType.Text.Plain else ContentType.Application.Json
+            RequestBody.text(jsonString, ct.withCharset(Charsets.UTF_8))
         }
 
         !files.isNullOrEmpty() -> {
@@ -825,9 +832,12 @@ internal fun buildBody(
                                     headers = Headers.build {
                                         append(
                                             HttpHeaders.ContentDisposition,
-                                            "form-data; name=\"${file.name}\"; filename=\"${file.fileName}\""
+                                            ContentDisposition("form-data")
+                                                .withParameter(ContentDisposition.Parameters.Name, file.name)
+                                                .withParameter(ContentDisposition.Parameters.FileName, file.fileName)
+                                                .toString()
                                         )
-                                        file.fileType?.let { append(HttpHeaders.ContentType, it) }
+                                        file.fileType?.let { append(HttpHeaders.ContentType, ContentType.parse(it)) }
                                     }
                                 )
                             } else {

@@ -1,38 +1,35 @@
 [versions]
-kotlin = "2.3.21"
-ktor = "3.4.3"
-kotlinx-coroutines = "1.10.2"
-kotlinx-serialization = "1.11.0"
-jsoup = "1.22.2"
-ksoup = "0.2.6"
 agp = "9.1.1"
+jsoup = "1.22.2"
+kotlin = "2.3.21"
+kotlinx-coroutines = "1.11.0"
+kotlinx-serialization = "1.11.0"
+ksoup = "0.2.6"
+ktor = "3.4.3"
 okhttp = "5.3.2"
 okio = "3.17.0"
 
 [libraries]
-ktor-client-core          = { module = "io.ktor:ktor-client-core",          version.ref = "ktor" }
-ktor-client-android       = { module = "io.ktor:ktor-client-android",       version.ref = "ktor" }
-ktor-client-okhttp        = { module = "io.ktor:ktor-client-okhttp",        version.ref = "ktor" }
-ktor-client-java          = { module = "io.ktor:ktor-client-java",          version.ref = "ktor" }
-ktor-client-js            = { module = "io.ktor:ktor-client-js",            version.ref = "ktor" }
-ktor-client-darwin        = { module = "io.ktor:ktor-client-darwin",        version.ref = "ktor" }
-ktor-client-winhttp       = { module = "io.ktor:ktor-client-winhttp",       version.ref = "ktor" }
-ktor-client-curl          = { module = "io.ktor:ktor-client-curl",          version.ref = "ktor" }
-ktor-client-cio           = { module = "io.ktor:ktor-client-cio",           version.ref = "ktor" }
-ktor-client-mock          = { module = "io.ktor:ktor-client-mock",          version.ref = "ktor" }
-
-kotlinx-coroutines-core   = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core",   version.ref = "kotlinx-coroutines" }
+jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
+ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
-
-jsoup                     = { module = "org.jsoup:jsoup",                   version.ref = "jsoup" }
-ksoup                     = { module = "com.fleeksoft.ksoup:ksoup",         version.ref = "ksoup" }
-
-okhttp                    = { module = "com.squareup.okhttp3:okhttp",              version.ref = "okhttp" }
-okhttp-dnsoverhttps       = { module = "com.squareup.okhttp3:okhttp-dnsoverhttps", version.ref = "okhttp" }
-okio                      = { module = "com.squareup.okio:okio",                   version.ref = "okio" }
+ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-curl = { module = "io.ktor:ktor-client-curl", version.ref = "ktor" }
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
+ktor-client-java = { module = "io.ktor:ktor-client-java", version.ref = "ktor" }
+ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
+ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+ktor-client-winhttp = { module = "io.ktor:ktor-client-winhttp", version.ref = "ktor" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+okhttp-dnsoverhttps = { module = "com.squareup.okhttp3:okhttp-dnsoverhttps", version.ref = "okhttp" }
+okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 
 [plugins]
-android-lint                  = { id = "com.android.lint", version.ref = "agp" }
+android-lint = { id = "com.android.lint", version.ref = "agp" }
 android-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
-kotlin-multiplatform          = { id = "org.jetbrains.kotlin.multiplatform",   version.ref = "kotlin" }
-kotlin-serialization          = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

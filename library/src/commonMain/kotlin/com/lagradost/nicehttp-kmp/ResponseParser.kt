@@ -13,13 +13,13 @@ interface ResponseParser {
     /** Same as [parse] but returns null on failure instead of throwing. */
     fun <T : Any> parseSafe(text: String, kClass: KClass<T>): T?
 
-    /** Serialise [obj] to a JSON string (used when passing `json = someObject` to requests). */
+    /** Serialize [obj] to a JSON string (used when passing `json = someObject` to requests). */
     fun writeValueAsString(obj: Any): String
 }
 
 /**
  * Wraps a raw JSON string so it is sent as `application/json` even though it is already
- * serialised, e.g. `post(url, json = JsonAsString(myRawJson))`.
+ * serialized, e.g. `post(url, json = JsonAsString(myRawJson))`.
  */
 data class JsonAsString(val string: String)
 
