@@ -4,8 +4,10 @@ import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.util.*
+import io.ktor.utils.io.*
 
 /**
  * KMP interceptor backed by Ktor's [HttpSend] plugin.
@@ -15,6 +17,15 @@ import io.ktor.util.*
  */
 fun interface Interceptor {
     suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall
+}
+
+/**
+ * Optional response-side counterpart to [Interceptor].
+ * Implement alongside [Interceptor] to mutate response headers before they are finalized,
+ * mirroring OkHttp's network interceptor behavior.
+ */
+fun interface ResponseInterceptor {
+    fun applyTo(headers: HeadersBuilder)
 }
 
 /**
@@ -45,10 +56,10 @@ class HttpSendInterceptorContext(
 }
 
 /**
- * Intercepts outgoing requests to add, overwrite, append, or remove headers.
- * Existing headers with the same name are removed before any overwrite operation.
- * Values are converted to strings via [Any.toString], so typed Ktor values like
- * [ContentType] and [CacheControl] work directly.
+ * Intercepts outgoing requests and optionally incoming responses to add, overwrite,
+ * append, or remove headers. Existing headers with the same name are removed before
+ * any overwrite operation. Values are converted to strings via [Any.toString], so typed
+ * Ktor values like [ContentType] and [CacheControl] work directly.
  *
  * ```kotlin
  * HeadersInterceptor {
@@ -59,14 +70,24 @@ class HttpSendInterceptorContext(
  *         HttpHeaders.XRequestId to requestId,
  *         HttpHeaders.XForwardedFor to clientIp,
  *     )
+ *
+ *     response {
+ *         removeHeader(HttpHeaders.CacheControl) // Remove site cache
+ *         removeHeader(HttpHeaders.Pragma) // Remove site cache
+ *         addHeader(HttpHeaders.CacheControl, "${CacheControl.ONLY_IF_CACHED}, ${CacheControl.MAX_STALE}=${Int.MAX_VALUE}")
+ *     }
  * }
  * ```
  */
 class HeadersInterceptor private constructor(
-    private val actions: List<HeaderAction>,
-) : Interceptor {
+    private val requestActions: List<HeaderAction>,
+    private val responseActions: List<HeaderAction>,
+) : Interceptor, ResponseInterceptor {
 
-    private constructor(builder: Builder) : this(builder.buildActions())
+    private constructor(builder: Builder) : this(
+        builder.buildRequestActions(),
+        builder.buildResponseActions(),
+    )
 
     sealed class HeaderAction {
         abstract val name: String
@@ -119,7 +140,18 @@ class HeadersInterceptor private constructor(
     }
 
     /** Stable binary entry point. [invoke] always delegates here for binary compatibility. */
-    class Builder : HeadersMutationBuilder()
+    class Builder : HeadersMutationBuilder() {
+        private val responseActions = mutableListOf<HeaderAction>()
+
+        fun response(block: ResponseBuilder.() -> Unit) {
+            responseActions.addAll(ResponseBuilder().apply(block).actions)
+        }
+
+        internal fun buildRequestActions() = actions.toList()
+        internal fun buildResponseActions() = responseActions.toList()
+    }
+
+    class ResponseBuilder : HeadersMutationBuilder()
 
     companion object {
         operator fun invoke(block: Builder.() -> Unit): HeadersInterceptor =
@@ -149,8 +181,12 @@ class HeadersInterceptor private constructor(
         }
     }
 
+    override fun applyTo(headers: HeadersBuilder) {
+        applyActions(responseActions, headers)
+    }
+
     override suspend fun intercept(ctx: HttpSendInterceptorContext): HttpClientCall {
-        applyActions(actions, ctx.request.headers)
+        applyActions(requestActions, ctx.request.headers)
         return ctx.proceed()
     }
 }
@@ -176,8 +212,10 @@ class RetryInterceptor(
 
 /**
  * Retries a failed request against a fallback URL.
- * Replaces the first occurrence of [primaryUrl] with [fallbackUrl] in the request URL.
- * @param shouldFallback called with each [HttpClientCall]; return true to use fallback.
+ * On any exception or non-2xx response from the primary URL, retries against [fallbackUrl].
+ * @param primaryUrl base URL of the primary host, e.g. "https://api.example.com"
+ * @param fallbackUrl base URL of the fallback host, e.g. "https://api-backup.example.com"
+ * @param shouldFallback called with each [HttpClientCall]; return true to try the fallback.
  */
 class FallbackUrlInterceptor(
     private val primaryUrl: String,
@@ -223,11 +261,14 @@ class LoggingInterceptor(
 
 /**
  * Installs a list of [Interceptor]s into an [HttpClient] via Ktor's [HttpSend] plugin.
+ * [ResponseInterceptor]s are additionally hooked into [HttpReceivePipeline.Before] so they
+ * run after the response arrives but before it is finalized, mirroring OkHttp's network interceptor.
  * Returns a new configured client, does not modify the original.
  * Interceptors run inside Ktor's pipeline so they properly interact with
  * [HttpCache], [HttpTimeout], and other plugins.
  * Interceptors are applied in order: first in list = first to run.
  */
+@OptIn(InternalAPI::class)
 internal fun HttpClient.withInterceptors(
     interceptors: List<Interceptor>,
 ): HttpClient {
@@ -239,6 +280,32 @@ internal fun HttpClient.withInterceptors(
             client.plugin(HttpSend).intercept { request ->
                 interceptor.intercept(
                     HttpSendInterceptorContext(request) { req -> execute(req) }
+                )
+            }
+        }
+
+        val responseInterceptors = interceptors.filterIsInstance<ResponseInterceptor>()
+        if (responseInterceptors.isNotEmpty()) {
+            client.receivePipeline.intercept(HttpReceivePipeline.Before) { response ->
+                val mutatedHeaders = HeadersBuilder().apply {
+                    response.headers.forEach { name, values ->
+                        values.forEach { append(name, it) }
+                    }
+                    responseInterceptors.forEach { it.applyTo(this) }
+                }.build()
+
+                proceedWith(
+                    DefaultHttpResponse(
+                        response.call,
+                        HttpResponseData(
+                            response.status,
+                            response.requestTime,
+                            mutatedHeaders,
+                            response.version,
+                            response.rawContent,
+                            response.coroutineContext,
+                        )
+                    )
                 )
             }
         }
