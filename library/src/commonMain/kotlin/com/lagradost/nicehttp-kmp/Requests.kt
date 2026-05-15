@@ -6,7 +6,6 @@ import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
-import io.ktor.client.utils.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.utils.io.charsets.*
@@ -121,7 +120,7 @@ open class Requests(
             response {
                 removeHeader(HttpHeaders.CacheControl) // Remove site cache
                 removeHeader(HttpHeaders.Pragma) // Remove site cache
-                addHeader(HttpHeaders.CacheControl, "${CacheControl.ONLY_IF_CACHED}, ${CacheControl.MAX_STALE}=${Int.MAX_VALUE}")
+                addHeader(HttpHeaders.CacheControl, "only-if-cached, max-stale=${Int.MAX_VALUE}")
             }
         })
         if (cacheTime > Duration.ZERO) {
