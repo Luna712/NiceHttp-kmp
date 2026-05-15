@@ -57,7 +57,7 @@ class NiceResponse(
                 )
             }
 
-            response.bodyAsChannel().readTextLimited(
+            channel().readTextLimited(
                 response.charset() ?: Charsets.UTF_8
             )
         }
@@ -127,13 +127,16 @@ class NiceResponse(
             )
         }
 
-        return response.bodyAsChannel().readTextLimited(
+        return channel().readTextLimited(
             response.charset() ?: Charsets.UTF_8
         )
     }
 
     /** Response body. Call .bytes() or .string() to read. Call .close() when done (no-op here). */
     suspend fun body(): ResponseBody = ResponseBody(response.readRawBytes())
+
+    /** Raw [ByteReadChannel] for incremental reads */
+    suspend fun channel(): ByteReadChannel = response.bodyAsChannel()
 
     /** Reads the response body without the size guard. */
     suspend fun textLarge(): String = response.bodyAsText()
