@@ -71,6 +71,8 @@ class HeadersInterceptor(
         fun header(name: String, value: Any) { headers.add(name to value.toString()) }
         /** Add a header, communicating intent to insert a new value. */
         fun add(name: String, value: Any) { headers.add(name to value.toString()) }
+        /** Add a header, communicating intent to append a value. */
+        fun append(name: String, value: Any) { headers.add(name to value.toString()) }
         /** Set a header, communicating intent to assign a value regardless of existing. */
         fun set(name: String, value: Any) { headers.add(name to value.toString()) }
         /** Replace a header, communicating intent to overwrite an existing value. */
