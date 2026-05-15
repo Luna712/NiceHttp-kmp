@@ -179,7 +179,7 @@ class RetryInterceptor(
  * Replaces the first occurrence of [primaryUrl] with [fallbackUrl] in the request URL.
  * @param shouldFallback called with each [HttpClientCall]; return true to use fallback.
  */
-/*class FallbackUrlInterceptor(
+class FallbackUrlInterceptor(
     private val primaryUrl: String,
     private val fallbackUrl: String,
     private val shouldFallback: (HttpClientCall) -> Boolean = { !it.response.status.isSuccess() },
@@ -191,20 +191,12 @@ class RetryInterceptor(
         } catch (_: Exception) {
         }
 
-        val newUrl = ctx.request.url.buildString().replaceFirst(primaryUrl, fallbackUrl)
-        val parsed = Url(newUrl)
         return ctx.proceed {
-            url.protocol = parsed.protocol
-            url.host = parsed.host
-            url.port = parsed.port
-            url.pathSegments = parsed.pathSegments
-            url.parameters.clear()
-            parsed.parameters.forEach { key, values ->
-                values.forEach { url.parameters.append(key, it) }
-            }
+            val originalUrl = url.buildString()
+            url.takeFrom(originalUrl.replaceFirst(primaryUrl, fallbackUrl))
         }
     }
-}*/
+}
 
 /**
  * Logs request and response details.
