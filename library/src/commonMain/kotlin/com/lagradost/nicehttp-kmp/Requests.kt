@@ -45,6 +45,7 @@ open class Requests(
     var defaultCookies: Map<String, String> = emptyMap(),
     var defaultCacheTime: Duration = Duration.ZERO,
     var defaultTimeout: Duration = Duration.ZERO,
+    var enableLogging: Boolean = false,
     var responseParser: ResponseParser? = null,
     var interceptors: MutableList<Interceptor> = mutableListOf(),
 ) {
@@ -114,8 +115,6 @@ open class Requests(
         interceptor: Interceptor?,
     ): MutableList<Interceptor> {
         val chain = interceptors.toMutableList()
-        // Logging always goes first so it sees the raw outgoing request
-        chain.add(0, LoggingInterceptor())
         if (cacheTime > Duration.ZERO) {
             // Cache-control header is injected before the logging interceptor sees the request
             chain.add(0, HeadersInterceptor {
@@ -126,6 +125,7 @@ open class Requests(
             })
         }
         if (interceptor != null) chain.add(interceptor)
+        if (enableLogging) chain.add(0, LoggingInterceptor())
         return chain
     }
 
