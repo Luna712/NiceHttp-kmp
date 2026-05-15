@@ -129,7 +129,7 @@ open class Requests(
             }
         })
         if (interceptor != null) chain.add(interceptor)
-        // if (enableLogging) chain.add(0, LoggingInterceptor())
+        chain.add(0, LoggingInterceptor())
         return chain
     }
 
