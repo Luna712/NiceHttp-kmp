@@ -116,10 +116,16 @@ open class Requests(
         val chain = interceptors.toMutableList()
         // Logging always goes first so it sees the raw outgoing request
         chain.add(0, LoggingInterceptor())
+        chain.add(HeadersInterceptor {
+            response {
+                removeHeader(HttpHeaders.CacheControl) // Remove site cache
+                removeHeader(HttpHeaders.Pragma) // Remove site cache
+                addHeader(HttpHeaders.CacheControl, "${CacheControl.ONLY_IF_CACHED}, ${CacheControl.MAX_STALE}=${Int.MAX_VALUE}")
+            }
+        })
         if (cacheTime > Duration.ZERO) {
             // Cache-control header is injected before the logging interceptor sees the request
             chain.add(0, HeadersInterceptor {
-                remove(HttpHeaders.Pragma)
                 header(
                     HttpHeaders.CacheControl,
                     CacheControl.MaxAge(cacheTime.inWholeSeconds.toInt())
