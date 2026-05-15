@@ -286,27 +286,30 @@ internal fun HttpClient.withInterceptors(
 
         val responseInterceptors = interceptors.filterIsInstance<ResponseInterceptor>()
         if (responseInterceptors.isNotEmpty()) {
-            client.receivePipeline.intercept(HttpReceivePipeline.Before) { response ->
+            client.plugin(HttpSend).intercept { request ->
+                val call = proceed(request)
                 val mutatedHeaders = HeadersBuilder().apply {
-                    response.headers.forEach { name, values ->
+                    call.response.headers.forEach { name, values ->
                         values.forEach { append(name, it) }
                     }
                     responseInterceptors.forEach { it.applyTo(this) }
                 }.build()
 
-                proceedWith(
+                @OptIn(InternalAPI::class)
+                call.setResponse(
                     DefaultHttpResponse(
-                        response.call,
+                        call,
                         HttpResponseData(
-                            response.status,
-                            response.requestTime,
+                            call.response.status,
+                            call.response.requestTime,
                             mutatedHeaders,
-                            response.version,
-                            response.rawContent,
-                            response.coroutineContext,
+                            call.response.version,
+                            call.response.rawContent,
+                            call.response.coroutineContext,
                         )
                     )
                 )
+                call
             }
         }
     }
