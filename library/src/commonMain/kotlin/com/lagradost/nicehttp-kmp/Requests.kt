@@ -114,20 +114,14 @@ open class Requests(
         interceptor: Interceptor?,
     ): MutableList<Interceptor> {
         val chain = interceptors.toMutableList()
-        chain.add(HeadersInterceptor {
-            if (cacheTime > Duration.ZERO) {
-                // Cache-control header is injected on the request side
+        if (cacheTime > Duration.ZERO) {
+            chain.add(HeadersInterceptor {
                 header(
                     HttpHeaders.CacheControl,
                     CacheControl.MaxAge(cacheTime.inWholeSeconds.toInt())
                 )
-            }
-            response {
-                removeHeader(HttpHeaders.CacheControl) // Remove site cache
-                removeHeader(HttpHeaders.Pragma) // Remove site cache
-                addHeader(HttpHeaders.CacheControl, "only-if-cached, max-stale=${Int.MAX_VALUE}")
-            }
-        })
+            })
+        }
         if (interceptor != null) chain.add(interceptor)
         chain.add(0, LoggingInterceptor())
         return chain
