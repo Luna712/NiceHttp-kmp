@@ -118,9 +118,8 @@ class HeadersInterceptor private constructor(
         internal fun buildActions() = actions.toList()
     }
 
-    class Builder : HeadersMutationBuilder() {
-        internal fun buildActions() = actions.toList()
-    }
+    /** Stable binary entry point. [invoke] always delegates here for binary compatibility. */
+    class Builder : HeadersMutationBuilder()
 
     companion object {
         operator fun invoke(block: Builder.() -> Unit): HeadersInterceptor =
