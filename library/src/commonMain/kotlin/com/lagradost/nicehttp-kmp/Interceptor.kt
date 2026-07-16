@@ -132,10 +132,12 @@ class HeadersInterceptor private constructor(
                 is HeaderAction.Remove -> headers.entries()
                     .filter { it.key.equals(action.name, ignoreCase = true) }
                     .forEach { headers.remove(it.key) }
+
                 is HeaderAction.ReplaceAll -> {
                     headers.clear()
                     action.headers.forEach { (name, value) -> headers.append(name, value) }
                 }
+
                 is HeaderAction.Mutation.Overwrite -> {
                     // Remove existing headers with the same
                     // case-insensitive name first.
@@ -144,6 +146,7 @@ class HeadersInterceptor private constructor(
                         .forEach { headers.remove(it.key) }
                     headers.append(action.name, action.value)
                 }
+
                 is HeaderAction.Mutation.Append -> headers.append(action.name, action.value)
             }
         }
