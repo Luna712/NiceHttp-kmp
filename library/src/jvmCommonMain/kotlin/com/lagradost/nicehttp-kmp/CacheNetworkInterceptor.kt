@@ -4,7 +4,7 @@ import okhttp3.CacheControl
 import okhttp3.Interceptor
 import okhttp3.Response
 
-class CacheNetworkInterceptor : Interceptor {
+internal object CacheNetworkInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         return chain.proceed(chain.request()).newBuilder()
             .removeHeader("Cache-Control") // Remove site cache
