@@ -41,10 +41,6 @@ private object OkHttpResponseCaptureInterceptor : Interceptor {
     }
 }
 
-@Deprecated(
-    "This was Only added as a temporary bridge to make NiceResponse.okhttpResponse work.",
-    level = DeprecationLevel.ERROR,
-)
-fun OkHttpClient.Builder.addNiceHttpResponseCapture(): OkHttpClient.Builder =
+internal fun OkHttpClient.Builder.addNiceHttpResponseCapture(): OkHttpClient.Builder =
     addInterceptor(OkHttpResponseCaptureInterceptor)
 
