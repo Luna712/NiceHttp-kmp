@@ -104,7 +104,7 @@ class NiceResponse(
         ReplaceWith("this"),
         DeprecationLevel.WARNING,
     )
-    val okhttpResponse: NiceResponse get() = this
+    val okhttpResponse: NiceResponseCompat? get() = resolveOkHttpResponseCompat()
 
     /** Returns the value of the header with the given [name], or null if absent. */
     @Deprecated(
