@@ -178,6 +178,8 @@ class NiceResponse(
     )
     @Suppress("DEPRECATION", "POTENTIALLY_NON_REPORTED_ANNOTATION")
     override fun toString(): String = text
+    // After deprecation phase, change toString to:
+    // "NiceResponse(code=$code, url=$url)"
 }
 
 /** Extracts `Set-Cookie` headers into a simple name→value map. */
