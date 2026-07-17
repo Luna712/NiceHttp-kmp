@@ -36,6 +36,6 @@ private object OkHttpResponseCaptureInterceptor : Interceptor {
     }
 }
 
-internal fun OkHttpClient.Builder.addNiceHttpResponseCapture(): OkHttpClient.Builder =
+fun OkHttpClient.Builder.addNiceHttpResponseCapture(): OkHttpClient.Builder =
     addInterceptor(OkHttpResponseCaptureInterceptor)
 
