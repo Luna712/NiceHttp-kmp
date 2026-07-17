@@ -17,7 +17,7 @@ private fun defaultHttpClient(builder: OkHttpClient.Builder): HttpClient = okHtt
         // so callers can still attach DNS-over-HTTPS, custom interceptors, etc.
         // addNiceHttpResponseCapture() is what makes NiceResponse.okHttpResponse work.
         // It will eventually be removed.
-        .addNetworkInterceptor(CacheNetworkInterceptor())
+        .addNetworkInterceptor(CacheNetworkInterceptor)
         .addNiceHttpResponseCapture()
 )
 
