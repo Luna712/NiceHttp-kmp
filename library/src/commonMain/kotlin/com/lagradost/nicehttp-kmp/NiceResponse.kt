@@ -171,8 +171,12 @@ class NiceResponse(
         null
     }
 
-    override fun toString(): String =
-        "NiceResponse(code=$code, url=$url)"
+    @Deprecated(
+        "Use suspend fun text() instead.",
+        ReplaceWith("text()"),
+        DeprecationLevel.ERROR,
+    )
+    override fun toString(): String = text
 }
 
 /** Extracts `Set-Cookie` headers into a simple name→value map. */
