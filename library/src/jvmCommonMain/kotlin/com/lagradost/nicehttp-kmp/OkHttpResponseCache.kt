@@ -25,7 +25,7 @@ internal object OkHttpResponseCache {
     fun take(id: String): Response? = map.remove(id)
 }
 
-object OkHttpResponseCaptureInterceptor : Interceptor {
+private object OkHttpResponseCaptureInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val id = UUID.randomUUID().toString()
         val response = chain.proceed(chain.request()).newBuilder()
@@ -36,6 +36,6 @@ object OkHttpResponseCaptureInterceptor : Interceptor {
     }
 }
 
-fun OkHttpClient.Builder.addNiceHttpResponseCapture(): OkHttpClient.Builder =
+internal fun OkHttpClient.Builder.addNiceHttpResponseCapture(): OkHttpClient.Builder =
     addInterceptor(OkHttpResponseCaptureInterceptor)
 
