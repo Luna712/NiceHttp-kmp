@@ -6,6 +6,11 @@ import okhttp3.Response
 import java.util.Collections
 import java.util.UUID
 
+/**
+ * This was added as a temporary bridge between ktor and okhttp, in order
+ * to make NiceResponse.okHttpResponse backwards-compatible.
+ */
+
 internal const val NICEHTTP_OKHTTP_ID_HEADER = "X-NiceHttp-OkHttp-Response-Id"
 
 internal object OkHttpResponseCache {
@@ -36,6 +41,10 @@ private object OkHttpResponseCaptureInterceptor : Interceptor {
     }
 }
 
+@Deprecated(
+    "This was Only added as a temporary bridge to make NiceResponse.okHttpResponse work.",
+    level = DeprecationLevel.ERROR,
+)
 fun OkHttpClient.Builder.addNiceHttpResponseCapture(): OkHttpClient.Builder =
     addInterceptor(OkHttpResponseCaptureInterceptor)
 
