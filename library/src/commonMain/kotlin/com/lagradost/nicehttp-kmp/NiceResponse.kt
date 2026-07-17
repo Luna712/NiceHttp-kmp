@@ -176,6 +176,7 @@ class NiceResponse(
         ReplaceWith("text()"),
         DeprecationLevel.ERROR,
     )
+    @Suppress("DEPRECATION", "POTENTIALLY_NON_REPORTED_ANNOTATION")
     override fun toString(): String = text
 }
 
