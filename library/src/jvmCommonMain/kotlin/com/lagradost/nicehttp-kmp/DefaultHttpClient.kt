@@ -21,10 +21,11 @@ actual fun insecureHttpClient(): HttpClient = HttpClient(OkHttp) {
     install(HttpTimeout)
     install(HttpCache)
     install(HttpRequestRetry) { noRetry() }
+    @Suppress("DEPRECATION_ERROR")
     engine {
         config {
-            ignoreAllSSLErrors()
             addNiceHttpResponseCapture()
+            ignoreAllSSLErrors()
         }
     }
 }
