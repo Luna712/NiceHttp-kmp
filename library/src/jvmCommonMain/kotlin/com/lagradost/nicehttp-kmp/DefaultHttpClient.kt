@@ -13,6 +13,7 @@ actual fun defaultHttpClient(): HttpClient = HttpClient(OkHttp) {
     // so callers can still attach DNS-over-HTTPS, custom interceptors, etc.
     // addNiceHttpResponseCapture() is what makes NiceResponse.okHttpResponse work.
     // It will eventually be removed.
+    @Suppress("DEPRECATION_ERROR")
     engine { config { addNiceHttpResponseCapture() } }
 }
 
