@@ -119,7 +119,7 @@ kotlin {
             dependsOn(jvmCommonMain)
         }
 
-        // Web: browser/Node.js Ktor engine
+        // Web targets: browser/Node.js Ktor engine
         val webMain by getting {
             dependsOn(nonJvmMain)
             dependencies {
