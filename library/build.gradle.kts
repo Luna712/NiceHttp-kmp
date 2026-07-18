@@ -119,16 +119,8 @@ kotlin {
             dependsOn(jvmCommonMain)
         }
 
-        // JS: browser/Node.js Ktor engine
-        val jsMain by getting {
-            dependsOn(nonJvmMain)
-            dependencies {
-                api(libs.ktor.client.js)
-            }
-        }
-
-        // WASM/JS: browser/Node.js Ktor engine
-        val wasmJsMain by getting {
+        // Web: browser/Node.js Ktor engine
+        val webMain by getting {
             dependsOn(nonJvmMain)
             dependencies {
                 api(libs.ktor.client.js)
