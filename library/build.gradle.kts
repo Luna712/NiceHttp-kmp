@@ -159,6 +159,10 @@ kotlin {
             }
         }
     }
+
+    @OptIn(org.jetbrains.kotlin.gradle.dsl.abi.ExperimentalAbiValidation::class)
+    // https://kotlinlang.org/docs/gradle-binary-compatibility-validation.html
+    abiValidation()
 }
 
 publishing {
