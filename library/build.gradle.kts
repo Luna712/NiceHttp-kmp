@@ -26,13 +26,13 @@ kotlin {
 
     android {
         namespace = "com.lagradost.nicehttp"
-        compileSdk = 36
+        compileSdk = 37
         minSdk = 23
         compilerOptions { jvmTarget.set(JvmTarget.JVM_1_8) }
     }
 
     // JS (browser + Node.js)
-    js(IR) {
+    js {
         browser {
             commonWebpackConfig {
                 devServer = KotlinWebpackConfig.DevServer(
