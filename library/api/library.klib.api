@@ -1,0 +1,425 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, js, linuxArm64, linuxX64, macosArm64, mingwX64, tvosArm64, tvosSimulatorArm64, wasmJs, watchosArm32, watchosArm64, watchosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.lagradost:library>
+abstract fun interface com.lagradost.nicehttp/Interceptor { // com.lagradost.nicehttp/Interceptor|null[0]
+    abstract suspend fun intercept(com.lagradost.nicehttp/HttpSendInterceptorContext): io.ktor.client.call/HttpClientCall // com.lagradost.nicehttp/Interceptor.intercept|intercept(com.lagradost.nicehttp.HttpSendInterceptorContext){}[0]
+}
+
+abstract interface com.lagradost.nicehttp/ResponseParser { // com.lagradost.nicehttp/ResponseParser|null[0]
+    abstract fun <#A1: kotlin/Any> parse(kotlin/String, kotlin.reflect/KClass<#A1>): #A1 // com.lagradost.nicehttp/ResponseParser.parse|parse(kotlin.String;kotlin.reflect.KClass<0:0>){0§<kotlin.Any>}[0]
+    abstract fun <#A1: kotlin/Any> parseSafe(kotlin/String, kotlin.reflect/KClass<#A1>): #A1? // com.lagradost.nicehttp/ResponseParser.parseSafe|parseSafe(kotlin.String;kotlin.reflect.KClass<0:0>){0§<kotlin.Any>}[0]
+    abstract fun writeValueAsString(kotlin/Any): kotlin/String // com.lagradost.nicehttp/ResponseParser.writeValueAsString|writeValueAsString(kotlin.Any){}[0]
+}
+
+abstract class com.lagradost.nicehttp/PlatformInputStream { // com.lagradost.nicehttp/PlatformInputStream|null[0]
+    constructor <init>() // com.lagradost.nicehttp/PlatformInputStream.<init>|<init>(){}[0]
+
+    abstract fun read(): kotlin/Int // com.lagradost.nicehttp/PlatformInputStream.read|read(){}[0]
+    open fun close() // com.lagradost.nicehttp/PlatformInputStream.close|close(){}[0]
+    open fun read(kotlin/ByteArray, kotlin/Int, kotlin/Int): kotlin/Int // com.lagradost.nicehttp/PlatformInputStream.read|read(kotlin.ByteArray;kotlin.Int;kotlin.Int){}[0]
+}
+
+abstract class com.lagradost.nicehttp/RequestBody { // com.lagradost.nicehttp/RequestBody|null[0]
+    constructor <init>() // com.lagradost.nicehttp/RequestBody.<init>|<init>(){}[0]
+
+    abstract val content // com.lagradost.nicehttp/RequestBody.content|{}content[0]
+        abstract fun <get-content>(): io.ktor.http.content/OutgoingContent // com.lagradost.nicehttp/RequestBody.content.<get-content>|<get-content>(){}[0]
+
+    final object Companion { // com.lagradost.nicehttp/RequestBody.Companion|null[0]
+        final fun bytes(kotlin/ByteArray, io.ktor.http/ContentType = ...): com.lagradost.nicehttp/RequestBody // com.lagradost.nicehttp/RequestBody.Companion.bytes|bytes(kotlin.ByteArray;io.ktor.http.ContentType){}[0]
+        final fun form(kotlin.collections/Map<kotlin/String, kotlin/String>): com.lagradost.nicehttp/RequestBody // com.lagradost.nicehttp/RequestBody.Companion.form|form(kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+        final fun of(io.ktor.http.content/OutgoingContent): com.lagradost.nicehttp/RequestBody // com.lagradost.nicehttp/RequestBody.Companion.of|of(io.ktor.http.content.OutgoingContent){}[0]
+        final fun text(kotlin/String, io.ktor.http/ContentType = ...): com.lagradost.nicehttp/RequestBody // com.lagradost.nicehttp/RequestBody.Companion.text|text(kotlin.String;io.ktor.http.ContentType){}[0]
+    }
+}
+
+final class com.lagradost.nicehttp/FallbackUrlInterceptor : com.lagradost.nicehttp/Interceptor { // com.lagradost.nicehttp/FallbackUrlInterceptor|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/Function1<io.ktor.client.call/HttpClientCall, kotlin/Boolean> = ...) // com.lagradost.nicehttp/FallbackUrlInterceptor.<init>|<init>(kotlin.String;kotlin.String;kotlin.Function1<io.ktor.client.call.HttpClientCall,kotlin.Boolean>){}[0]
+
+    final suspend fun intercept(com.lagradost.nicehttp/HttpSendInterceptorContext): io.ktor.client.call/HttpClientCall // com.lagradost.nicehttp/FallbackUrlInterceptor.intercept|intercept(com.lagradost.nicehttp.HttpSendInterceptorContext){}[0]
+}
+
+final class com.lagradost.nicehttp/HeadersInterceptor : com.lagradost.nicehttp/Interceptor { // com.lagradost.nicehttp/HeadersInterceptor|null[0]
+    final suspend fun intercept(com.lagradost.nicehttp/HttpSendInterceptorContext): io.ktor.client.call/HttpClientCall // com.lagradost.nicehttp/HeadersInterceptor.intercept|intercept(com.lagradost.nicehttp.HttpSendInterceptorContext){}[0]
+
+    abstract class HeadersMutationBuilder { // com.lagradost.nicehttp/HeadersInterceptor.HeadersMutationBuilder|null[0]
+        constructor <init>() // com.lagradost.nicehttp/HeadersInterceptor.HeadersMutationBuilder.<init>|<init>(){}[0]
+
+        final fun add(kotlin/String, kotlin/Any) // com.lagradost.nicehttp/HeadersInterceptor.HeadersMutationBuilder.add|add(kotlin.String;kotlin.Any){}[0]
+        final fun addHeader(kotlin/String, kotlin/Any) // com.lagradost.nicehttp/HeadersInterceptor.HeadersMutationBuilder.addHeader|addHeader(kotlin.String;kotlin.Any){}[0]
+        final fun append(kotlin/String, kotlin/Any) // com.lagradost.nicehttp/HeadersInterceptor.HeadersMutationBuilder.append|append(kotlin.String;kotlin.Any){}[0]
+        final fun header(kotlin/String, kotlin/Any) // com.lagradost.nicehttp/HeadersInterceptor.HeadersMutationBuilder.header|header(kotlin.String;kotlin.Any){}[0]
+        final fun headers(io.ktor.http/Headers) // com.lagradost.nicehttp/HeadersInterceptor.HeadersMutationBuilder.headers|headers(io.ktor.http.Headers){}[0]
+        final fun headers(kotlin/Array<out kotlin/Pair<kotlin/String, kotlin/Any>>...) // com.lagradost.nicehttp/HeadersInterceptor.HeadersMutationBuilder.headers|headers(kotlin.Array<out|kotlin.Pair<kotlin.String,kotlin.Any>>...){}[0]
+        final fun headers(kotlin/Function1<io.ktor.http/HeadersBuilder, kotlin/Unit>) // com.lagradost.nicehttp/HeadersInterceptor.HeadersMutationBuilder.headers|headers(kotlin.Function1<io.ktor.http.HeadersBuilder,kotlin.Unit>){}[0]
+        final fun remove(kotlin/String) // com.lagradost.nicehttp/HeadersInterceptor.HeadersMutationBuilder.remove|remove(kotlin.String){}[0]
+        final fun removeHeader(kotlin/String) // com.lagradost.nicehttp/HeadersInterceptor.HeadersMutationBuilder.removeHeader|removeHeader(kotlin.String){}[0]
+        final fun replace(kotlin/String, kotlin/Any) // com.lagradost.nicehttp/HeadersInterceptor.HeadersMutationBuilder.replace|replace(kotlin.String;kotlin.Any){}[0]
+        final fun set(kotlin/String, kotlin/Any) // com.lagradost.nicehttp/HeadersInterceptor.HeadersMutationBuilder.set|set(kotlin.String;kotlin.Any){}[0]
+    }
+
+    final class Builder : com.lagradost.nicehttp/HeadersInterceptor.HeadersMutationBuilder { // com.lagradost.nicehttp/HeadersInterceptor.Builder|null[0]
+        constructor <init>() // com.lagradost.nicehttp/HeadersInterceptor.Builder.<init>|<init>(){}[0]
+    }
+
+    sealed class HeaderAction { // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction|null[0]
+        abstract val name // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.name|{}name[0]
+            abstract fun <get-name>(): kotlin/String // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.name.<get-name>|<get-name>(){}[0]
+
+        final class Remove : com.lagradost.nicehttp/HeadersInterceptor.HeaderAction { // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Remove|null[0]
+            constructor <init>(kotlin/String) // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Remove.<init>|<init>(kotlin.String){}[0]
+
+            final val name // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Remove.name|{}name[0]
+                final fun <get-name>(): kotlin/String // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Remove.name.<get-name>|<get-name>(){}[0]
+
+            final fun component1(): kotlin/String // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Remove.component1|component1(){}[0]
+            final fun copy(kotlin/String = ...): com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Remove // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Remove.copy|copy(kotlin.String){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Remove.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Remove.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Remove.toString|toString(){}[0]
+        }
+
+        final class ReplaceAll : com.lagradost.nicehttp/HeadersInterceptor.HeaderAction { // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.ReplaceAll|null[0]
+            constructor <init>(kotlin.collections/List<kotlin/Pair<kotlin/String, kotlin/String>>) // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.ReplaceAll.<init>|<init>(kotlin.collections.List<kotlin.Pair<kotlin.String,kotlin.String>>){}[0]
+
+            final val headers // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.ReplaceAll.headers|{}headers[0]
+                final fun <get-headers>(): kotlin.collections/List<kotlin/Pair<kotlin/String, kotlin/String>> // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.ReplaceAll.headers.<get-headers>|<get-headers>(){}[0]
+            final val name // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.ReplaceAll.name|{}name[0]
+                final fun <get-name>(): kotlin/String // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.ReplaceAll.name.<get-name>|<get-name>(){}[0]
+
+            final fun component1(): kotlin.collections/List<kotlin/Pair<kotlin/String, kotlin/String>> // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.ReplaceAll.component1|component1(){}[0]
+            final fun copy(kotlin.collections/List<kotlin/Pair<kotlin/String, kotlin/String>> = ...): com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.ReplaceAll // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.ReplaceAll.copy|copy(kotlin.collections.List<kotlin.Pair<kotlin.String,kotlin.String>>){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.ReplaceAll.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.ReplaceAll.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.ReplaceAll.toString|toString(){}[0]
+        }
+
+        sealed class Mutation : com.lagradost.nicehttp/HeadersInterceptor.HeaderAction { // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation|null[0]
+            abstract val value // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.value|{}value[0]
+                abstract fun <get-value>(): kotlin/String // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.value.<get-value>|<get-value>(){}[0]
+
+            final class Append : com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation { // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Append|null[0]
+                constructor <init>(kotlin/String, kotlin/String) // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Append.<init>|<init>(kotlin.String;kotlin.String){}[0]
+
+                final val name // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Append.name|{}name[0]
+                    final fun <get-name>(): kotlin/String // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Append.name.<get-name>|<get-name>(){}[0]
+                final val value // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Append.value|{}value[0]
+                    final fun <get-value>(): kotlin/String // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Append.value.<get-value>|<get-value>(){}[0]
+
+                final fun component1(): kotlin/String // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Append.component1|component1(){}[0]
+                final fun component2(): kotlin/String // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Append.component2|component2(){}[0]
+                final fun copy(kotlin/String = ..., kotlin/String = ...): com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Append // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Append.copy|copy(kotlin.String;kotlin.String){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Append.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Append.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Append.toString|toString(){}[0]
+            }
+
+            final class Overwrite : com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation { // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Overwrite|null[0]
+                constructor <init>(kotlin/String, kotlin/String) // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Overwrite.<init>|<init>(kotlin.String;kotlin.String){}[0]
+
+                final val name // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Overwrite.name|{}name[0]
+                    final fun <get-name>(): kotlin/String // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Overwrite.name.<get-name>|<get-name>(){}[0]
+                final val value // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Overwrite.value|{}value[0]
+                    final fun <get-value>(): kotlin/String // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Overwrite.value.<get-value>|<get-value>(){}[0]
+
+                final fun component1(): kotlin/String // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Overwrite.component1|component1(){}[0]
+                final fun component2(): kotlin/String // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Overwrite.component2|component2(){}[0]
+                final fun copy(kotlin/String = ..., kotlin/String = ...): com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Overwrite // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Overwrite.copy|copy(kotlin.String;kotlin.String){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Overwrite.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Overwrite.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // com.lagradost.nicehttp/HeadersInterceptor.HeaderAction.Mutation.Overwrite.toString|toString(){}[0]
+            }
+        }
+    }
+
+    final object Companion { // com.lagradost.nicehttp/HeadersInterceptor.Companion|null[0]
+        final fun invoke(kotlin/Function1<com.lagradost.nicehttp/HeadersInterceptor.Builder, kotlin/Unit>): com.lagradost.nicehttp/HeadersInterceptor // com.lagradost.nicehttp/HeadersInterceptor.Companion.invoke|invoke(kotlin.Function1<com.lagradost.nicehttp.HeadersInterceptor.Builder,kotlin.Unit>){}[0]
+    }
+}
+
+final class com.lagradost.nicehttp/HttpSendInterceptorContext { // com.lagradost.nicehttp/HttpSendInterceptorContext|null[0]
+    constructor <init>(io.ktor.client.request/HttpRequestBuilder, kotlin.coroutines/SuspendFunction1<io.ktor.client.request/HttpRequestBuilder, io.ktor.client.call/HttpClientCall>) // com.lagradost.nicehttp/HttpSendInterceptorContext.<init>|<init>(io.ktor.client.request.HttpRequestBuilder;kotlin.coroutines.SuspendFunction1<io.ktor.client.request.HttpRequestBuilder,io.ktor.client.call.HttpClientCall>){}[0]
+
+    final val execute // com.lagradost.nicehttp/HttpSendInterceptorContext.execute|{}execute[0]
+        final fun <get-execute>(): kotlin.coroutines/SuspendFunction1<io.ktor.client.request/HttpRequestBuilder, io.ktor.client.call/HttpClientCall> // com.lagradost.nicehttp/HttpSendInterceptorContext.execute.<get-execute>|<get-execute>(){}[0]
+    final val headers // com.lagradost.nicehttp/HttpSendInterceptorContext.headers|{}headers[0]
+        final fun <get-headers>(): io.ktor.http/Headers // com.lagradost.nicehttp/HttpSendInterceptorContext.headers.<get-headers>|<get-headers>(){}[0]
+    final val method // com.lagradost.nicehttp/HttpSendInterceptorContext.method|{}method[0]
+        final fun <get-method>(): kotlin/String // com.lagradost.nicehttp/HttpSendInterceptorContext.method.<get-method>|<get-method>(){}[0]
+    final val request // com.lagradost.nicehttp/HttpSendInterceptorContext.request|{}request[0]
+        final fun <get-request>(): io.ktor.client.request/HttpRequestBuilder // com.lagradost.nicehttp/HttpSendInterceptorContext.request.<get-request>|<get-request>(){}[0]
+    final val url // com.lagradost.nicehttp/HttpSendInterceptorContext.url|{}url[0]
+        final fun <get-url>(): kotlin/String // com.lagradost.nicehttp/HttpSendInterceptorContext.url.<get-url>|<get-url>(){}[0]
+
+    final suspend fun proceed(): io.ktor.client.call/HttpClientCall // com.lagradost.nicehttp/HttpSendInterceptorContext.proceed|proceed(){}[0]
+    final suspend fun proceed(io.ktor.client.request/HttpRequestBuilder): io.ktor.client.call/HttpClientCall // com.lagradost.nicehttp/HttpSendInterceptorContext.proceed|proceed(io.ktor.client.request.HttpRequestBuilder){}[0]
+    final suspend fun proceed(kotlin/Function1<io.ktor.client.request/HttpRequestBuilder, kotlin/Unit>): io.ktor.client.call/HttpClientCall // com.lagradost.nicehttp/HttpSendInterceptorContext.proceed|proceed(kotlin.Function1<io.ktor.client.request.HttpRequestBuilder,kotlin.Unit>){}[0]
+}
+
+final class com.lagradost.nicehttp/JsonAsString { // com.lagradost.nicehttp/JsonAsString|null[0]
+    constructor <init>(kotlin/String) // com.lagradost.nicehttp/JsonAsString.<init>|<init>(kotlin.String){}[0]
+
+    final val string // com.lagradost.nicehttp/JsonAsString.string|{}string[0]
+        final fun <get-string>(): kotlin/String // com.lagradost.nicehttp/JsonAsString.string.<get-string>|<get-string>(){}[0]
+
+    final fun component1(): kotlin/String // com.lagradost.nicehttp/JsonAsString.component1|component1(){}[0]
+    final fun copy(kotlin/String = ...): com.lagradost.nicehttp/JsonAsString // com.lagradost.nicehttp/JsonAsString.copy|copy(kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.lagradost.nicehttp/JsonAsString.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.lagradost.nicehttp/JsonAsString.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.lagradost.nicehttp/JsonAsString.toString|toString(){}[0]
+}
+
+final class com.lagradost.nicehttp/LoggingInterceptor : com.lagradost.nicehttp/Interceptor { // com.lagradost.nicehttp/LoggingInterceptor|null[0]
+    constructor <init>(kotlin/Function1<kotlin/String, kotlin/Unit> = ...) // com.lagradost.nicehttp/LoggingInterceptor.<init>|<init>(kotlin.Function1<kotlin.String,kotlin.Unit>){}[0]
+
+    final suspend fun intercept(com.lagradost.nicehttp/HttpSendInterceptorContext): io.ktor.client.call/HttpClientCall // com.lagradost.nicehttp/LoggingInterceptor.intercept|intercept(com.lagradost.nicehttp.HttpSendInterceptorContext){}[0]
+}
+
+final class com.lagradost.nicehttp/NiceFile { // com.lagradost.nicehttp/NiceFile|null[0]
+    constructor <init>(com.lagradost.nicehttp/PlatformFile) // com.lagradost.nicehttp/NiceFile.<init>|<init>(com.lagradost.nicehttp.PlatformFile){}[0]
+    constructor <init>(kotlin/String, com.lagradost.nicehttp/PlatformFile) // com.lagradost.nicehttp/NiceFile.<init>|<init>(kotlin.String;com.lagradost.nicehttp.PlatformFile){}[0]
+    constructor <init>(kotlin/String, com.lagradost.nicehttp/PlatformFile, kotlin/String? = ...) // com.lagradost.nicehttp/NiceFile.<init>|<init>(kotlin.String;com.lagradost.nicehttp.PlatformFile;kotlin.String?){}[0]
+    constructor <init>(kotlin/String, kotlin/String) // com.lagradost.nicehttp/NiceFile.<init>|<init>(kotlin.String;kotlin.String){}[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/ByteArray? = ..., kotlin/String? = ...) // com.lagradost.nicehttp/NiceFile.<init>|<init>(kotlin.String;kotlin.String;kotlin.ByteArray?;kotlin.String?){}[0]
+
+    final val bytes // com.lagradost.nicehttp/NiceFile.bytes|{}bytes[0]
+        final fun <get-bytes>(): kotlin/ByteArray? // com.lagradost.nicehttp/NiceFile.bytes.<get-bytes>|<get-bytes>(){}[0]
+    final val fileName // com.lagradost.nicehttp/NiceFile.fileName|{}fileName[0]
+        final fun <get-fileName>(): kotlin/String // com.lagradost.nicehttp/NiceFile.fileName.<get-fileName>|<get-fileName>(){}[0]
+    final val fileType // com.lagradost.nicehttp/NiceFile.fileType|{}fileType[0]
+        final fun <get-fileType>(): kotlin/String? // com.lagradost.nicehttp/NiceFile.fileType.<get-fileType>|<get-fileType>(){}[0]
+    final val name // com.lagradost.nicehttp/NiceFile.name|{}name[0]
+        final fun <get-name>(): kotlin/String // com.lagradost.nicehttp/NiceFile.name.<get-name>|<get-name>(){}[0]
+}
+
+final class com.lagradost.nicehttp/NiceHeaders : io.ktor.http/Headers { // com.lagradost.nicehttp/NiceHeaders|null[0]
+    constructor <init>(io.ktor.http/Headers) // com.lagradost.nicehttp/NiceHeaders.<init>|<init>(io.ktor.http.Headers){}[0]
+
+    final val caseInsensitiveName // com.lagradost.nicehttp/NiceHeaders.caseInsensitiveName|{}caseInsensitiveName[0]
+        final fun <get-caseInsensitiveName>(): kotlin/Boolean // com.lagradost.nicehttp/NiceHeaders.caseInsensitiveName.<get-caseInsensitiveName>|<get-caseInsensitiveName>(){}[0]
+
+    final fun contains(kotlin/String): kotlin/Boolean // com.lagradost.nicehttp/NiceHeaders.contains|contains(kotlin.String){}[0]
+    final fun contains(kotlin/String, kotlin/String): kotlin/Boolean // com.lagradost.nicehttp/NiceHeaders.contains|contains(kotlin.String;kotlin.String){}[0]
+    final fun entries(): kotlin.collections/Set<kotlin.collections/Map.Entry<kotlin/String, kotlin.collections/List<kotlin/String>>> // com.lagradost.nicehttp/NiceHeaders.entries|entries(){}[0]
+    final fun forEach(kotlin/Function2<kotlin/String, kotlin.collections/List<kotlin/String>, kotlin/Unit>) // com.lagradost.nicehttp/NiceHeaders.forEach|forEach(kotlin.Function2<kotlin.String,kotlin.collections.List<kotlin.String>,kotlin.Unit>){}[0]
+    final fun get(kotlin/String): kotlin/String? // com.lagradost.nicehttp/NiceHeaders.get|get(kotlin.String){}[0]
+    final fun getAll(kotlin/String): kotlin.collections/List<kotlin/String>? // com.lagradost.nicehttp/NiceHeaders.getAll|getAll(kotlin.String){}[0]
+    final fun isEmpty(): kotlin/Boolean // com.lagradost.nicehttp/NiceHeaders.isEmpty|isEmpty(){}[0]
+    final fun names(): kotlin.collections/Set<kotlin/String> // com.lagradost.nicehttp/NiceHeaders.names|names(){}[0]
+    final fun toMap(): kotlin.collections/Map<kotlin/String, kotlin/String> // com.lagradost.nicehttp/NiceHeaders.toMap|toMap(){}[0]
+    final fun toMultiMap(): kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>> // com.lagradost.nicehttp/NiceHeaders.toMultiMap|toMultiMap(){}[0]
+}
+
+final class com.lagradost.nicehttp/NiceResponse { // com.lagradost.nicehttp/NiceResponse|null[0]
+    constructor <init>(io.ktor.client.statement/HttpResponse, com.lagradost.nicehttp/ResponseParser? = ...) // com.lagradost.nicehttp/NiceResponse.<init>|<init>(io.ktor.client.statement.HttpResponse;com.lagradost.nicehttp.ResponseParser?){}[0]
+
+    final val body // com.lagradost.nicehttp/NiceResponse.body|{}body[0]
+        final fun <get-body>(): com.lagradost.nicehttp/ResponseBody // com.lagradost.nicehttp/NiceResponse.body.<get-body>|<get-body>(){}[0]
+    final val code // com.lagradost.nicehttp/NiceResponse.code|{}code[0]
+        final fun <get-code>(): kotlin/Int // com.lagradost.nicehttp/NiceResponse.code.<get-code>|<get-code>(){}[0]
+    final val cookies // com.lagradost.nicehttp/NiceResponse.cookies|{}cookies[0]
+        final fun <get-cookies>(): kotlin.collections/Map<kotlin/String, kotlin/String> // com.lagradost.nicehttp/NiceResponse.cookies.<get-cookies>|<get-cookies>(){}[0]
+    final val document // com.lagradost.nicehttp/NiceResponse.document|{}document[0]
+        final fun <get-document>(): com.fleeksoft.ksoup.nodes/Document // com.lagradost.nicehttp/NiceResponse.document.<get-document>|<get-document>(){}[0]
+    final val documentLarge // com.lagradost.nicehttp/NiceResponse.documentLarge|{}documentLarge[0]
+        final fun <get-documentLarge>(): com.fleeksoft.ksoup.nodes/Document // com.lagradost.nicehttp/NiceResponse.documentLarge.<get-documentLarge>|<get-documentLarge>(){}[0]
+    final val headers // com.lagradost.nicehttp/NiceResponse.headers|{}headers[0]
+        final fun <get-headers>(): com.lagradost.nicehttp/NiceHeaders // com.lagradost.nicehttp/NiceResponse.headers.<get-headers>|<get-headers>(){}[0]
+    final val isSuccessful // com.lagradost.nicehttp/NiceResponse.isSuccessful|{}isSuccessful[0]
+        final fun <get-isSuccessful>(): kotlin/Boolean // com.lagradost.nicehttp/NiceResponse.isSuccessful.<get-isSuccessful>|<get-isSuccessful>(){}[0]
+    final val okhttpResponse // com.lagradost.nicehttp/NiceResponse.okhttpResponse|{}okhttpResponse[0]
+        final fun <get-okhttpResponse>(): com.lagradost.nicehttp/NiceResponse? // com.lagradost.nicehttp/NiceResponse.okhttpResponse.<get-okhttpResponse>|<get-okhttpResponse>(){}[0]
+    final val parser // com.lagradost.nicehttp/NiceResponse.parser|{}parser[0]
+        final fun <get-parser>(): com.lagradost.nicehttp/ResponseParser? // com.lagradost.nicehttp/NiceResponse.parser.<get-parser>|<get-parser>(){}[0]
+    final val response // com.lagradost.nicehttp/NiceResponse.response|{}response[0]
+        final fun <get-response>(): io.ktor.client.statement/HttpResponse // com.lagradost.nicehttp/NiceResponse.response.<get-response>|<get-response>(){}[0]
+    final val size // com.lagradost.nicehttp/NiceResponse.size|{}size[0]
+        final fun <get-size>(): kotlin/Long? // com.lagradost.nicehttp/NiceResponse.size.<get-size>|<get-size>(){}[0]
+    final val text // com.lagradost.nicehttp/NiceResponse.text|{}text[0]
+        final fun <get-text>(): kotlin/String // com.lagradost.nicehttp/NiceResponse.text.<get-text>|<get-text>(){}[0]
+    final val textLarge // com.lagradost.nicehttp/NiceResponse.textLarge|{}textLarge[0]
+        final fun <get-textLarge>(): kotlin/String // com.lagradost.nicehttp/NiceResponse.textLarge.<get-textLarge>|<get-textLarge>(){}[0]
+    final val url // com.lagradost.nicehttp/NiceResponse.url|{}url[0]
+        final fun <get-url>(): kotlin/String // com.lagradost.nicehttp/NiceResponse.url.<get-url>|<get-url>(){}[0]
+
+    final fun header(kotlin/String): kotlin/String? // com.lagradost.nicehttp/NiceResponse.header|header(kotlin.String){}[0]
+    final fun toString(): kotlin/String // com.lagradost.nicehttp/NiceResponse.toString|toString(){}[0]
+    final suspend fun body(): com.lagradost.nicehttp/ResponseBody // com.lagradost.nicehttp/NiceResponse.body|body(){}[0]
+    final suspend fun channel(): io.ktor.utils.io/ByteReadChannel // com.lagradost.nicehttp/NiceResponse.channel|channel(){}[0]
+    final suspend fun document(): com.fleeksoft.ksoup.nodes/Document // com.lagradost.nicehttp/NiceResponse.document|document(){}[0]
+    final suspend fun documentLarge(): com.fleeksoft.ksoup.nodes/Document // com.lagradost.nicehttp/NiceResponse.documentLarge|documentLarge(){}[0]
+    final suspend fun text(): kotlin/String // com.lagradost.nicehttp/NiceResponse.text|text(){}[0]
+    final suspend fun textLarge(): kotlin/String // com.lagradost.nicehttp/NiceResponse.textLarge|textLarge(){}[0]
+    final suspend inline fun <#A1: reified kotlin/Any> parsed(): #A1 // com.lagradost.nicehttp/NiceResponse.parsed|parsed(){0§<kotlin.Any>}[0]
+    final suspend inline fun <#A1: reified kotlin/Any> parsedLarge(): #A1 // com.lagradost.nicehttp/NiceResponse.parsedLarge|parsedLarge(){0§<kotlin.Any>}[0]
+    final suspend inline fun <#A1: reified kotlin/Any> parsedSafe(): #A1? // com.lagradost.nicehttp/NiceResponse.parsedSafe|parsedSafe(){0§<kotlin.Any>}[0]
+    final suspend inline fun <#A1: reified kotlin/Any> parsedSafeLarge(): #A1? // com.lagradost.nicehttp/NiceResponse.parsedSafeLarge|parsedSafeLarge(){0§<kotlin.Any>}[0]
+}
+
+final class com.lagradost.nicehttp/PlatformFile { // com.lagradost.nicehttp/PlatformFile|null[0]
+    constructor <init>(kotlin/ByteArray, kotlin/String) // com.lagradost.nicehttp/PlatformFile.<init>|<init>(kotlin.ByteArray;kotlin.String){}[0]
+
+    final val bytes // com.lagradost.nicehttp/PlatformFile.bytes|{}bytes[0]
+        final fun <get-bytes>(): kotlin/ByteArray // com.lagradost.nicehttp/PlatformFile.bytes.<get-bytes>|<get-bytes>(){}[0]
+    final val name // com.lagradost.nicehttp/PlatformFile.name|{}name[0]
+        final fun <get-name>(): kotlin/String // com.lagradost.nicehttp/PlatformFile.name.<get-name>|<get-name>(){}[0]
+}
+
+final class com.lagradost.nicehttp/RequestBuilder { // com.lagradost.nicehttp/RequestBuilder|null[0]
+    final var allowRedirects // com.lagradost.nicehttp/RequestBuilder.allowRedirects|{}allowRedirects[0]
+        final fun <get-allowRedirects>(): kotlin/Boolean // com.lagradost.nicehttp/RequestBuilder.allowRedirects.<get-allowRedirects>|<get-allowRedirects>(){}[0]
+        final fun <set-allowRedirects>(kotlin/Boolean) // com.lagradost.nicehttp/RequestBuilder.allowRedirects.<set-allowRedirects>|<set-allowRedirects>(kotlin.Boolean){}[0]
+    final var cacheTime // com.lagradost.nicehttp/RequestBuilder.cacheTime|{}cacheTime[0]
+        final fun <get-cacheTime>(): kotlin.time/Duration // com.lagradost.nicehttp/RequestBuilder.cacheTime.<get-cacheTime>|<get-cacheTime>(){}[0]
+        final fun <set-cacheTime>(kotlin.time/Duration) // com.lagradost.nicehttp/RequestBuilder.cacheTime.<set-cacheTime>|<set-cacheTime>(kotlin.time.Duration){}[0]
+    final var cookies // com.lagradost.nicehttp/RequestBuilder.cookies|{}cookies[0]
+        final fun <get-cookies>(): kotlin.collections/Map<kotlin/String, kotlin/String> // com.lagradost.nicehttp/RequestBuilder.cookies.<get-cookies>|<get-cookies>(){}[0]
+        final fun <set-cookies>(kotlin.collections/Map<kotlin/String, kotlin/String>) // com.lagradost.nicehttp/RequestBuilder.cookies.<set-cookies>|<set-cookies>(kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    final var data // com.lagradost.nicehttp/RequestBuilder.data|{}data[0]
+        final fun <get-data>(): kotlin.collections/Map<kotlin/String, kotlin/String>? // com.lagradost.nicehttp/RequestBuilder.data.<get-data>|<get-data>(){}[0]
+        final fun <set-data>(kotlin.collections/Map<kotlin/String, kotlin/String>?) // com.lagradost.nicehttp/RequestBuilder.data.<set-data>|<set-data>(kotlin.collections.Map<kotlin.String,kotlin.String>?){}[0]
+    final var files // com.lagradost.nicehttp/RequestBuilder.files|{}files[0]
+        final fun <get-files>(): kotlin.collections/List<com.lagradost.nicehttp/NiceFile>? // com.lagradost.nicehttp/RequestBuilder.files.<get-files>|<get-files>(){}[0]
+        final fun <set-files>(kotlin.collections/List<com.lagradost.nicehttp/NiceFile>?) // com.lagradost.nicehttp/RequestBuilder.files.<set-files>|<set-files>(kotlin.collections.List<com.lagradost.nicehttp.NiceFile>?){}[0]
+    final var headers // com.lagradost.nicehttp/RequestBuilder.headers|{}headers[0]
+        final fun <get-headers>(): kotlin.collections/Map<kotlin/String, kotlin/String> // com.lagradost.nicehttp/RequestBuilder.headers.<get-headers>|<get-headers>(){}[0]
+        final fun <set-headers>(kotlin.collections/Map<kotlin/String, kotlin/String>) // com.lagradost.nicehttp/RequestBuilder.headers.<set-headers>|<set-headers>(kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    final var interceptor // com.lagradost.nicehttp/RequestBuilder.interceptor|{}interceptor[0]
+        final fun <get-interceptor>(): com.lagradost.nicehttp/Interceptor? // com.lagradost.nicehttp/RequestBuilder.interceptor.<get-interceptor>|<get-interceptor>(){}[0]
+        final fun <set-interceptor>(com.lagradost.nicehttp/Interceptor?) // com.lagradost.nicehttp/RequestBuilder.interceptor.<set-interceptor>|<set-interceptor>(com.lagradost.nicehttp.Interceptor?){}[0]
+    final var json // com.lagradost.nicehttp/RequestBuilder.json|{}json[0]
+        final fun <get-json>(): kotlin/Any? // com.lagradost.nicehttp/RequestBuilder.json.<get-json>|<get-json>(){}[0]
+        final fun <set-json>(kotlin/Any?) // com.lagradost.nicehttp/RequestBuilder.json.<set-json>|<set-json>(kotlin.Any?){}[0]
+    final var params // com.lagradost.nicehttp/RequestBuilder.params|{}params[0]
+        final fun <get-params>(): kotlin.collections/Map<kotlin/String, kotlin/String> // com.lagradost.nicehttp/RequestBuilder.params.<get-params>|<get-params>(){}[0]
+        final fun <set-params>(kotlin.collections/Map<kotlin/String, kotlin/String>) // com.lagradost.nicehttp/RequestBuilder.params.<set-params>|<set-params>(kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    final var referer // com.lagradost.nicehttp/RequestBuilder.referer|{}referer[0]
+        final fun <get-referer>(): kotlin/String? // com.lagradost.nicehttp/RequestBuilder.referer.<get-referer>|<get-referer>(){}[0]
+        final fun <set-referer>(kotlin/String?) // com.lagradost.nicehttp/RequestBuilder.referer.<set-referer>|<set-referer>(kotlin.String?){}[0]
+    final var requestBody // com.lagradost.nicehttp/RequestBuilder.requestBody|{}requestBody[0]
+        final fun <get-requestBody>(): com.lagradost.nicehttp/RequestBody? // com.lagradost.nicehttp/RequestBuilder.requestBody.<get-requestBody>|<get-requestBody>(){}[0]
+        final fun <set-requestBody>(com.lagradost.nicehttp/RequestBody?) // com.lagradost.nicehttp/RequestBuilder.requestBody.<set-requestBody>|<set-requestBody>(com.lagradost.nicehttp.RequestBody?){}[0]
+    final var responseParser // com.lagradost.nicehttp/RequestBuilder.responseParser|{}responseParser[0]
+        final fun <get-responseParser>(): com.lagradost.nicehttp/ResponseParser? // com.lagradost.nicehttp/RequestBuilder.responseParser.<get-responseParser>|<get-responseParser>(){}[0]
+        final fun <set-responseParser>(com.lagradost.nicehttp/ResponseParser?) // com.lagradost.nicehttp/RequestBuilder.responseParser.<set-responseParser>|<set-responseParser>(com.lagradost.nicehttp.ResponseParser?){}[0]
+    final var timeout // com.lagradost.nicehttp/RequestBuilder.timeout|{}timeout[0]
+        final fun <get-timeout>(): kotlin.time/Duration // com.lagradost.nicehttp/RequestBuilder.timeout.<get-timeout>|<get-timeout>(){}[0]
+        final fun <set-timeout>(kotlin.time/Duration) // com.lagradost.nicehttp/RequestBuilder.timeout.<set-timeout>|<set-timeout>(kotlin.time.Duration){}[0]
+    final var verify // com.lagradost.nicehttp/RequestBuilder.verify|{}verify[0]
+        final fun <get-verify>(): kotlin/Boolean // com.lagradost.nicehttp/RequestBuilder.verify.<get-verify>|<get-verify>(){}[0]
+        final fun <set-verify>(kotlin/Boolean) // com.lagradost.nicehttp/RequestBuilder.verify.<set-verify>|<set-verify>(kotlin.Boolean){}[0]
+
+    final fun cookie(kotlin/String, kotlin/String) // com.lagradost.nicehttp/RequestBuilder.cookie|cookie(kotlin.String;kotlin.String){}[0]
+    final fun data(kotlin/String, kotlin/String) // com.lagradost.nicehttp/RequestBuilder.data|data(kotlin.String;kotlin.String){}[0]
+    final fun header(kotlin/String, kotlin/String) // com.lagradost.nicehttp/RequestBuilder.header|header(kotlin.String;kotlin.String){}[0]
+    final fun param(kotlin/String, kotlin/String) // com.lagradost.nicehttp/RequestBuilder.param|param(kotlin.String;kotlin.String){}[0]
+}
+
+final class com.lagradost.nicehttp/ResponseBody { // com.lagradost.nicehttp/ResponseBody|null[0]
+    constructor <init>(kotlin/ByteArray) // com.lagradost.nicehttp/ResponseBody.<init>|<init>(kotlin.ByteArray){}[0]
+
+    final fun byteStream(): com.lagradost.nicehttp/PlatformInputStream // com.lagradost.nicehttp/ResponseBody.byteStream|byteStream(){}[0]
+    final fun bytes(): kotlin/ByteArray // com.lagradost.nicehttp/ResponseBody.bytes|bytes(){}[0]
+    final fun close() // com.lagradost.nicehttp/ResponseBody.close|close(){}[0]
+    final fun contentLength(): kotlin/Long // com.lagradost.nicehttp/ResponseBody.contentLength|contentLength(){}[0]
+    final fun source(): okio/BufferedSource // com.lagradost.nicehttp/ResponseBody.source|source(){}[0]
+    final fun string(): kotlin/String // com.lagradost.nicehttp/ResponseBody.string|string(){}[0]
+}
+
+final class com.lagradost.nicehttp/RetryInterceptor : com.lagradost.nicehttp/Interceptor { // com.lagradost.nicehttp/RetryInterceptor|null[0]
+    constructor <init>(kotlin/Int = ..., kotlin/Function1<io.ktor.client.call/HttpClientCall, kotlin/Boolean> = ...) // com.lagradost.nicehttp/RetryInterceptor.<init>|<init>(kotlin.Int;kotlin.Function1<io.ktor.client.call.HttpClientCall,kotlin.Boolean>){}[0]
+
+    final suspend fun intercept(com.lagradost.nicehttp/HttpSendInterceptorContext): io.ktor.client.call/HttpClientCall // com.lagradost.nicehttp/RetryInterceptor.intercept|intercept(com.lagradost.nicehttp.HttpSendInterceptorContext){}[0]
+}
+
+final class com.lagradost.nicehttp/SerializationResponseParser : com.lagradost.nicehttp/ResponseParser { // com.lagradost.nicehttp/SerializationResponseParser|null[0]
+    constructor <init>(kotlinx.serialization.json/Json = ...) // com.lagradost.nicehttp/SerializationResponseParser.<init>|<init>(kotlinx.serialization.json.Json){}[0]
+
+    final val json // com.lagradost.nicehttp/SerializationResponseParser.json|{}json[0]
+        final fun <get-json>(): kotlinx.serialization.json/Json // com.lagradost.nicehttp/SerializationResponseParser.json.<get-json>|<get-json>(){}[0]
+
+    final fun <#A1: kotlin/Any> parse(kotlin/String, kotlin.reflect/KClass<#A1>): #A1 // com.lagradost.nicehttp/SerializationResponseParser.parse|parse(kotlin.String;kotlin.reflect.KClass<0:0>){0§<kotlin.Any>}[0]
+    final fun <#A1: kotlin/Any> parseSafe(kotlin/String, kotlin.reflect/KClass<#A1>): #A1? // com.lagradost.nicehttp/SerializationResponseParser.parseSafe|parseSafe(kotlin.String;kotlin.reflect.KClass<0:0>){0§<kotlin.Any>}[0]
+    final fun writeValueAsString(kotlin/Any): kotlin/String // com.lagradost.nicehttp/SerializationResponseParser.writeValueAsString|writeValueAsString(kotlin.Any){}[0]
+}
+
+final class com.lagradost.nicehttp/Session : com.lagradost.nicehttp/Requests { // com.lagradost.nicehttp/Session|null[0]
+    constructor <init>(io.ktor.client/HttpClient = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...) // com.lagradost.nicehttp/Session.<init>|<init>(io.ktor.client.HttpClient;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+}
+
+open class com.lagradost.nicehttp/Requests { // com.lagradost.nicehttp/Requests|null[0]
+    constructor <init>(io.ktor.client/HttpClient = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., com.lagradost.nicehttp/ResponseParser? = ..., kotlin.collections/MutableList<com.lagradost.nicehttp/Interceptor> = ...) // com.lagradost.nicehttp/Requests.<init>|<init>(io.ktor.client.HttpClient;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.time.Duration;kotlin.time.Duration;com.lagradost.nicehttp.ResponseParser?;kotlin.collections.MutableList<com.lagradost.nicehttp.Interceptor>){}[0]
+    constructor <init>(io.ktor.client/HttpClient = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/Int = ..., kotlin.time/DurationUnit = ..., kotlin/Long = ..., com.lagradost.nicehttp/ResponseParser? = ..., kotlin.collections/MutableList<com.lagradost.nicehttp/Interceptor> = ...) // com.lagradost.nicehttp/Requests.<init>|<init>(io.ktor.client.HttpClient;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.Int;kotlin.time.DurationUnit;kotlin.Long;com.lagradost.nicehttp.ResponseParser?;kotlin.collections.MutableList<com.lagradost.nicehttp.Interceptor>){}[0]
+
+    final var baseClient // com.lagradost.nicehttp/Requests.baseClient|{}baseClient[0]
+        final fun <get-baseClient>(): io.ktor.client/HttpClient // com.lagradost.nicehttp/Requests.baseClient.<get-baseClient>|<get-baseClient>(){}[0]
+        final fun <set-baseClient>(io.ktor.client/HttpClient) // com.lagradost.nicehttp/Requests.baseClient.<set-baseClient>|<set-baseClient>(io.ktor.client.HttpClient){}[0]
+    final var defaultCacheTime // com.lagradost.nicehttp/Requests.defaultCacheTime|{}defaultCacheTime[0]
+        final fun <get-defaultCacheTime>(): kotlin.time/Duration // com.lagradost.nicehttp/Requests.defaultCacheTime.<get-defaultCacheTime>|<get-defaultCacheTime>(){}[0]
+        final fun <set-defaultCacheTime>(kotlin.time/Duration) // com.lagradost.nicehttp/Requests.defaultCacheTime.<set-defaultCacheTime>|<set-defaultCacheTime>(kotlin.time.Duration){}[0]
+    final var defaultCookies // com.lagradost.nicehttp/Requests.defaultCookies|{}defaultCookies[0]
+        final fun <get-defaultCookies>(): kotlin.collections/Map<kotlin/String, kotlin/String> // com.lagradost.nicehttp/Requests.defaultCookies.<get-defaultCookies>|<get-defaultCookies>(){}[0]
+        final fun <set-defaultCookies>(kotlin.collections/Map<kotlin/String, kotlin/String>) // com.lagradost.nicehttp/Requests.defaultCookies.<set-defaultCookies>|<set-defaultCookies>(kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    final var defaultData // com.lagradost.nicehttp/Requests.defaultData|{}defaultData[0]
+        final fun <get-defaultData>(): kotlin.collections/Map<kotlin/String, kotlin/String> // com.lagradost.nicehttp/Requests.defaultData.<get-defaultData>|<get-defaultData>(){}[0]
+        final fun <set-defaultData>(kotlin.collections/Map<kotlin/String, kotlin/String>) // com.lagradost.nicehttp/Requests.defaultData.<set-defaultData>|<set-defaultData>(kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    final var defaultHeaders // com.lagradost.nicehttp/Requests.defaultHeaders|{}defaultHeaders[0]
+        final fun <get-defaultHeaders>(): kotlin.collections/Map<kotlin/String, kotlin/String> // com.lagradost.nicehttp/Requests.defaultHeaders.<get-defaultHeaders>|<get-defaultHeaders>(){}[0]
+        final fun <set-defaultHeaders>(kotlin.collections/Map<kotlin/String, kotlin/String>) // com.lagradost.nicehttp/Requests.defaultHeaders.<set-defaultHeaders>|<set-defaultHeaders>(kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    final var defaultReferer // com.lagradost.nicehttp/Requests.defaultReferer|{}defaultReferer[0]
+        final fun <get-defaultReferer>(): kotlin/String? // com.lagradost.nicehttp/Requests.defaultReferer.<get-defaultReferer>|<get-defaultReferer>(){}[0]
+        final fun <set-defaultReferer>(kotlin/String?) // com.lagradost.nicehttp/Requests.defaultReferer.<set-defaultReferer>|<set-defaultReferer>(kotlin.String?){}[0]
+    final var defaultTimeout // com.lagradost.nicehttp/Requests.defaultTimeout|{}defaultTimeout[0]
+        final fun <get-defaultTimeout>(): kotlin.time/Duration // com.lagradost.nicehttp/Requests.defaultTimeout.<get-defaultTimeout>|<get-defaultTimeout>(){}[0]
+        final fun <set-defaultTimeout>(kotlin.time/Duration) // com.lagradost.nicehttp/Requests.defaultTimeout.<set-defaultTimeout>|<set-defaultTimeout>(kotlin.time.Duration){}[0]
+    final var interceptors // com.lagradost.nicehttp/Requests.interceptors|{}interceptors[0]
+        final fun <get-interceptors>(): kotlin.collections/MutableList<com.lagradost.nicehttp/Interceptor> // com.lagradost.nicehttp/Requests.interceptors.<get-interceptors>|<get-interceptors>(){}[0]
+        final fun <set-interceptors>(kotlin.collections/MutableList<com.lagradost.nicehttp/Interceptor>) // com.lagradost.nicehttp/Requests.interceptors.<set-interceptors>|<set-interceptors>(kotlin.collections.MutableList<com.lagradost.nicehttp.Interceptor>){}[0]
+    final var responseParser // com.lagradost.nicehttp/Requests.responseParser|{}responseParser[0]
+        final fun <get-responseParser>(): com.lagradost.nicehttp/ResponseParser? // com.lagradost.nicehttp/Requests.responseParser.<get-responseParser>|<get-responseParser>(){}[0]
+        final fun <set-responseParser>(com.lagradost.nicehttp/ResponseParser?) // com.lagradost.nicehttp/Requests.responseParser.<set-responseParser>|<set-responseParser>(com.lagradost.nicehttp.ResponseParser?){}[0]
+
+    final fun addInterceptor(com.lagradost.nicehttp/Interceptor): kotlin/Boolean // com.lagradost.nicehttp/Requests.addInterceptor|addInterceptor(com.lagradost.nicehttp.Interceptor){}[0]
+    final fun removeInterceptor(com.lagradost.nicehttp/Interceptor): kotlin/Boolean // com.lagradost.nicehttp/Requests.removeInterceptor|removeInterceptor(com.lagradost.nicehttp.Interceptor){}[0]
+    final suspend fun <#A1: kotlin/Any?> streamGet(kotlin/String, kotlin/Function1<com.lagradost.nicehttp/RequestBuilder, kotlin/Unit> = ..., kotlin.coroutines/SuspendFunction1<com.lagradost.nicehttp/NiceResponse, #A1>): #A1 // com.lagradost.nicehttp/Requests.streamGet|streamGet(kotlin.String;kotlin.Function1<com.lagradost.nicehttp.RequestBuilder,kotlin.Unit>;kotlin.coroutines.SuspendFunction1<com.lagradost.nicehttp.NiceResponse,0:0>){0§<kotlin.Any?>}[0]
+    final suspend fun <#A1: kotlin/Any?> streamPost(kotlin/String, kotlin/Function1<com.lagradost.nicehttp/RequestBuilder, kotlin/Unit> = ..., kotlin.coroutines/SuspendFunction1<com.lagradost.nicehttp/NiceResponse, #A1>): #A1 // com.lagradost.nicehttp/Requests.streamPost|streamPost(kotlin.String;kotlin.Function1<com.lagradost.nicehttp.RequestBuilder,kotlin.Unit>;kotlin.coroutines.SuspendFunction1<com.lagradost.nicehttp.NiceResponse,0:0>){0§<kotlin.Any?>}[0]
+    final suspend fun delete(kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String>? = ..., kotlin.collections/List<com.lagradost.nicehttp/NiceFile>? = ..., kotlin/Any? = ..., com.lagradost.nicehttp/RequestBody? = ..., kotlin/Boolean = ..., kotlin/Int = ..., kotlin.time/DurationUnit = ..., kotlin/Long = ..., com.lagradost.nicehttp/Interceptor? = ..., kotlin/Boolean = ..., com.lagradost.nicehttp/ResponseParser? = ...): com.lagradost.nicehttp/NiceResponse // com.lagradost.nicehttp/Requests.delete|delete(kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>?;kotlin.collections.List<com.lagradost.nicehttp.NiceFile>?;kotlin.Any?;com.lagradost.nicehttp.RequestBody?;kotlin.Boolean;kotlin.Int;kotlin.time.DurationUnit;kotlin.Long;com.lagradost.nicehttp.Interceptor?;kotlin.Boolean;com.lagradost.nicehttp.ResponseParser?){}[0]
+    final suspend fun delete(kotlin/String, kotlin/Function1<com.lagradost.nicehttp/RequestBuilder, kotlin/Unit> = ...): com.lagradost.nicehttp/NiceResponse // com.lagradost.nicehttp/Requests.delete|delete(kotlin.String;kotlin.Function1<com.lagradost.nicehttp.RequestBuilder,kotlin.Unit>){}[0]
+    final suspend fun get(kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/Boolean = ..., kotlin/Int = ..., kotlin.time/DurationUnit = ..., kotlin/Long = ..., com.lagradost.nicehttp/Interceptor? = ..., kotlin/Boolean = ..., com.lagradost.nicehttp/ResponseParser? = ...): com.lagradost.nicehttp/NiceResponse // com.lagradost.nicehttp/Requests.get|get(kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.Boolean;kotlin.Int;kotlin.time.DurationUnit;kotlin.Long;com.lagradost.nicehttp.Interceptor?;kotlin.Boolean;com.lagradost.nicehttp.ResponseParser?){}[0]
+    final suspend fun get(kotlin/String, kotlin/Function1<com.lagradost.nicehttp/RequestBuilder, kotlin/Unit> = ...): com.lagradost.nicehttp/NiceResponse // com.lagradost.nicehttp/Requests.get|get(kotlin.String;kotlin.Function1<com.lagradost.nicehttp.RequestBuilder,kotlin.Unit>){}[0]
+    final suspend fun head(kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/Boolean = ..., kotlin/Int = ..., kotlin.time/DurationUnit = ..., kotlin/Long = ..., com.lagradost.nicehttp/Interceptor? = ..., kotlin/Boolean = ..., com.lagradost.nicehttp/ResponseParser? = ...): com.lagradost.nicehttp/NiceResponse // com.lagradost.nicehttp/Requests.head|head(kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.Boolean;kotlin.Int;kotlin.time.DurationUnit;kotlin.Long;com.lagradost.nicehttp.Interceptor?;kotlin.Boolean;com.lagradost.nicehttp.ResponseParser?){}[0]
+    final suspend fun head(kotlin/String, kotlin/Function1<com.lagradost.nicehttp/RequestBuilder, kotlin/Unit> = ...): com.lagradost.nicehttp/NiceResponse // com.lagradost.nicehttp/Requests.head|head(kotlin.String;kotlin.Function1<com.lagradost.nicehttp.RequestBuilder,kotlin.Unit>){}[0]
+    final suspend fun options(kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String>? = ..., kotlin.collections/List<com.lagradost.nicehttp/NiceFile>? = ..., kotlin/Any? = ..., com.lagradost.nicehttp/RequestBody? = ..., kotlin/Boolean = ..., kotlin/Int = ..., kotlin.time/DurationUnit = ..., kotlin/Long = ..., com.lagradost.nicehttp/Interceptor? = ..., kotlin/Boolean = ..., com.lagradost.nicehttp/ResponseParser? = ...): com.lagradost.nicehttp/NiceResponse // com.lagradost.nicehttp/Requests.options|options(kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>?;kotlin.collections.List<com.lagradost.nicehttp.NiceFile>?;kotlin.Any?;com.lagradost.nicehttp.RequestBody?;kotlin.Boolean;kotlin.Int;kotlin.time.DurationUnit;kotlin.Long;com.lagradost.nicehttp.Interceptor?;kotlin.Boolean;com.lagradost.nicehttp.ResponseParser?){}[0]
+    final suspend fun options(kotlin/String, kotlin/Function1<com.lagradost.nicehttp/RequestBuilder, kotlin/Unit> = ...): com.lagradost.nicehttp/NiceResponse // com.lagradost.nicehttp/Requests.options|options(kotlin.String;kotlin.Function1<com.lagradost.nicehttp.RequestBuilder,kotlin.Unit>){}[0]
+    final suspend fun patch(kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String>? = ..., kotlin.collections/List<com.lagradost.nicehttp/NiceFile>? = ..., kotlin/Any? = ..., com.lagradost.nicehttp/RequestBody? = ..., kotlin/Boolean = ..., kotlin/Int = ..., kotlin.time/DurationUnit = ..., kotlin/Long = ..., com.lagradost.nicehttp/Interceptor? = ..., kotlin/Boolean = ..., com.lagradost.nicehttp/ResponseParser? = ...): com.lagradost.nicehttp/NiceResponse // com.lagradost.nicehttp/Requests.patch|patch(kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>?;kotlin.collections.List<com.lagradost.nicehttp.NiceFile>?;kotlin.Any?;com.lagradost.nicehttp.RequestBody?;kotlin.Boolean;kotlin.Int;kotlin.time.DurationUnit;kotlin.Long;com.lagradost.nicehttp.Interceptor?;kotlin.Boolean;com.lagradost.nicehttp.ResponseParser?){}[0]
+    final suspend fun patch(kotlin/String, kotlin/Function1<com.lagradost.nicehttp/RequestBuilder, kotlin/Unit> = ...): com.lagradost.nicehttp/NiceResponse // com.lagradost.nicehttp/Requests.patch|patch(kotlin.String;kotlin.Function1<com.lagradost.nicehttp.RequestBuilder,kotlin.Unit>){}[0]
+    final suspend fun post(kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String>? = ..., kotlin.collections/List<com.lagradost.nicehttp/NiceFile>? = ..., kotlin/Any? = ..., com.lagradost.nicehttp/RequestBody? = ..., kotlin/Boolean = ..., kotlin/Int = ..., kotlin.time/DurationUnit = ..., kotlin/Long = ..., com.lagradost.nicehttp/Interceptor? = ..., kotlin/Boolean = ..., com.lagradost.nicehttp/ResponseParser? = ...): com.lagradost.nicehttp/NiceResponse // com.lagradost.nicehttp/Requests.post|post(kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>?;kotlin.collections.List<com.lagradost.nicehttp.NiceFile>?;kotlin.Any?;com.lagradost.nicehttp.RequestBody?;kotlin.Boolean;kotlin.Int;kotlin.time.DurationUnit;kotlin.Long;com.lagradost.nicehttp.Interceptor?;kotlin.Boolean;com.lagradost.nicehttp.ResponseParser?){}[0]
+    final suspend fun post(kotlin/String, kotlin/Function1<com.lagradost.nicehttp/RequestBuilder, kotlin/Unit> = ...): com.lagradost.nicehttp/NiceResponse // com.lagradost.nicehttp/Requests.post|post(kotlin.String;kotlin.Function1<com.lagradost.nicehttp.RequestBuilder,kotlin.Unit>){}[0]
+    final suspend fun prepareGet(kotlin/String, kotlin/Function1<com.lagradost.nicehttp/RequestBuilder, kotlin/Unit> = ...): io.ktor.client.statement/HttpStatement // com.lagradost.nicehttp/Requests.prepareGet|prepareGet(kotlin.String;kotlin.Function1<com.lagradost.nicehttp.RequestBuilder,kotlin.Unit>){}[0]
+    final suspend fun preparePost(kotlin/String, kotlin/Function1<com.lagradost.nicehttp/RequestBuilder, kotlin/Unit> = ...): io.ktor.client.statement/HttpStatement // com.lagradost.nicehttp/Requests.preparePost|preparePost(kotlin.String;kotlin.Function1<com.lagradost.nicehttp.RequestBuilder,kotlin.Unit>){}[0]
+    final suspend fun put(kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String>? = ..., kotlin.collections/List<com.lagradost.nicehttp/NiceFile>? = ..., kotlin/Any? = ..., com.lagradost.nicehttp/RequestBody? = ..., kotlin/Boolean = ..., kotlin/Int = ..., kotlin.time/DurationUnit = ..., kotlin/Long = ..., com.lagradost.nicehttp/Interceptor? = ..., kotlin/Boolean = ..., com.lagradost.nicehttp/ResponseParser? = ...): com.lagradost.nicehttp/NiceResponse // com.lagradost.nicehttp/Requests.put|put(kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>?;kotlin.collections.List<com.lagradost.nicehttp.NiceFile>?;kotlin.Any?;com.lagradost.nicehttp.RequestBody?;kotlin.Boolean;kotlin.Int;kotlin.time.DurationUnit;kotlin.Long;com.lagradost.nicehttp.Interceptor?;kotlin.Boolean;com.lagradost.nicehttp.ResponseParser?){}[0]
+    final suspend fun put(kotlin/String, kotlin/Function1<com.lagradost.nicehttp/RequestBuilder, kotlin/Unit> = ...): com.lagradost.nicehttp/NiceResponse // com.lagradost.nicehttp/Requests.put|put(kotlin.String;kotlin.Function1<com.lagradost.nicehttp.RequestBuilder,kotlin.Unit>){}[0]
+    open suspend fun custom(kotlin/String, kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String>? = ..., kotlin.collections/List<com.lagradost.nicehttp/NiceFile>? = ..., kotlin/Any? = ..., com.lagradost.nicehttp/RequestBody? = ..., kotlin/Boolean = ..., kotlin/Int = ..., kotlin.time/DurationUnit = ..., kotlin/Long = ..., com.lagradost.nicehttp/Interceptor? = ..., kotlin/Boolean = ..., com.lagradost.nicehttp/ResponseParser? = ...): com.lagradost.nicehttp/NiceResponse // com.lagradost.nicehttp/Requests.custom|custom(kotlin.String;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>?;kotlin.collections.List<com.lagradost.nicehttp.NiceFile>?;kotlin.Any?;com.lagradost.nicehttp.RequestBody?;kotlin.Boolean;kotlin.Int;kotlin.time.DurationUnit;kotlin.Long;com.lagradost.nicehttp.Interceptor?;kotlin.Boolean;com.lagradost.nicehttp.ResponseParser?){}[0]
+}
+
+final object com.lagradost.nicehttp/RequestBodyTypes { // com.lagradost.nicehttp/RequestBodyTypes|null[0]
+    final const val JSON // com.lagradost.nicehttp/RequestBodyTypes.JSON|{}JSON[0]
+        final fun <get-JSON>(): kotlin/String // com.lagradost.nicehttp/RequestBodyTypes.JSON.<get-JSON>|<get-JSON>(){}[0]
+    final const val TEXT // com.lagradost.nicehttp/RequestBodyTypes.TEXT|{}TEXT[0]
+        final fun <get-TEXT>(): kotlin/String // com.lagradost.nicehttp/RequestBodyTypes.TEXT.<get-TEXT>|<get-TEXT>(){}[0]
+}
+
+final const val com.lagradost.nicehttp/MAX_TEXT_BYTES // com.lagradost.nicehttp/MAX_TEXT_BYTES|{}MAX_TEXT_BYTES[0]
+    final fun <get-MAX_TEXT_BYTES>(): kotlin/Long // com.lagradost.nicehttp/MAX_TEXT_BYTES.<get-MAX_TEXT_BYTES>|<get-MAX_TEXT_BYTES>(){}[0]
+
+final fun (io.ktor.http/Headers).com.lagradost.nicehttp/getRequestCookies(): kotlin.collections/Map<kotlin/String, kotlin/String> // com.lagradost.nicehttp/getRequestCookies|getRequestCookies@io.ktor.http.Headers(){}[0]
+final fun (io.ktor.http/Headers).com.lagradost.nicehttp/getSetCookies(): kotlin.collections/Map<kotlin/String, kotlin/String> // com.lagradost.nicehttp/getSetCookies|getSetCookies@io.ktor.http.Headers(){}[0]
+final fun (kotlin.collections/Map<kotlin/String, kotlin/String>).com.lagradost.nicehttp/toNiceFiles(): kotlin.collections/List<com.lagradost.nicehttp/NiceFile> // com.lagradost.nicehttp/toNiceFiles|toNiceFiles@kotlin.collections.Map<kotlin.String,kotlin.String>(){}[0]
+final fun com.lagradost.nicehttp/buildHeaders(kotlin.collections/Map<kotlin/String, kotlin/String>, kotlin/String?, kotlin.collections/Map<kotlin/String, kotlin/String>): io.ktor.http/Headers // com.lagradost.nicehttp/buildHeaders|buildHeaders(kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+final fun com.lagradost.nicehttp/defaultHttpClient(): io.ktor.client/HttpClient // com.lagradost.nicehttp/defaultHttpClient|defaultHttpClient(){}[0]
+final fun com.lagradost.nicehttp/insecureHttpClient(): io.ktor.client/HttpClient // com.lagradost.nicehttp/insecureHttpClient|insecureHttpClient(){}[0]

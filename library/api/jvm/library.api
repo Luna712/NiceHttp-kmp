@@ -1,0 +1,400 @@
+public final class com/lagradost/nicehttp/ContinuationCallback : kotlin/jvm/functions/Function1, okhttp3/Callback {
+	public fun <init> (Lokhttp3/Call;Lkotlinx/coroutines/CancellableContinuation;)V
+	public synthetic fun invoke (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun invoke (Ljava/lang/Throwable;)V
+	public fun onFailure (Lokhttp3/Call;Ljava/io/IOException;)V
+	public fun onResponse (Lokhttp3/Call;Lokhttp3/Response;)V
+}
+
+public final class com/lagradost/nicehttp/DefaultHttpClientKt {
+	public static final fun defaultHttpClient ()Lio/ktor/client/HttpClient;
+	public static final fun defaultHttpClient (Lokhttp3/OkHttpClient;)Lio/ktor/client/HttpClient;
+	public static final fun insecureHttpClient ()Lio/ktor/client/HttpClient;
+}
+
+public final class com/lagradost/nicehttp/FallbackUrlInterceptor : com/lagradost/nicehttp/Interceptor {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun intercept (Lcom/lagradost/nicehttp/HttpSendInterceptorContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/lagradost/nicehttp/HeadersInterceptor : com/lagradost/nicehttp/Interceptor {
+	public static final field Companion Lcom/lagradost/nicehttp/HeadersInterceptor$Companion;
+	public fun intercept (Lcom/lagradost/nicehttp/HttpSendInterceptorContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/lagradost/nicehttp/HeadersInterceptor$Builder : com/lagradost/nicehttp/HeadersInterceptor$HeadersMutationBuilder {
+	public fun <init> ()V
+}
+
+public final class com/lagradost/nicehttp/HeadersInterceptor$Companion {
+	public final fun invoke (Lkotlin/jvm/functions/Function1;)Lcom/lagradost/nicehttp/HeadersInterceptor;
+}
+
+public abstract class com/lagradost/nicehttp/HeadersInterceptor$HeaderAction {
+	public abstract fun getName ()Ljava/lang/String;
+}
+
+public abstract class com/lagradost/nicehttp/HeadersInterceptor$HeaderAction$Mutation : com/lagradost/nicehttp/HeadersInterceptor$HeaderAction {
+	public abstract fun getValue ()Ljava/lang/String;
+}
+
+public final class com/lagradost/nicehttp/HeadersInterceptor$HeaderAction$Mutation$Append : com/lagradost/nicehttp/HeadersInterceptor$HeaderAction$Mutation {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/lagradost/nicehttp/HeadersInterceptor$HeaderAction$Mutation$Append;
+	public static synthetic fun copy$default (Lcom/lagradost/nicehttp/HeadersInterceptor$HeaderAction$Mutation$Append;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/lagradost/nicehttp/HeadersInterceptor$HeaderAction$Mutation$Append;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getName ()Ljava/lang/String;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/lagradost/nicehttp/HeadersInterceptor$HeaderAction$Mutation$Overwrite : com/lagradost/nicehttp/HeadersInterceptor$HeaderAction$Mutation {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/lagradost/nicehttp/HeadersInterceptor$HeaderAction$Mutation$Overwrite;
+	public static synthetic fun copy$default (Lcom/lagradost/nicehttp/HeadersInterceptor$HeaderAction$Mutation$Overwrite;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/lagradost/nicehttp/HeadersInterceptor$HeaderAction$Mutation$Overwrite;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getName ()Ljava/lang/String;
+	public fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/lagradost/nicehttp/HeadersInterceptor$HeaderAction$Remove : com/lagradost/nicehttp/HeadersInterceptor$HeaderAction {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/lagradost/nicehttp/HeadersInterceptor$HeaderAction$Remove;
+	public static synthetic fun copy$default (Lcom/lagradost/nicehttp/HeadersInterceptor$HeaderAction$Remove;Ljava/lang/String;ILjava/lang/Object;)Lcom/lagradost/nicehttp/HeadersInterceptor$HeaderAction$Remove;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/lagradost/nicehttp/HeadersInterceptor$HeaderAction$ReplaceAll : com/lagradost/nicehttp/HeadersInterceptor$HeaderAction {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lcom/lagradost/nicehttp/HeadersInterceptor$HeaderAction$ReplaceAll;
+	public static synthetic fun copy$default (Lcom/lagradost/nicehttp/HeadersInterceptor$HeaderAction$ReplaceAll;Ljava/util/List;ILjava/lang/Object;)Lcom/lagradost/nicehttp/HeadersInterceptor$HeaderAction$ReplaceAll;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHeaders ()Ljava/util/List;
+	public fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class com/lagradost/nicehttp/HeadersInterceptor$HeadersMutationBuilder {
+	public fun <init> ()V
+	public final fun add (Ljava/lang/String;Ljava/lang/Object;)V
+	public final fun addHeader (Ljava/lang/String;Ljava/lang/Object;)V
+	public final fun append (Ljava/lang/String;Ljava/lang/Object;)V
+	public final fun header (Ljava/lang/String;Ljava/lang/Object;)V
+	public final fun headers (Lio/ktor/http/Headers;)V
+	public final fun headers (Lkotlin/jvm/functions/Function1;)V
+	public final fun headers ([Lkotlin/Pair;)V
+	public final fun remove (Ljava/lang/String;)V
+	public final fun removeHeader (Ljava/lang/String;)V
+	public final fun replace (Ljava/lang/String;Ljava/lang/Object;)V
+	public final fun set (Ljava/lang/String;Ljava/lang/Object;)V
+}
+
+public final class com/lagradost/nicehttp/HttpSendInterceptorContext {
+	public fun <init> (Lio/ktor/client/request/HttpRequestBuilder;Lkotlin/jvm/functions/Function2;)V
+	public final fun getExecute ()Lkotlin/jvm/functions/Function2;
+	public final fun getHeaders ()Lio/ktor/http/Headers;
+	public final fun getMethod ()Ljava/lang/String;
+	public final fun getRequest ()Lio/ktor/client/request/HttpRequestBuilder;
+	public final fun getUrl ()Ljava/lang/String;
+	public final fun proceed (Lio/ktor/client/request/HttpRequestBuilder;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun proceed (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun proceed (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class com/lagradost/nicehttp/Interceptor {
+	public abstract fun intercept (Lcom/lagradost/nicehttp/HttpSendInterceptorContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/lagradost/nicehttp/JsonAsString {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/lagradost/nicehttp/JsonAsString;
+	public static synthetic fun copy$default (Lcom/lagradost/nicehttp/JsonAsString;Ljava/lang/String;ILjava/lang/Object;)Lcom/lagradost/nicehttp/JsonAsString;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getString ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/lagradost/nicehttp/LoggingInterceptor : com/lagradost/nicehttp/Interceptor {
+	public fun <init> ()V
+	public fun <init> (Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun intercept (Lcom/lagradost/nicehttp/HttpSendInterceptorContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/lagradost/nicehttp/NiceFile {
+	public fun <init> (Ljava/io/File;)V
+	public fun <init> (Ljava/lang/String;Ljava/io/File;)V
+	public fun <init> (Ljava/lang/String;Ljava/io/File;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/io/File;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;[BLjava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;[BLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getBytes ()[B
+	public final fun getFileName ()Ljava/lang/String;
+	public final fun getFileType ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+}
+
+public final class com/lagradost/nicehttp/NiceFileKt {
+	public static final fun toNiceFiles (Ljava/util/Map;)Ljava/util/List;
+}
+
+public final class com/lagradost/nicehttp/NiceHeaders : io/ktor/http/Headers {
+	public fun <init> (Lio/ktor/http/Headers;)V
+	public fun contains (Ljava/lang/String;)Z
+	public fun contains (Ljava/lang/String;Ljava/lang/String;)Z
+	public fun entries ()Ljava/util/Set;
+	public fun forEach (Lkotlin/jvm/functions/Function2;)V
+	public fun get (Ljava/lang/String;)Ljava/lang/String;
+	public fun getAll (Ljava/lang/String;)Ljava/util/List;
+	public fun getCaseInsensitiveName ()Z
+	public fun isEmpty ()Z
+	public fun names ()Ljava/util/Set;
+	public final fun toMap ()Ljava/util/Map;
+	public final fun toMultiMap ()Ljava/util/Map;
+}
+
+public final class com/lagradost/nicehttp/NiceResponse {
+	public fun <init> (Lio/ktor/client/statement/HttpResponse;Lcom/lagradost/nicehttp/ResponseParser;)V
+	public synthetic fun <init> (Lio/ktor/client/statement/HttpResponse;Lcom/lagradost/nicehttp/ResponseParser;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun body (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun channel (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun document (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun documentLarge (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getBody ()Lcom/lagradost/nicehttp/ResponseBody;
+	public final fun getCode ()I
+	public final fun getCookies ()Ljava/util/Map;
+	public final fun getDocument ()Lorg/jsoup/nodes/Document;
+	public final fun getDocumentLarge ()Lorg/jsoup/nodes/Document;
+	public final fun getHeaders ()Lcom/lagradost/nicehttp/NiceHeaders;
+	public final fun getOkhttpResponse ()Lokhttp3/Response;
+	public final fun getParser ()Lcom/lagradost/nicehttp/ResponseParser;
+	public final fun getResponse ()Lio/ktor/client/statement/HttpResponse;
+	public final fun getSize ()Ljava/lang/Long;
+	public final fun getText ()Ljava/lang/String;
+	public final fun getTextLarge ()Ljava/lang/String;
+	public final fun getUrl ()Ljava/lang/String;
+	public final fun header (Ljava/lang/String;)Ljava/lang/String;
+	public final fun isSuccessful ()Z
+	public final fun text (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun textLarge (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/lagradost/nicehttp/NiceResponseKt {
+	public static final field MAX_TEXT_BYTES J
+	public static final fun getRequestCookies (Lio/ktor/http/Headers;)Ljava/util/Map;
+	public static final fun getSetCookies (Lio/ktor/http/Headers;)Ljava/util/Map;
+}
+
+public final class com/lagradost/nicehttp/OkHttpBridgeKt {
+	public static final fun toNiceRequestBody (Lokhttp3/RequestBody;)Lcom/lagradost/nicehttp/RequestBody;
+	public static final fun toOkHttpRequestBody (Lcom/lagradost/nicehttp/RequestBody;)Lokhttp3/RequestBody;
+}
+
+public final class com/lagradost/nicehttp/OkHttpCompatKt {
+	public static final fun requestCreator (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;Ljava/util/List;Ljava/lang/Object;Lokhttp3/RequestBody;Ljava/lang/Integer;Ljava/util/concurrent/TimeUnit;Lcom/lagradost/nicehttp/ResponseParser;)Lokhttp3/Request;
+	public static synthetic fun requestCreator$default (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;Ljava/util/List;Ljava/lang/Object;Lokhttp3/RequestBody;Ljava/lang/Integer;Ljava/util/concurrent/TimeUnit;Lcom/lagradost/nicehttp/ResponseParser;ILjava/lang/Object;)Lokhttp3/Request;
+}
+
+public final class com/lagradost/nicehttp/OkHttpCookieCompatKt {
+	public static final fun getCookies (Lokhttp3/Request;)Ljava/util/Map;
+	public static final fun getCookies (Lokhttp3/Response;)Ljava/util/Map;
+}
+
+public final class com/lagradost/nicehttp/OkHttpExtrasKt {
+	public static final fun addGenericDns (Lokhttp3/OkHttpClient$Builder;Ljava/lang/String;Ljava/util/List;)Lokhttp3/OkHttpClient$Builder;
+	public static final fun ignoreAllSSLErrors (Lokhttp3/OkHttpClient$Builder;)Lokhttp3/OkHttpClient$Builder;
+}
+
+public final class com/lagradost/nicehttp/OkHttpInterceptorBridgeKt {
+	public static final fun toNiceInterceptor (Lcom/lagradost/nicehttp/Interceptor;)Lcom/lagradost/nicehttp/Interceptor;
+	public static final fun toNiceInterceptor (Lokhttp3/Interceptor;)Lcom/lagradost/nicehttp/Interceptor;
+	public static final fun toOkHttpInterceptor (Lcom/lagradost/nicehttp/Interceptor;)Lokhttp3/Interceptor;
+}
+
+public abstract class com/lagradost/nicehttp/RequestBody {
+	public static final field Companion Lcom/lagradost/nicehttp/RequestBody$Companion;
+	public fun <init> ()V
+	public abstract fun getContent ()Lio/ktor/http/content/OutgoingContent;
+}
+
+public final class com/lagradost/nicehttp/RequestBody$Companion {
+	public final fun bytes ([BLio/ktor/http/ContentType;)Lcom/lagradost/nicehttp/RequestBody;
+	public static synthetic fun bytes$default (Lcom/lagradost/nicehttp/RequestBody$Companion;[BLio/ktor/http/ContentType;ILjava/lang/Object;)Lcom/lagradost/nicehttp/RequestBody;
+	public final fun form (Ljava/util/Map;)Lcom/lagradost/nicehttp/RequestBody;
+	public final fun of (Lio/ktor/http/content/OutgoingContent;)Lcom/lagradost/nicehttp/RequestBody;
+	public final fun text (Ljava/lang/String;Lio/ktor/http/ContentType;)Lcom/lagradost/nicehttp/RequestBody;
+	public static synthetic fun text$default (Lcom/lagradost/nicehttp/RequestBody$Companion;Ljava/lang/String;Lio/ktor/http/ContentType;ILjava/lang/Object;)Lcom/lagradost/nicehttp/RequestBody;
+}
+
+public final class com/lagradost/nicehttp/RequestBodyTypes {
+	public static final field INSTANCE Lcom/lagradost/nicehttp/RequestBodyTypes;
+	public static final field JSON Ljava/lang/String;
+	public static final field TEXT Ljava/lang/String;
+}
+
+public final class com/lagradost/nicehttp/RequestBuilder {
+	public final fun cookie (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun data (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun getAllowRedirects ()Z
+	public final fun getCacheTime-UwyO8pc ()J
+	public final fun getCookies ()Ljava/util/Map;
+	public final fun getData ()Ljava/util/Map;
+	public final fun getFiles ()Ljava/util/List;
+	public final fun getHeaders ()Ljava/util/Map;
+	public final fun getInterceptor ()Lcom/lagradost/nicehttp/Interceptor;
+	public final fun getJson ()Ljava/lang/Object;
+	public final fun getParams ()Ljava/util/Map;
+	public final fun getReferer ()Ljava/lang/String;
+	public final fun getRequestBody ()Lcom/lagradost/nicehttp/RequestBody;
+	public final fun getResponseParser ()Lcom/lagradost/nicehttp/ResponseParser;
+	public final fun getTimeout-UwyO8pc ()J
+	public final fun getVerify ()Z
+	public final fun header (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun param (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun setAllowRedirects (Z)V
+	public final fun setCacheTime-LRDsOJo (J)V
+	public final fun setCookies (Ljava/util/Map;)V
+	public final fun setData (Ljava/util/Map;)V
+	public final fun setFiles (Ljava/util/List;)V
+	public final fun setHeaders (Ljava/util/Map;)V
+	public final fun setInterceptor (Lcom/lagradost/nicehttp/Interceptor;)V
+	public final fun setJson (Ljava/lang/Object;)V
+	public final fun setParams (Ljava/util/Map;)V
+	public final fun setReferer (Ljava/lang/String;)V
+	public final fun setRequestBody (Lcom/lagradost/nicehttp/RequestBody;)V
+	public final fun setResponseParser (Lcom/lagradost/nicehttp/ResponseParser;)V
+	public final fun setTimeout-LRDsOJo (J)V
+	public final fun setVerify (Z)V
+}
+
+public class com/lagradost/nicehttp/Requests {
+	public fun <init> (Lio/ktor/client/HttpClient;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;ILjava/util/concurrent/TimeUnit;JLcom/lagradost/nicehttp/ResponseParser;Ljava/util/List;)V
+	public synthetic fun <init> (Lio/ktor/client/HttpClient;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;ILjava/util/concurrent/TimeUnit;JLcom/lagradost/nicehttp/ResponseParser;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lio/ktor/client/HttpClient;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;JJLcom/lagradost/nicehttp/ResponseParser;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lio/ktor/client/HttpClient;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;JJLcom/lagradost/nicehttp/ResponseParser;Ljava/util/List;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun addInterceptor (Lcom/lagradost/nicehttp/Interceptor;)Z
+	public fun custom (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;Ljava/util/List;Ljava/lang/Object;Lokhttp3/RequestBody;ZILjava/util/concurrent/TimeUnit;JLokhttp3/Interceptor;ZLcom/lagradost/nicehttp/ResponseParser;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun custom$default (Lcom/lagradost/nicehttp/Requests;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;Ljava/util/List;Ljava/lang/Object;Lokhttp3/RequestBody;ZILjava/util/concurrent/TimeUnit;JLokhttp3/Interceptor;ZLcom/lagradost/nicehttp/ResponseParser;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun delete (Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;Ljava/util/List;Ljava/lang/Object;Lokhttp3/RequestBody;ZILjava/util/concurrent/TimeUnit;JLokhttp3/Interceptor;ZLcom/lagradost/nicehttp/ResponseParser;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun delete (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun delete$default (Lcom/lagradost/nicehttp/Requests;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;Ljava/util/List;Ljava/lang/Object;Lokhttp3/RequestBody;ZILjava/util/concurrent/TimeUnit;JLokhttp3/Interceptor;ZLcom/lagradost/nicehttp/ResponseParser;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun delete$default (Lcom/lagradost/nicehttp/Requests;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun get (Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;ZILjava/util/concurrent/TimeUnit;JLokhttp3/Interceptor;ZLcom/lagradost/nicehttp/ResponseParser;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun get (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun get$default (Lcom/lagradost/nicehttp/Requests;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;ZILjava/util/concurrent/TimeUnit;JLokhttp3/Interceptor;ZLcom/lagradost/nicehttp/ResponseParser;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun get$default (Lcom/lagradost/nicehttp/Requests;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun getBaseClient ()Lio/ktor/client/HttpClient;
+	public final fun getDefaultCacheTime-UwyO8pc ()J
+	public final fun getDefaultCookies ()Ljava/util/Map;
+	public final fun getDefaultData ()Ljava/util/Map;
+	public final fun getDefaultHeaders ()Ljava/util/Map;
+	public final fun getDefaultReferer ()Ljava/lang/String;
+	public final fun getDefaultTimeout-UwyO8pc ()J
+	public final fun getInterceptors ()Ljava/util/List;
+	public final fun getResponseParser ()Lcom/lagradost/nicehttp/ResponseParser;
+	public final fun head (Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;ZILjava/util/concurrent/TimeUnit;JLokhttp3/Interceptor;ZLcom/lagradost/nicehttp/ResponseParser;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun head (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun head$default (Lcom/lagradost/nicehttp/Requests;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;ZILjava/util/concurrent/TimeUnit;JLokhttp3/Interceptor;ZLcom/lagradost/nicehttp/ResponseParser;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun head$default (Lcom/lagradost/nicehttp/Requests;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun options (Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;Ljava/util/List;Ljava/lang/Object;Lokhttp3/RequestBody;ZILjava/util/concurrent/TimeUnit;JLokhttp3/Interceptor;ZLcom/lagradost/nicehttp/ResponseParser;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun options (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun options$default (Lcom/lagradost/nicehttp/Requests;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;Ljava/util/List;Ljava/lang/Object;Lokhttp3/RequestBody;ZILjava/util/concurrent/TimeUnit;JLokhttp3/Interceptor;ZLcom/lagradost/nicehttp/ResponseParser;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun options$default (Lcom/lagradost/nicehttp/Requests;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun patch (Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;Ljava/util/List;Ljava/lang/Object;Lokhttp3/RequestBody;ZILjava/util/concurrent/TimeUnit;JLokhttp3/Interceptor;ZLcom/lagradost/nicehttp/ResponseParser;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun patch (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun patch$default (Lcom/lagradost/nicehttp/Requests;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;Ljava/util/List;Ljava/lang/Object;Lokhttp3/RequestBody;ZILjava/util/concurrent/TimeUnit;JLokhttp3/Interceptor;ZLcom/lagradost/nicehttp/ResponseParser;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun patch$default (Lcom/lagradost/nicehttp/Requests;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun post (Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;Ljava/util/List;Ljava/lang/Object;Lokhttp3/RequestBody;ZILjava/util/concurrent/TimeUnit;JLokhttp3/Interceptor;ZLcom/lagradost/nicehttp/ResponseParser;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun post (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun post$default (Lcom/lagradost/nicehttp/Requests;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;Ljava/util/List;Ljava/lang/Object;Lokhttp3/RequestBody;ZILjava/util/concurrent/TimeUnit;JLokhttp3/Interceptor;ZLcom/lagradost/nicehttp/ResponseParser;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun post$default (Lcom/lagradost/nicehttp/Requests;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun prepareGet (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun prepareGet$default (Lcom/lagradost/nicehttp/Requests;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun preparePost (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun preparePost$default (Lcom/lagradost/nicehttp/Requests;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun put (Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;Ljava/util/List;Ljava/lang/Object;Lokhttp3/RequestBody;ZILjava/util/concurrent/TimeUnit;JLokhttp3/Interceptor;ZLcom/lagradost/nicehttp/ResponseParser;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun put (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun put$default (Lcom/lagradost/nicehttp/Requests;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;Ljava/util/List;Ljava/lang/Object;Lokhttp3/RequestBody;ZILjava/util/concurrent/TimeUnit;JLokhttp3/Interceptor;ZLcom/lagradost/nicehttp/ResponseParser;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun put$default (Lcom/lagradost/nicehttp/Requests;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun removeInterceptor (Lcom/lagradost/nicehttp/Interceptor;)Z
+	public final fun setBaseClient (Lio/ktor/client/HttpClient;)V
+	public final fun setDefaultCacheTime-LRDsOJo (J)V
+	public final fun setDefaultCookies (Ljava/util/Map;)V
+	public final fun setDefaultData (Ljava/util/Map;)V
+	public final fun setDefaultHeaders (Ljava/util/Map;)V
+	public final fun setDefaultReferer (Ljava/lang/String;)V
+	public final fun setDefaultTimeout-LRDsOJo (J)V
+	public final fun setInterceptors (Ljava/util/List;)V
+	public final fun setResponseParser (Lcom/lagradost/nicehttp/ResponseParser;)V
+	public final fun streamGet (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun streamGet$default (Lcom/lagradost/nicehttp/Requests;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun streamPost (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun streamPost$default (Lcom/lagradost/nicehttp/Requests;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class com/lagradost/nicehttp/RequestsCompat {
+	public static final field INSTANCE Lcom/lagradost/nicehttp/RequestsCompat;
+	public final fun await (Lokhttp3/Call;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/lagradost/nicehttp/ResponseBody {
+	public fun <init> ([B)V
+	public final fun byteStream ()Ljava/io/InputStream;
+	public final fun bytes ()[B
+	public final fun close ()V
+	public final fun contentLength ()J
+	public final fun source ()Lokio/BufferedSource;
+	public final fun string ()Ljava/lang/String;
+}
+
+public abstract interface class com/lagradost/nicehttp/ResponseParser {
+	public abstract fun parse (Ljava/lang/String;Lkotlin/reflect/KClass;)Ljava/lang/Object;
+	public abstract fun parseSafe (Ljava/lang/String;Lkotlin/reflect/KClass;)Ljava/lang/Object;
+	public abstract fun writeValueAsString (Ljava/lang/Object;)Ljava/lang/String;
+}
+
+public final class com/lagradost/nicehttp/RetryInterceptor : com/lagradost/nicehttp/Interceptor {
+	public fun <init> ()V
+	public fun <init> (ILkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (ILkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun intercept (Lcom/lagradost/nicehttp/HttpSendInterceptorContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/lagradost/nicehttp/SerializationResponseParser : com/lagradost/nicehttp/ResponseParser {
+	public fun <init> ()V
+	public fun <init> (Lkotlinx/serialization/json/Json;)V
+	public synthetic fun <init> (Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getJson ()Lkotlinx/serialization/json/Json;
+	public fun parse (Ljava/lang/String;Lkotlin/reflect/KClass;)Ljava/lang/Object;
+	public fun parseSafe (Ljava/lang/String;Lkotlin/reflect/KClass;)Ljava/lang/Object;
+	public fun writeValueAsString (Ljava/lang/Object;)Ljava/lang/String;
+}
+
+public final class com/lagradost/nicehttp/Session : com/lagradost/nicehttp/Requests {
+	public fun <init> ()V
+	public fun <init> (Lio/ktor/client/HttpClient;Ljava/util/Map;)V
+	public synthetic fun <init> (Lio/ktor/client/HttpClient;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/lagradost/nicehttp/UtilsKt {
+	public static final fun buildHeaders (Ljava/util/Map;Ljava/lang/String;Ljava/util/Map;)Lio/ktor/http/Headers;
+}
+
