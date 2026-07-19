@@ -143,7 +143,7 @@ open class Requests(
             !verify && !allowRedirects -> insecureNoRedirectClient
             !verify                    -> insecureClient
             !allowRedirects            -> noRedirectClient
-            else                       -> baseClient
+            else                       -> baseHttpClient
         }
 
     /**
