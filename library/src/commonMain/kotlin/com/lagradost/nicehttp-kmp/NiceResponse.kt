@@ -101,7 +101,7 @@ class NiceResponse(
         ReplaceWith("body()"),
         DeprecationLevel.WARNING,
     )
-    val body: NiceResponseBodyCompat? by lazy {
+    val body: NiceResponseBodyCompat by lazy {
         resolveOkHttpResponseBodyCompat()
     }
 
