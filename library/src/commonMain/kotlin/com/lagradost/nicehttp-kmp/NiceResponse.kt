@@ -22,10 +22,9 @@ class NiceResponse(
 
     /**
      * Response headers wrapped in [NiceHeaders], which delegates [Headers] and adds
-     * [NiceHeaders.toMap] and [NiceHeaders.toMultiMap] for source compatibility
-     * with the original NiceHttp library.
+     * [NiceHeaders.toMap] and [NiceHeaders.toMultiMap].
      */
-    val headers: NiceHeaders get() = NiceHeaders(response.headers)
+    val responseHeaders: NiceHeaders get() = NiceHeaders(response.headers)
 
     /** Final URL after any redirects */
     val url: String get() = response.request.url.toString()
@@ -89,6 +88,14 @@ class NiceResponse(
     @Suppress("DEPRECATION")
     val documentLarge: NiceDocument by lazy { parseDocument(textLarge) }
 
+    /** Alias for [NiceResponse] for source compatibility with original NiceHttp */
+    @Deprecated(
+        "OkHttp compatibility shim, no longer needed. Use the NiceResponse directly.",
+        ReplaceWith("this"),
+        DeprecationLevel.WARNING,
+    )
+    val okhttpResponse: NiceResponseCompat? get() = resolveOkHttpResponseCompat()
+
     @Deprecated(
         "Use suspend fun body() instead.",
         ReplaceWith("body()"),
@@ -98,21 +105,20 @@ class NiceResponse(
         ResponseBody(runBlockingCompat { response.readRawBytes() })
     }
 
-    /** Alias for [NiceResponse] for source compatibility with original NiceHttp */
     @Deprecated(
-        "OkHttp compatibility shim, no longer needed. Use the NiceResponse directly.",
-        ReplaceWith("this"),
+        "Use responseHeaders instead.",
+        ReplaceWith("responseHeaders"),
         DeprecationLevel.WARNING,
     )
-    val okhttpResponse: NiceResponseCompat? get() = resolveOkHttpResponseCompat()
+    val headers: NiceHeadersCompat? get() = resolveOkHttpHeadersCompat()
 
     /** Returns the value of the header with the given [name], or null if absent. */
     @Deprecated(
-        "Exists for back-compat. Use headers[name] directly.",
-        ReplaceWith("headers[name]"),
+        "Exists for back-compat. Use responseHeaders[name] directly.",
+        ReplaceWith("responseHeaders[name]"),
         DeprecationLevel.WARNING,
     )
-    fun header(name: String): String? = headers[name]
+    fun header(name: String): String? = responseHeaders[name]
 
     /**
      * Reads the response body as a string. Throws [IllegalStateException] if the body exceeds
