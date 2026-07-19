@@ -182,10 +182,11 @@ public final class com/lagradost/nicehttp/NiceResponse {
 	public final fun getCookies ()Ljava/util/Map;
 	public final fun getDocument ()Lorg/jsoup/nodes/Document;
 	public final fun getDocumentLarge ()Lorg/jsoup/nodes/Document;
-	public final fun getHeaders ()Lcom/lagradost/nicehttp/NiceHeaders;
+	public final fun getHeaders ()Lokhttp3/Headers;
 	public final fun getOkhttpResponse ()Lokhttp3/Response;
 	public final fun getParser ()Lcom/lagradost/nicehttp/ResponseParser;
 	public final fun getResponse ()Lio/ktor/client/statement/HttpResponse;
+	public final fun getResponseHeaders ()Lcom/lagradost/nicehttp/NiceHeaders;
 	public final fun getSize ()Ljava/lang/Long;
 	public final fun getText ()Ljava/lang/String;
 	public final fun getTextLarge ()Ljava/lang/String;
