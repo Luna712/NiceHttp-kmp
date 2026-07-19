@@ -362,7 +362,7 @@ public final class com/lagradost/nicehttp/ResponseBody {
 	public final fun bytes ()[B
 	public final fun close ()V
 	public final fun contentLength ()J
-	public final fun source ()Lokio/BufferedSource;
+	public final fun source ()Lkotlinx/io/Source;
 	public final fun string ()Ljava/lang/String;
 }
 

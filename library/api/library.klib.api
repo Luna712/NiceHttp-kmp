@@ -329,7 +329,7 @@ final class com.lagradost.nicehttp/ResponseBody { // com.lagradost.nicehttp/Resp
     final fun bytes(): kotlin/ByteArray // com.lagradost.nicehttp/ResponseBody.bytes|bytes(){}[0]
     final fun close() // com.lagradost.nicehttp/ResponseBody.close|close(){}[0]
     final fun contentLength(): kotlin/Long // com.lagradost.nicehttp/ResponseBody.contentLength|contentLength(){}[0]
-    final fun source(): okio/BufferedSource // com.lagradost.nicehttp/ResponseBody.source|source(){}[0]
+    final fun source(): kotlinx.io/Source // com.lagradost.nicehttp/ResponseBody.source|source(){}[0]
     final fun string(): kotlin/String // com.lagradost.nicehttp/ResponseBody.string|string(){}[0]
 }
 
