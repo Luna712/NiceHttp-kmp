@@ -101,8 +101,8 @@ class NiceResponse(
         ReplaceWith("body()"),
         DeprecationLevel.WARNING,
     )
-    val body: ResponseBody by lazy {
-        ResponseBody(runBlockingCompat { response.readRawBytes() })
+    val body: NiceResponseBodyCompat? by lazy {
+        resolveOkHttpResponseBodyCompat()
     }
 
     @Deprecated(
