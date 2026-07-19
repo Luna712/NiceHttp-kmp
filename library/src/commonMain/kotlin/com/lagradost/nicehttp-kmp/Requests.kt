@@ -27,7 +27,7 @@ import kotlin.time.toDuration
  *
  * Pass a pre-configured [HttpClient] if you need custom TLS, logging, or auth plugins.
  *
- * @param baseClient        The Ktor [HttpClient] used for all requests.
+ * @param baseHttpClient        The Ktor [HttpClient] used for all requests.
  * @param defaultHeaders    Headers sent with every request (overridable per-call).
  * @param defaultReferer    Referer header sent when not overridden per-call.
  * @param defaultData       Default form data sent with every request.
@@ -38,7 +38,7 @@ import kotlin.time.toDuration
  * @param interceptors      List of [Interceptor]s applied to every request in order.
  */
 open class Requests(
-    var baseClient: HttpClient = defaultHttpClient(),
+    var baseHttpClient: HttpClient = defaultHttpClient(),
     var defaultHeaders: Map<String, String> = mapOf(HttpHeaders.UserAgent to "NiceHttp"),
     var defaultReferer: String? = null,
     var defaultData: Map<String, String> = emptyMap(),
@@ -48,6 +48,12 @@ open class Requests(
     var responseParser: ResponseParser? = null,
     var interceptors: MutableList<Interceptor> = mutableListOf(),
 ) {
+    var baseClient: NiceOkHttpClientCompat = defaultNiceOkHttpClientCompat()
+    set(value) {
+        field = value
+        baseHttpClient = value.toHttpClient()
+    }
+
     /**
      * Back-compatible constructor accepting the original NiceHttp parameter types.
      * Use the primary constructor with [Duration] and [Interceptor] directly instead.
@@ -70,7 +76,7 @@ open class Requests(
         defaultTimeOut: Long = 0L,
         responseParser: ResponseParser? = null,
     ) : this(
-        baseClient = baseClient.toHttpClient(),
+        baseHttpClient = baseClient.toHttpClient(),
         defaultHeaders = defaultHeaders,
         defaultReferer = defaultReferer,
         defaultData = defaultData,
