@@ -84,7 +84,6 @@ kotlin {
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
                 api(libs.ksoup)
-                api(libs.okio)
             }
         }
         val commonTest by getting {
@@ -103,6 +102,7 @@ kotlin {
                 // Expose OkHttp extras so callers can still configure DNS-over-HTTPS, etc.
                 api(libs.okhttp)
                 api(libs.okhttp.dnsoverhttps)
+                api(libs.okio)
                 api(libs.jsoup)
             }
         }
