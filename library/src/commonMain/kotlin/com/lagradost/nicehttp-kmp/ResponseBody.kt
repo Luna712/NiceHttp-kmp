@@ -1,50 +1,42 @@
 package com.lagradost.nicehttp
 
-import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.readRemaining
-import io.ktor.utils.io.cancel
 import kotlinx.io.Buffer
 import kotlinx.io.Source
-import kotlinx.io.readByteArray
 import kotlinx.io.write
 
 /**
- * KMP replacement for okhttp3.ResponseBody, backed by a [ByteReadChannel].
+ * KMP replacement for okhttp3.ResponseBody.
+ * Keeps .bytes and .close() call sites working unchanged.
  *
- * The channel is read lazily on first access and the result is cached, since a
- * [ByteReadChannel] can only be consumed once but callers may call multiple accessors.
+ * TODO: Migrate to accept a [io.ktor.utils.io.ByteReadChannel] instead of a [ByteArray] and make
+ *  [bytes], [string], [contentLength], [byteStream], and [source] suspend functions.
+ *  The channel can then be read lazily on demand, avoiding the eager copy done here.
  */
-class ResponseBody(private val channel: ByteReadChannel) {
-    private var cachedBytes: ByteArray? = null
-
-    private suspend fun readAll(): ByteArray =
-        cachedBytes ?: channel.readRemaining().readByteArray().also { cachedBytes = it }
-
+class ResponseBody(private val data: ByteArray) {
     /** Returns the body as a byte array. */
-    suspend fun bytes(): ByteArray = readAll()
+    fun bytes(): ByteArray = data
 
     /** Returns the body as a UTF-8 string. */
-    suspend fun string(): String = readAll().decodeToString()
+    fun string(): String = data.decodeToString()
 
     /** Returns the content length in bytes. */
-    suspend fun contentLength(): Long = readAll().size.toLong()
+    fun contentLength(): Long = data.size.toLong()
 
     /**
      * Returns the body as a platform-specific input stream.
      * On JVM/Android returns [java.io.InputStream].
      * On other platforms returns a [PlatformInputStream] wrapping the raw bytes.
      */
-    suspend fun byteStream(): PlatformInputStream = readAll().toPlatformInputStream()
+    fun byteStream(): PlatformInputStream = data.toPlatformInputStream()
 
     /** Returns the body as a [Source]. */
-    suspend fun source(): Source = Buffer().apply { write(readAll()) }
+    fun source(): Source = Buffer().apply { write(data) }
 
-    /**
-     * Cancels the underlying channel, releasing the connection if the body was never
-     * (fully) consumed. Safe to call after the body has already been read, it's then
-     * a no-op since the channel is already exhausted/closed.
-     */
-    fun close() {
-        if (cachedBytes == null) channel.cancel()
-    }
+    /** No-op - included for okhttp3.ResponseBody source compatibility. */
+    @Deprecated(
+        "No-op OkHttp compatibility shim, safe to remove.",
+        ReplaceWith(""),
+        DeprecationLevel.WARNING,
+    )
+    fun close() = Unit
 }
