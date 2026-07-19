@@ -110,7 +110,7 @@ class NiceResponse(
         ReplaceWith("responseHeaders"),
         DeprecationLevel.WARNING,
     )
-    val headers: NiceHeadersCompat? get() = resolveOkHttpHeadersCompat()
+    val headers: NiceHeadersCompat get() = resolveOkHttpHeadersCompat()
 
     /** Returns the value of the header with the given [name], or null if absent. */
     @Deprecated(
