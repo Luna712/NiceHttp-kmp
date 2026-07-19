@@ -177,7 +177,7 @@ public final class com/lagradost/nicehttp/NiceResponse {
 	public final fun channel (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun document (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun documentLarge (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun getBody ()Lcom/lagradost/nicehttp/ResponseBody;
+	public final fun getBody ()Lokhttp3/ResponseBody;
 	public final fun getCode ()I
 	public final fun getCookies ()Ljava/util/Map;
 	public final fun getDocument ()Lorg/jsoup/nodes/Document;

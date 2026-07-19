@@ -219,7 +219,7 @@ final class com.lagradost.nicehttp/NiceResponse { // com.lagradost.nicehttp/Nice
     constructor <init>(io.ktor.client.statement/HttpResponse, com.lagradost.nicehttp/ResponseParser? = ...) // com.lagradost.nicehttp/NiceResponse.<init>|<init>(io.ktor.client.statement.HttpResponse;com.lagradost.nicehttp.ResponseParser?){}[0]
 
     final val body // com.lagradost.nicehttp/NiceResponse.body|{}body[0]
-        final fun <get-body>(): com.lagradost.nicehttp/ResponseBody // com.lagradost.nicehttp/NiceResponse.body.<get-body>|<get-body>(){}[0]
+        final fun <get-body>(): io.ktor.client.statement/HttpResponse? // com.lagradost.nicehttp/NiceResponse.body.<get-body>|<get-body>(){}[0]
     final val code // com.lagradost.nicehttp/NiceResponse.code|{}code[0]
         final fun <get-code>(): kotlin/Int // com.lagradost.nicehttp/NiceResponse.code.<get-code>|<get-code>(){}[0]
     final val cookies // com.lagradost.nicehttp/NiceResponse.cookies|{}cookies[0]
