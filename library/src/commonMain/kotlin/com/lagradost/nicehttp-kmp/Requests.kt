@@ -27,7 +27,7 @@ import kotlin.time.toDuration
  *
  * Pass a pre-configured [HttpClient] if you need custom TLS, logging, or auth plugins.
  *
- * @param baseHttpClient        The Ktor [HttpClient] used for all requests.
+ * @param baseHttpClient    The Ktor [HttpClient] used for all requests.
  * @param defaultHeaders    Headers sent with every request (overridable per-call).
  * @param defaultReferer    Referer header sent when not overridden per-call.
  * @param defaultData       Default form data sent with every request.
@@ -91,7 +91,7 @@ open class Requests(
     fun removeInterceptor(interceptor: Interceptor) = interceptors.remove(interceptor)
 
     private val noRedirectClient: HttpClient by lazy {
-        baseClient.config { followRedirects = false }
+        baseHttpClient.config { followRedirects = false }
     }
 
     private val insecureClient: HttpClient by lazy {
