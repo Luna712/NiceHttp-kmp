@@ -215,11 +215,13 @@ final class com.lagradost.nicehttp/NiceHeaders : io.ktor.http/Headers { // com.l
     final fun toMultiMap(): kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>> // com.lagradost.nicehttp/NiceHeaders.toMultiMap|toMultiMap(){}[0]
 }
 
+final class com.lagradost.nicehttp/NiceOkHttpClientCompat // com.lagradost.nicehttp/NiceOkHttpClientCompat|null[0]
+
 final class com.lagradost.nicehttp/NiceResponse { // com.lagradost.nicehttp/NiceResponse|null[0]
     constructor <init>(io.ktor.client.statement/HttpResponse, com.lagradost.nicehttp/ResponseParser? = ...) // com.lagradost.nicehttp/NiceResponse.<init>|<init>(io.ktor.client.statement.HttpResponse;com.lagradost.nicehttp.ResponseParser?){}[0]
 
     final val body // com.lagradost.nicehttp/NiceResponse.body|{}body[0]
-        final fun <get-body>(): io.ktor.client.statement/HttpResponse? // com.lagradost.nicehttp/NiceResponse.body.<get-body>|<get-body>(){}[0]
+        final fun <get-body>(): io.ktor.client.statement/HttpResponse // com.lagradost.nicehttp/NiceResponse.body.<get-body>|<get-body>(){}[0]
     final val code // com.lagradost.nicehttp/NiceResponse.code|{}code[0]
         final fun <get-code>(): kotlin/Int // com.lagradost.nicehttp/NiceResponse.code.<get-code>|<get-code>(){}[0]
     final val cookies // com.lagradost.nicehttp/NiceResponse.cookies|{}cookies[0]
@@ -229,11 +231,11 @@ final class com.lagradost.nicehttp/NiceResponse { // com.lagradost.nicehttp/Nice
     final val documentLarge // com.lagradost.nicehttp/NiceResponse.documentLarge|{}documentLarge[0]
         final fun <get-documentLarge>(): com.fleeksoft.ksoup.nodes/Document // com.lagradost.nicehttp/NiceResponse.documentLarge.<get-documentLarge>|<get-documentLarge>(){}[0]
     final val headers // com.lagradost.nicehttp/NiceResponse.headers|{}headers[0]
-        final fun <get-headers>(): com.lagradost.nicehttp/NiceHeaders? // com.lagradost.nicehttp/NiceResponse.headers.<get-headers>|<get-headers>(){}[0]
+        final fun <get-headers>(): com.lagradost.nicehttp/NiceHeaders // com.lagradost.nicehttp/NiceResponse.headers.<get-headers>|<get-headers>(){}[0]
     final val isSuccessful // com.lagradost.nicehttp/NiceResponse.isSuccessful|{}isSuccessful[0]
         final fun <get-isSuccessful>(): kotlin/Boolean // com.lagradost.nicehttp/NiceResponse.isSuccessful.<get-isSuccessful>|<get-isSuccessful>(){}[0]
     final val okhttpResponse // com.lagradost.nicehttp/NiceResponse.okhttpResponse|{}okhttpResponse[0]
-        final fun <get-okhttpResponse>(): com.lagradost.nicehttp/NiceResponse? // com.lagradost.nicehttp/NiceResponse.okhttpResponse.<get-okhttpResponse>|<get-okhttpResponse>(){}[0]
+        final fun <get-okhttpResponse>(): com.lagradost.nicehttp/NiceResponse // com.lagradost.nicehttp/NiceResponse.okhttpResponse.<get-okhttpResponse>|<get-okhttpResponse>(){}[0]
     final val parser // com.lagradost.nicehttp/NiceResponse.parser|{}parser[0]
         final fun <get-parser>(): com.lagradost.nicehttp/ResponseParser? // com.lagradost.nicehttp/NiceResponse.parser.<get-parser>|<get-parser>(){}[0]
     final val response // com.lagradost.nicehttp/NiceResponse.response|{}response[0]
@@ -355,8 +357,8 @@ final class com.lagradost.nicehttp/Session : com.lagradost.nicehttp/Requests { /
 }
 
 open class com.lagradost.nicehttp/Requests { // com.lagradost.nicehttp/Requests|null[0]
+    constructor <init>(com.lagradost.nicehttp/NiceOkHttpClientCompat, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/Int = ..., kotlin.time/DurationUnit = ..., kotlin/Long = ..., com.lagradost.nicehttp/ResponseParser? = ...) // com.lagradost.nicehttp/Requests.<init>|<init>(com.lagradost.nicehttp.NiceOkHttpClientCompat;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.Int;kotlin.time.DurationUnit;kotlin.Long;com.lagradost.nicehttp.ResponseParser?){}[0]
     constructor <init>(io.ktor.client/HttpClient = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., com.lagradost.nicehttp/ResponseParser? = ..., kotlin.collections/MutableList<com.lagradost.nicehttp/Interceptor> = ...) // com.lagradost.nicehttp/Requests.<init>|<init>(io.ktor.client.HttpClient;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.time.Duration;kotlin.time.Duration;com.lagradost.nicehttp.ResponseParser?;kotlin.collections.MutableList<com.lagradost.nicehttp.Interceptor>){}[0]
-    constructor <init>(io.ktor.client/HttpClient = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/Int = ..., kotlin.time/DurationUnit = ..., kotlin/Long = ..., com.lagradost.nicehttp/ResponseParser? = ..., kotlin.collections/MutableList<com.lagradost.nicehttp/Interceptor> = ...) // com.lagradost.nicehttp/Requests.<init>|<init>(io.ktor.client.HttpClient;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.Int;kotlin.time.DurationUnit;kotlin.Long;com.lagradost.nicehttp.ResponseParser?;kotlin.collections.MutableList<com.lagradost.nicehttp.Interceptor>){}[0]
 
     final var baseClient // com.lagradost.nicehttp/Requests.baseClient|{}baseClient[0]
         final fun <get-baseClient>(): io.ktor.client/HttpClient // com.lagradost.nicehttp/Requests.baseClient.<get-baseClient>|<get-baseClient>(){}[0]
