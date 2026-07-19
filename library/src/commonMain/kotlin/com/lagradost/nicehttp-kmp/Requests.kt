@@ -60,7 +60,7 @@ open class Requests(
         level = DeprecationLevel.WARNING,
     )
     constructor(
-        baseClient: HttpClient = defaultHttpClient(),
+        baseClient: NiceOkHttpClientCompat,
         defaultHeaders: Map<String, String> = mapOf(HttpHeaders.UserAgent to "NiceHttp"),
         defaultReferer: String? = null,
         defaultData: Map<String, String> = emptyMap(),
@@ -69,9 +69,8 @@ open class Requests(
         defaultCacheTimeUnit: NiceTimeUnit = NiceTimeUnit.MINUTES,
         defaultTimeOut: Long = 0L,
         responseParser: ResponseParser? = null,
-        interceptors: MutableList<NiceInterceptorCompat> = mutableListOf(),
     ) : this(
-        baseClient = baseClient,
+        baseClient = baseClient.toHttpClient(),
         defaultHeaders = defaultHeaders,
         defaultReferer = defaultReferer,
         defaultData = defaultData,
@@ -80,7 +79,6 @@ open class Requests(
         defaultTimeout = if (defaultTimeOut <= 0L) Duration.ZERO
             else defaultTimeOut.seconds,
         responseParser = responseParser,
-        interceptors = interceptors.map { it.toInterceptor() }.toMutableList(),
     )
 
     fun addInterceptor(interceptor: Interceptor) = interceptors.add(interceptor)
