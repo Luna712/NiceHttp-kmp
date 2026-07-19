@@ -22,7 +22,7 @@ class Session(
     client: HttpClient = defaultHttpClient(),
     defaultHeaders: Map<String, String> = mapOf(HttpHeaders.UserAgent to "NiceHttp"),
 ) : Requests(
-    baseClient = client.config {
+    baseHttpClient = client.config {
         install(HttpCookies) {
             storage = AcceptAllCookiesStorage()
         }
