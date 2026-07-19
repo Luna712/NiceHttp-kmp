@@ -138,11 +138,8 @@ class NiceResponse(
         )
     }
 
-    /**
-     * Response body. Call .bytes() or .string() to read.
-     * Call .close() when done to release the connection if the body wasn't fully read.
-     */
-    suspend fun body(): ResponseBody = ResponseBody(channel())
+    /** Response body. Call .bytes() or .string() to read. Call .close() when done (no-op here). */
+    suspend fun body(): ResponseBody = ResponseBody(response.readRawBytes())
 
     /** Raw [ByteReadChannel] for incremental reads */
     suspend fun channel(): ByteReadChannel = response.bodyAsChannel()
