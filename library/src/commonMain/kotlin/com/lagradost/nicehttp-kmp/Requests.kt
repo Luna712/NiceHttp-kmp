@@ -460,13 +460,17 @@ open class Requests(
      *
      * Pass `stream = true` to keep the connection open for the duration of [streamBlock],
      * ideal for video/audio streaming, large file downloads, and Server-Sent Events.
-     * Use [NiceResponse.response] to access the [ByteReadChannel] for incremental reads.
+     * Use [NiceResponse.channel] to access the [ByteReadChannel] for incremental reads.
      * Ktor closes the connection automatically when [streamBlock] returns. Caching is
      * skipped whenever [stream] is true, since caching a live byte stream is meaningless.
      *
+     * The read must happen inside [streamBlock] - Ktor only guarantees the connection
+     * stays open for the duration of that lambda, so reading [NiceResponse.channel] after
+     * [streamBlock] returns is not safe.
+     *
      * Example reading a video stream in chunks:
      * ```kotlin
-     * app.get("https://cdn.example.com/video.mp4", stream = true, {
+     * app.get("https://cdn.example.com/video.mp4", stream = true, block = {
      *     header(HttpHeaders.Range, "bytes=0-")
      * }) { response ->
      *     val channel = response.channel
@@ -511,6 +515,10 @@ open class Requests(
      * Useful for Server-Sent Events or chunked JSON responses where the server sends
      * data progressively rather than all at once. Caching is skipped whenever [stream]
      * is true, since caching a live byte stream is meaningless.
+     *
+     * The read must happen inside [streamBlock] - Ktor only guarantees the connection
+     * stays open for the duration of that lambda, so reading [NiceResponse.channel] after
+     * [streamBlock] returns is not safe.
      *
      * @param url         Target URL.
      * @param stream      If true, keeps the connection open for [streamBlock] instead of
