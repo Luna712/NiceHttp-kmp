@@ -137,16 +137,17 @@ open class Requests(
     private fun selectClient(verify: Boolean, allowRedirects: Boolean): HttpClient =
         when {
             !verify && !allowRedirects -> insecureNoRedirectClient
-            !verify                    -> insecureClient
-            !allowRedirects            -> noRedirectClient
-            else                       -> baseClient
+            !verify -> insecureClient
+            !allowRedirects -> noRedirectClient
+            else -> baseClient
         }
 
     /**
      * Configures a Ktor [HttpRequestBuilder] with all resolved call parameters.
      *
      * This is the single place where URL, headers, body, and timeout are written
-     * onto the builder, keeping [request] and [stream] in sync without duplicating logic.
+     * onto the builder, keeping non-streaming and streaming calls in sync without
+     * duplicating logic (see [executeRequest]).
      *
      * @param method       HTTP method for this request.
      * @param finalUrl     Already-resolved URL with query params appended.
@@ -171,8 +172,95 @@ open class Requests(
             timeout {
                 requestTimeoutMillis = ms
                 connectTimeoutMillis = ms
-                socketTimeoutMillis  = ms
+                socketTimeoutMillis = ms
             }
+        }
+    }
+
+    /**
+     * Shared implementation behind both [request] and [stream].
+     *
+     * Resolves the URL/headers/body, builds the interceptor chain, picks the right
+     * client variant, and then either:
+     *  - executes the request immediately via [HttpClient.request] ([stream] = false), or
+     *  - keeps the connection open via [HttpClient.prepareRequest] + [HttpStatement.execute]
+     *    for the duration of [block] ([stream] = true).
+     *
+     * In both cases the resulting [HttpResponse] is wrapped in a [NiceResponse] and handed
+     * to [block]; the non-streaming [request] wrapper simply passes through an identity
+     * block so it can still return a plain [NiceResponse].
+     *
+     * Caching is skipped whenever [stream] is true - it makes no sense for a live byte stream.
+     *
+     * @param method         HTTP method from [HttpMethod].
+     * @param url            Target URL.
+     * @param headers        Extra headers merged on top of [defaultHeaders].
+     * @param referer        Overrides [defaultReferer] for this call.
+     * @param params         Query-string parameters appended to [url].
+     * @param cookies        Merged with [defaultCookies].
+     * @param data           URL-encoded form body (mutually exclusive with [json]/[requestBody]).
+     * @param files          Multipart form parts.
+     * @param json           Object serialised to JSON, or a raw [JsonAsString].
+     * @param requestBody    Fully pre-built [RequestBody] (highest priority body).
+     * @param allowRedirects Whether to follow HTTP redirects.
+     * @param stream         If true, keeps the connection open for [block] instead of
+     *                       buffering the whole body up-front, and disables caching.
+     * @param cacheTime      How long to cache the response. Ignored when [stream] is true.
+     * @param timeout        Request timeout. [Duration.ZERO] means no timeout.
+     * @param interceptor    Per-call [Interceptor], appended after [interceptors].
+     * @param verify         If false, SSL certificate verification is disabled.
+     *                       Only has effect on platforms that support it (JVM/Android, Darwin, Curl, WinHttp).
+     *                       Silently ignored on JS/WASM.
+     * @param responseParser Overrides [this.responseParser] for this call.
+     * @param block          Suspend lambda that receives the [NiceResponse] and returns [T].
+     * @return Whatever [block] returns.
+     */
+    private suspend fun <T> executeRequest(
+        method: HttpMethod,
+        url: String,
+        headers: Map<String, String>,
+        referer: String?,
+        params: Map<String, String>,
+        cookies: Map<String, String>,
+        data: Map<String, String>?,
+        files: List<NiceFile>?,
+        json: Any?,
+        requestBody: RequestBody?,
+        allowRedirects: Boolean,
+        stream: Boolean,
+        cacheTime: Duration,
+        timeout: Duration,
+        interceptor: Interceptor?,
+        verify: Boolean,
+        responseParser: ResponseParser?,
+        block: suspend (NiceResponse) -> T,
+    ): T {
+        val finalUrl = addParamsToUrl(url, params)
+        val finalHeaders = buildHeaders(
+            defaultHeaders + headers,
+            referer ?: defaultReferer,
+            defaultCookies + cookies,
+        )
+
+        val body = buildBody(method, data, files, json, requestBody, responseParser)
+
+        // Streaming requests skip the cache interceptor - caching a live stream is meaningless
+        val allInterceptors = buildInterceptorChain(if (stream) Duration.ZERO else cacheTime, interceptor)
+        val client = selectClient(verify, allowRedirects).withInterceptors(allInterceptors)
+
+        return if (stream) {
+            // prepareRequest + execute keeps the connection open for the duration of the lambda;
+            // Ktor releases it automatically once block() returns
+            client.prepareRequest {
+                configureRequest(method, finalUrl, finalHeaders, body, timeout)
+            }.execute { httpResponse ->
+                block(NiceResponse(httpResponse, responseParser))
+            }
+        } else {
+            val response = client.request {
+                configureRequest(method, finalUrl, finalHeaders, body, timeout)
+            }
+            block(NiceResponse(response, responseParser))
         }
     }
 
@@ -216,135 +304,11 @@ open class Requests(
         interceptor: Interceptor?,
         verify: Boolean,
         responseParser: ResponseParser?,
-    ): NiceResponse {
-        val finalUrl = addParamsToUrl(url, params)
-        val finalHeaders = buildHeaders(
-            defaultHeaders + headers,
-            referer ?: defaultReferer,
-            defaultCookies + cookies,
-        )
-        val body = buildBody(method, data, files, json, requestBody, responseParser)
-
-        // Build all interceptors for this call
-        val allInterceptors = buildInterceptorChain(cacheTime, interceptor)
-
-        // Pick the right client variant, then install interceptors
-        val client = selectClient(verify, allowRedirects).withInterceptors(allInterceptors)
-
-        val response = client.request {
-            configureRequest(method, finalUrl, finalHeaders, body, timeout)
-        }
-
-        return NiceResponse(response, responseParser)
-    }
-
-    /**
-     * Streaming variant of [request] - uses Ktor's [HttpStatement.execute] so the
-     * connection stays open while [block] runs, letting the caller read the body
-     * channel incrementally without buffering the entire payload into memory first.
-     *
-     * The [HttpResponse] is wrapped in an ordinary [NiceResponse] and passed to [block].
-     * The response body channel remains live for the duration of [block]; Ktor closes
-     * the connection automatically when [block] returns.
-     *
-     * Ideal for video/audio streaming, large file downloads, and Server-Sent Events.
-     * Caching is intentionally skipped - it makes no sense for a live byte stream.
-     *
-     * @param method         HTTP method from [HttpMethod].
-     * @param url            Target URL.
-     * @param headers        Extra headers merged on top of [defaultHeaders].
-     * @param referer        Overrides [defaultReferer] for this call.
-     * @param params         Query-string parameters appended to [url].
-     * @param cookies        Merged with [defaultCookies].
-     * @param data           URL-encoded form body (mutually exclusive with [json]/[requestBody]).
-     * @param files          Multipart form parts.
-     * @param json           Object serialised to JSON, or a raw [JsonAsString].
-     * @param requestBody    Fully pre-built [RequestBody] (highest priority body).
-     * @param allowRedirects Whether to follow HTTP redirects.
-     * @param timeout        Connection/socket timeout. Defaults to [Duration.ZERO] (no timeout)
-     *                       because a server may drip bytes indefinitely on a live stream.
-     * @param interceptor    Per-call [Interceptor], appended after [interceptors].
-     * @param verify         If false, SSL certificate verification is disabled.
-     * @param responseParser Overrides [this.responseParser] for this call.
-     * @param block          Suspend lambda that receives the live [NiceResponse] and returns [T].
-     * @return Whatever [block] returns.
-     */
-    private suspend fun <T> stream(
-        method: HttpMethod,
-        url: String,
-        headers: Map<String, String>,
-        referer: String?,
-        params: Map<String, String>,
-        cookies: Map<String, String>,
-        data: Map<String, String>?,
-        files: List<NiceFile>?,
-        json: Any?,
-        requestBody: RequestBody?,
-        allowRedirects: Boolean,
-        // Streams intentionally default to no timeout as a server may drip bytes indefinitely
-        timeout: Duration = Duration.ZERO,
-        interceptor: Interceptor?,
-        verify: Boolean,
-        responseParser: ResponseParser?,
-        block: suspend (NiceResponse) -> T,
-    ): T {
-        val finalUrl = addParamsToUrl(url, params)
-        val finalHeaders = buildHeaders(
-            defaultHeaders + headers,
-            referer ?: defaultReferer,
-            defaultCookies + cookies,
-        )
-        val body = buildBody(method, data, files, json, requestBody, responseParser)
-
-        // Streaming requests skip the cache interceptor as caching a live stream is meaningless
-        val allInterceptors = buildInterceptorChain(cacheTime = Duration.ZERO, interceptor)
-
-        val client = selectClient(verify, allowRedirects).withInterceptors(allInterceptors)
-
-        // prepareRequest + execute keeps the connection open for the duration of the lambda;
-        // Ktor releases it automatically once block() returns
-        return client.prepareRequest {
-            configureRequest(method, finalUrl, finalHeaders, body, timeout)
-        }.execute { httpResponse ->
-            block(NiceResponse(httpResponse, responseParser))
-        }
-    }
-
-    /**
-     * Builds and returns a prepared [HttpStatement] without executing it.
-     * Skips caching (meaningless for raw statements) but applies the full interceptor chain,
-     * client selection, and header/cookie merging identically to [request].
-     */
-    private suspend fun prepareStatement(
-        method: HttpMethod,
-        url: String,
-        headers: Map<String, String>,
-        referer: String?,
-        params: Map<String, String>,
-        cookies: Map<String, String>,
-        data: Map<String, String>?,
-        files: List<NiceFile>?,
-        json: Any?,
-        requestBody: RequestBody?,
-        allowRedirects: Boolean,
-        timeout: Duration = Duration.ZERO,
-        interceptor: Interceptor?,
-        verify: Boolean,
-        responseParser: ResponseParser?,
-    ): HttpStatement {
-        val finalUrl = addParamsToUrl(url, params)
-        val finalHeaders = buildHeaders(
-            defaultHeaders + headers,
-            referer ?: defaultReferer,
-            defaultCookies + cookies,
-        )
-        val body = buildBody(method, data, files, json, requestBody, responseParser)
-        val allInterceptors = buildInterceptorChain(cacheTime = Duration.ZERO, interceptor)
-        val client = selectClient(verify, allowRedirects).withInterceptors(allInterceptors)
-        return client.prepareRequest {
-            configureRequest(method, finalUrl, finalHeaders, body, timeout)
-        }
-    }
+    ): NiceResponse = executeRequest(
+        method, url, headers, referer, params, cookies, data, files, json, requestBody,
+        allowRedirects, stream = false, cacheTime = cacheTime, timeout = timeout,
+        interceptor = interceptor, verify = verify, responseParser = responseParser,
+    ) { it }
 
     @Deprecated(
         "Use one of the named builder methods instead: get(url) { }, post(url) { }, put(url) { }, etc.",
@@ -378,103 +342,128 @@ open class Requests(
 
     suspend fun get(
         url: String,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        timeout: Duration = Duration.ZERO,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
         val builder = RequestBuilder(this, block)
         return request(
-            HttpMethod.Get, url, builder.headers, builder.referer, builder.params, builder.cookies,
-            null, null, null, null, builder.allowRedirects, builder.cacheTime, builder.timeout,
+            HttpMethod.Get, url, builder.headers + headers, referer ?: builder.referer, builder.params, builder.cookies,
+            null, null, null, null, builder.allowRedirects, builder.cacheTime,
+            if (timeout != Duration.ZERO) timeout else builder.timeout,
             builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
     suspend fun post(
         url: String,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        timeout: Duration = Duration.ZERO,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
         val builder = RequestBuilder(this, block)
         return request(
-            HttpMethod.Post, url, builder.headers, builder.referer, builder.params, builder.cookies,
+            HttpMethod.Post, url, builder.headers + headers, referer ?: builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
-            builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
-            builder.responseParser,
+            builder.cacheTime, if (timeout != Duration.ZERO) timeout else builder.timeout,
+            builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
     suspend fun put(
         url: String,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        timeout: Duration = Duration.ZERO,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
         val builder = RequestBuilder(this, block)
         return request(
-            HttpMethod.Put, url, builder.headers, builder.referer, builder.params, builder.cookies,
+            HttpMethod.Put, url, builder.headers + headers, referer ?: builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
-            builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
-            builder.responseParser,
+            builder.cacheTime, if (timeout != Duration.ZERO) timeout else builder.timeout,
+            builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
     suspend fun delete(
         url: String,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        timeout: Duration = Duration.ZERO,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
         val builder = RequestBuilder(this, block)
         return request(
-            HttpMethod.Delete, url, builder.headers, builder.referer, builder.params, builder.cookies,
+            HttpMethod.Delete, url, builder.headers + headers, referer ?: builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
-            builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
-            builder.responseParser,
+            builder.cacheTime, if (timeout != Duration.ZERO) timeout else builder.timeout,
+            builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
     suspend fun head(
         url: String,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        timeout: Duration = Duration.ZERO,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
         val builder = RequestBuilder(this, block)
         return request(
-            HttpMethod.Head, url, builder.headers, builder.referer, builder.params, builder.cookies,
-            null, null, null, null, builder.allowRedirects, builder.cacheTime, builder.timeout,
+            HttpMethod.Head, url, builder.headers + headers, referer ?: builder.referer, builder.params, builder.cookies,
+            null, null, null, null, builder.allowRedirects, builder.cacheTime,
+            if (timeout != Duration.ZERO) timeout else builder.timeout,
             builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
     suspend fun patch(
         url: String,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        timeout: Duration = Duration.ZERO,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
         val builder = RequestBuilder(this, block)
         return request(
-            HttpMethod.Patch, url, builder.headers, builder.referer, builder.params, builder.cookies,
+            HttpMethod.Patch, url, builder.headers + headers, referer ?: builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
-            builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
-            builder.responseParser,
+            builder.cacheTime, if (timeout != Duration.ZERO) timeout else builder.timeout,
+            builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
     suspend fun options(
         url: String,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        timeout: Duration = Duration.ZERO,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
         val builder = RequestBuilder(this, block)
         return request(
-            HttpMethod.Options, url, builder.headers, builder.referer, builder.params, builder.cookies,
-            null, null, null, null, builder.allowRedirects, builder.cacheTime, builder.timeout,
+            HttpMethod.Options, url, builder.headers + headers, referer ?: builder.referer, builder.params, builder.cookies,
+            null, null, null, null, builder.allowRedirects, builder.cacheTime,
+            if (timeout != Duration.ZERO) timeout else builder.timeout,
             builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
     /**
-     * Opens a streaming GET request, ideal for video/audio streaming or large file
-     * downloads where buffering the full body into memory is undesirable.
+     * GET request that streams the response instead of buffering it up-front.
      *
-     * The connection stays open for the duration of [streamBlock]; use [NiceResponse.response]
-     * to access [ByteReadChannel] for incremental reads. Ktor closes the connection
-     * automatically when [streamBlock] returns.
+     * Pass `stream = true` to keep the connection open for the duration of [streamBlock],
+     * ideal for video/audio streaming, large file downloads, and Server-Sent Events.
+     * Use [NiceResponse.response] to access the [ByteReadChannel] for incremental reads.
+     * Ktor closes the connection automatically when [streamBlock] returns. Caching is
+     * skipped whenever [stream] is true, since caching a live byte stream is meaningless.
      *
      * Example reading a video stream in chunks:
      * ```kotlin
-     * app.streamGet("https://cdn.example.com/video.mp4", {
+     * app.get("https://cdn.example.com/video.mp4", stream = true, {
      *     header(HttpHeaders.Range, "bytes=0-")
      * }) { response ->
      *     val channel = response.channel
@@ -483,74 +472,70 @@ open class Requests(
      * ```
      *
      * @param url         Target URL.
+     * @param stream      If true, keeps the connection open for [streamBlock] instead of
+     *                     buffering the whole body up-front, and disables caching.
+     * @param headers     Extra headers merged on top of [defaultHeaders] and any set via [block].
+     * @param referer     Overrides [defaultReferer] (and any referer set via [block]) for this call.
+     * @param timeout     Request timeout. [Duration.ZERO] means fall back to whatever [block] set.
      * @param block       Optional [RequestBuilder] configuration lambda (headers, params, etc.).
-     * @param streamBlock Suspend lambda that receives the live [NiceResponse] and returns [T].
+     * @param streamBlock Suspend lambda that receives the [NiceResponse] and returns [T].
      * @return Whatever [streamBlock] returns.
      */
-    suspend fun <T> streamGet(
+    suspend fun <T> get(
         url: String,
+        stream: Boolean,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        timeout: Duration = Duration.ZERO,
         block: RequestBuilder.() -> Unit = {},
         streamBlock: suspend (NiceResponse) -> T,
     ): T {
         val builder = RequestBuilder(this, block)
-        return stream(
-            HttpMethod.Get, url, builder.headers, builder.referer, builder.params, builder.cookies,
-            null, null, null, null, builder.allowRedirects, builder.timeout,
-            builder.interceptor, builder.verify, builder.responseParser, streamBlock,
+        return executeRequest(
+            HttpMethod.Get, url, builder.headers + headers, referer ?: builder.referer, builder.params, builder.cookies,
+            null, null, null, null, builder.allowRedirects, stream,
+            cacheTime = builder.cacheTime,
+            timeout = if (timeout != Duration.ZERO) timeout else builder.timeout,
+            interceptor = builder.interceptor, verify = builder.verify,
+            responseParser = builder.responseParser, block = streamBlock,
         )
     }
 
     /**
-     * Opens a streaming POST request. Useful for Server-Sent Events or chunked JSON
-     * responses where the server sends data progressively rather than all at once.
+     * POST request that streams the response instead of buffering it up-front.
+     *
+     * Pass `stream = true` to keep the connection open for the duration of [streamBlock].
+     * Useful for Server-Sent Events or chunked JSON responses where the server sends
+     * data progressively rather than all at once. Caching is skipped whenever [stream]
+     * is true, since caching a live byte stream is meaningless.
      *
      * @param url         Target URL.
+     * @param stream      If true, keeps the connection open for [streamBlock] instead of
+     *                     buffering the whole body up-front, and disables caching.
+     * @param headers     Extra headers merged on top of [defaultHeaders] and any set via [block].
+     * @param referer     Overrides [defaultReferer] (and any referer set via [block]) for this call.
+     * @param timeout     Request timeout. [Duration.ZERO] means fall back to whatever [block] set.
      * @param block       Optional [RequestBuilder] configuration lambda (body, headers, etc.).
-     * @param streamBlock Suspend lambda that receives the live [NiceResponse] and returns [T].
+     * @param streamBlock Suspend lambda that receives the [NiceResponse] and returns [T].
      * @return Whatever [streamBlock] returns.
      */
-    suspend fun <T> streamPost(
+    suspend fun <T> post(
         url: String,
+        stream: Boolean,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        timeout: Duration = Duration.ZERO,
         block: RequestBuilder.() -> Unit = {},
         streamBlock: suspend (NiceResponse) -> T,
     ): T {
         val builder = RequestBuilder(this, block)
-        return stream(
-            HttpMethod.Post, url, builder.headers, builder.referer, builder.params, builder.cookies,
-            builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
-            builder.timeout, builder.interceptor, builder.verify, builder.responseParser, streamBlock,
-        )
-    }
-
-    /**
-     * Returns a prepared [HttpStatement] for a GET request without executing it.
-     * Useful for Media3's KtorDataSource which manages its own execution and byte-range handling.
-     */
-    suspend fun prepareGet(
-        url: String,
-        block: RequestBuilder.() -> Unit = {},
-    ): HttpStatement {
-        val builder = RequestBuilder(this, block)
-        return prepareStatement(
-            HttpMethod.Get, url, builder.headers, builder.referer, builder.params, builder.cookies,
-            null, null, null, null, builder.allowRedirects, builder.timeout,
-            builder.interceptor, builder.verify, builder.responseParser,
-        )
-    }
-
-    /**
-     * Returns a prepared [HttpStatement] for a POST request without executing it.
-     * Useful for Media3's KtorDataSource which manages its own execution and byte-range handling.
-     */
-    suspend fun preparePost(
-        url: String,
-        block: RequestBuilder.() -> Unit = {},
-    ): HttpStatement {
-        val builder = RequestBuilder(this, block)
-        return prepareStatement(
-            HttpMethod.Post, url, builder.headers, builder.referer, builder.params, builder.cookies,
-            builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
-            builder.timeout, builder.interceptor, builder.verify, builder.responseParser,
+        return executeRequest(
+            HttpMethod.Post, url, builder.headers + headers, referer ?: builder.referer, builder.params, builder.cookies,
+            builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects, stream,
+            cacheTime = builder.cacheTime,
+            timeout = if (timeout != Duration.ZERO) timeout else builder.timeout,
+            interceptor = builder.interceptor, verify = builder.verify,
+            responseParser = builder.responseParser, block = streamBlock,
         )
     }
 
