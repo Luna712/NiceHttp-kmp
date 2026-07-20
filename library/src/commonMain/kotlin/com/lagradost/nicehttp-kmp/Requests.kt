@@ -48,6 +48,12 @@ open class Requests(
     var responseParser: ResponseParser? = null,
     var interceptors: MutableList<Interceptor> = mutableListOf(),
 ) {
+    /**
+     * Back-compat companion. On JVM/Android this inherits the legacy `Call.await()`
+     * extension (see [RequestsCompanionCompat]).
+     */
+    companion object : RequestsCompanionCompat()
+
     var baseClient: NiceOkHttpClientCompat = defaultNiceOkHttpClientCompat()
     set(value) {
         field = value
