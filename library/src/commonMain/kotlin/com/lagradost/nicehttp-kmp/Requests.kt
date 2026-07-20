@@ -140,9 +140,9 @@ open class Requests(
     private fun selectClient(verify: Boolean, allowRedirects: Boolean): HttpClient =
         when {
             !verify && !allowRedirects -> insecureNoRedirectClient
-            !verify                    -> insecureClient
-            !allowRedirects            -> noRedirectClient
-            else                       -> baseClient
+            !verify -> insecureClient
+            !allowRedirects -> noRedirectClient
+            else -> baseClient
         }
 
     /**
@@ -174,7 +174,7 @@ open class Requests(
             timeout {
                 requestTimeoutMillis = ms
                 connectTimeoutMillis = ms
-                socketTimeoutMillis  = ms
+                socketTimeoutMillis = ms
             }
         }
     }
@@ -226,6 +226,7 @@ open class Requests(
             referer ?: defaultReferer,
             defaultCookies + cookies,
         )
+
         val body = buildBody(method, data, files, json, requestBody, responseParser)
 
         // Build all interceptors for this call
@@ -233,7 +234,6 @@ open class Requests(
 
         // Pick the right client variant, then install interceptors
         val client = selectClient(verify, allowRedirects).withInterceptors(allInterceptors)
-
         val response = client.request {
             configureRequest(method, finalUrl, finalHeaders, body, timeout)
         }
@@ -297,11 +297,11 @@ open class Requests(
             referer ?: defaultReferer,
             defaultCookies + cookies,
         )
+
         val body = buildBody(method, data, files, json, requestBody, responseParser)
 
         // Streaming requests skip the cache interceptor as caching a live stream is meaningless
         val allInterceptors = buildInterceptorChain(cacheTime = Duration.ZERO, interceptor)
-
         val client = selectClient(verify, allowRedirects).withInterceptors(allInterceptors)
 
         // prepareRequest + execute keeps the connection open for the duration of the lambda;
@@ -310,42 +310,6 @@ open class Requests(
             configureRequest(method, finalUrl, finalHeaders, body, timeout)
         }.execute { httpResponse ->
             block(NiceResponse(httpResponse, responseParser))
-        }
-    }
-
-    /**
-     * Builds and returns a prepared [HttpStatement] without executing it.
-     * Skips caching (meaningless for raw statements) but applies the full interceptor chain,
-     * client selection, and header/cookie merging identically to [request].
-     */
-    private suspend fun prepareStatement(
-        method: HttpMethod,
-        url: String,
-        headers: Map<String, String>,
-        referer: String?,
-        params: Map<String, String>,
-        cookies: Map<String, String>,
-        data: Map<String, String>?,
-        files: List<NiceFile>?,
-        json: Any?,
-        requestBody: RequestBody?,
-        allowRedirects: Boolean,
-        timeout: Duration = Duration.ZERO,
-        interceptor: Interceptor?,
-        verify: Boolean,
-        responseParser: ResponseParser?,
-    ): HttpStatement {
-        val finalUrl = addParamsToUrl(url, params)
-        val finalHeaders = buildHeaders(
-            defaultHeaders + headers,
-            referer ?: defaultReferer,
-            defaultCookies + cookies,
-        )
-        val body = buildBody(method, data, files, json, requestBody, responseParser)
-        val allInterceptors = buildInterceptorChain(cacheTime = Duration.ZERO, interceptor)
-        val client = selectClient(verify, allowRedirects).withInterceptors(allInterceptors)
-        return client.prepareRequest {
-            configureRequest(method, finalUrl, finalHeaders, body, timeout)
         }
     }
 
@@ -522,38 +486,6 @@ open class Requests(
             HttpMethod.Post, url, builder.headers, builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
             builder.timeout, builder.interceptor, builder.verify, builder.responseParser, streamBlock,
-        )
-    }
-
-    /**
-     * Returns a prepared [HttpStatement] for a GET request without executing it.
-     * Useful for Media3's KtorDataSource which manages its own execution and byte-range handling.
-     */
-    suspend fun prepareGet(
-        url: String,
-        block: RequestBuilder.() -> Unit = {},
-    ): HttpStatement {
-        val builder = RequestBuilder(this, block)
-        return prepareStatement(
-            HttpMethod.Get, url, builder.headers, builder.referer, builder.params, builder.cookies,
-            null, null, null, null, builder.allowRedirects, builder.timeout,
-            builder.interceptor, builder.verify, builder.responseParser,
-        )
-    }
-
-    /**
-     * Returns a prepared [HttpStatement] for a POST request without executing it.
-     * Useful for Media3's KtorDataSource which manages its own execution and byte-range handling.
-     */
-    suspend fun preparePost(
-        url: String,
-        block: RequestBuilder.() -> Unit = {},
-    ): HttpStatement {
-        val builder = RequestBuilder(this, block)
-        return prepareStatement(
-            HttpMethod.Post, url, builder.headers, builder.referer, builder.params, builder.cookies,
-            builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
-            builder.timeout, builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
