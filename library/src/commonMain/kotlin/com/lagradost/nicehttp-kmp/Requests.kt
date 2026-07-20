@@ -345,88 +345,112 @@ open class Requests(
 
     suspend fun get(
         url: String,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        timeout: Duration = Duration.ZERO,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
         val builder = RequestBuilder(this, block)
         return request(
-            HttpMethod.Get, url, builder.headers, builder.referer, builder.params, builder.cookies,
-            null, null, null, null, builder.allowRedirects, builder.cacheTime, builder.timeout,
+            HttpMethod.Get, url, builder.headers + headers, referer ?: builder.referer, builder.params, builder.cookies,
+            null, null, null, null, builder.allowRedirects, builder.cacheTime,
+            if (timeout != Duration.ZERO) timeout else builder.timeout,
             builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
     suspend fun post(
         url: String,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        timeout: Duration = Duration.ZERO,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
         val builder = RequestBuilder(this, block)
         return request(
-            HttpMethod.Post, url, builder.headers, builder.referer, builder.params, builder.cookies,
+            HttpMethod.Post, url, builder.headers + headers, referer ?: builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
-            builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
-            builder.responseParser,
+            builder.cacheTime, if (timeout != Duration.ZERO) timeout else builder.timeout,
+            builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
     suspend fun put(
         url: String,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        timeout: Duration = Duration.ZERO,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
         val builder = RequestBuilder(this, block)
         return request(
-            HttpMethod.Put, url, builder.headers, builder.referer, builder.params, builder.cookies,
+            HttpMethod.Put, url, builder.headers + headers, referer ?: builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
-            builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
-            builder.responseParser,
+            builder.cacheTime, if (timeout != Duration.ZERO) timeout else builder.timeout,
+            builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
     suspend fun delete(
         url: String,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        timeout: Duration = Duration.ZERO,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
         val builder = RequestBuilder(this, block)
         return request(
-            HttpMethod.Delete, url, builder.headers, builder.referer, builder.params, builder.cookies,
+            HttpMethod.Delete, url, builder.headers + headers, referer ?: builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
-            builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
-            builder.responseParser,
+            builder.cacheTime, if (timeout != Duration.ZERO) timeout else builder.timeout,
+            builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
     suspend fun head(
         url: String,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        timeout: Duration = Duration.ZERO,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
         val builder = RequestBuilder(this, block)
         return request(
-            HttpMethod.Head, url, builder.headers, builder.referer, builder.params, builder.cookies,
-            null, null, null, null, builder.allowRedirects, builder.cacheTime, builder.timeout,
+            HttpMethod.Head, url, builder.headers + headers, referer ?: builder.referer, builder.params, builder.cookies,
+            null, null, null, null, builder.allowRedirects, builder.cacheTime,
+            if (timeout != Duration.ZERO) timeout else builder.timeout,
             builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
     suspend fun patch(
         url: String,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        timeout: Duration = Duration.ZERO,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
         val builder = RequestBuilder(this, block)
         return request(
-            HttpMethod.Patch, url, builder.headers, builder.referer, builder.params, builder.cookies,
+            HttpMethod.Patch, url, builder.headers + headers, referer ?: builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects,
-            builder.cacheTime, builder.timeout, builder.interceptor, builder.verify,
-            builder.responseParser,
+            builder.cacheTime, if (timeout != Duration.ZERO) timeout else builder.timeout,
+            builder.interceptor, builder.verify, builder.responseParser,
         )
     }
 
     suspend fun options(
         url: String,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        timeout: Duration = Duration.ZERO,
         block: RequestBuilder.() -> Unit = {},
     ): NiceResponse {
         val builder = RequestBuilder(this, block)
         return request(
-            HttpMethod.Options, url, builder.headers, builder.referer, builder.params, builder.cookies,
-            null, null, null, null, builder.allowRedirects, builder.cacheTime, builder.timeout,
+            HttpMethod.Options, url, builder.headers + headers, referer ?: builder.referer, builder.params, builder.cookies,
+            null, null, null, null, builder.allowRedirects, builder.cacheTime,
+            if (timeout != Duration.ZERO) timeout else builder.timeout,
             builder.interceptor, builder.verify, builder.responseParser,
         )
     }
@@ -453,6 +477,9 @@ open class Requests(
      * @param url         Target URL.
      * @param stream      If true, keeps the connection open for [streamBlock] instead of
      *                     buffering the whole body up-front, and disables caching.
+     * @param headers     Extra headers merged on top of [defaultHeaders] and any set via [block].
+     * @param referer     Overrides [defaultReferer] (and any referer set via [block]) for this call.
+     * @param timeout     Request timeout. [Duration.ZERO] means fall back to whatever [block] set.
      * @param block       Optional [RequestBuilder] configuration lambda (headers, params, etc.).
      * @param streamBlock Suspend lambda that receives the [NiceResponse] and returns [T].
      * @return Whatever [streamBlock] returns.
@@ -460,14 +487,18 @@ open class Requests(
     suspend fun <T> get(
         url: String,
         stream: Boolean,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        timeout: Duration = Duration.ZERO,
         block: RequestBuilder.() -> Unit = {},
         streamBlock: suspend (NiceResponse) -> T,
     ): T {
         val builder = RequestBuilder(this, block)
         return executeRequest(
-            HttpMethod.Get, url, builder.headers, builder.referer, builder.params, builder.cookies,
+            HttpMethod.Get, url, builder.headers + headers, referer ?: builder.referer, builder.params, builder.cookies,
             null, null, null, null, builder.allowRedirects, stream,
-            cacheTime = builder.cacheTime, timeout = builder.timeout,
+            cacheTime = builder.cacheTime,
+            timeout = if (timeout != Duration.ZERO) timeout else builder.timeout,
             interceptor = builder.interceptor, verify = builder.verify,
             responseParser = builder.responseParser, block = streamBlock,
         )
@@ -484,6 +515,9 @@ open class Requests(
      * @param url         Target URL.
      * @param stream      If true, keeps the connection open for [streamBlock] instead of
      *                     buffering the whole body up-front, and disables caching.
+     * @param headers     Extra headers merged on top of [defaultHeaders] and any set via [block].
+     * @param referer     Overrides [defaultReferer] (and any referer set via [block]) for this call.
+     * @param timeout     Request timeout. [Duration.ZERO] means fall back to whatever [block] set.
      * @param block       Optional [RequestBuilder] configuration lambda (body, headers, etc.).
      * @param streamBlock Suspend lambda that receives the [NiceResponse] and returns [T].
      * @return Whatever [streamBlock] returns.
@@ -491,14 +525,18 @@ open class Requests(
     suspend fun <T> post(
         url: String,
         stream: Boolean,
+        headers: Map<String, String> = emptyMap(),
+        referer: String? = null,
+        timeout: Duration = Duration.ZERO,
         block: RequestBuilder.() -> Unit = {},
         streamBlock: suspend (NiceResponse) -> T,
     ): T {
         val builder = RequestBuilder(this, block)
         return executeRequest(
-            HttpMethod.Post, url, builder.headers, builder.referer, builder.params, builder.cookies,
+            HttpMethod.Post, url, builder.headers + headers, referer ?: builder.referer, builder.params, builder.cookies,
             builder.data, builder.files, builder.json, builder.requestBody, builder.allowRedirects, stream,
-            cacheTime = builder.cacheTime, timeout = builder.timeout,
+            cacheTime = builder.cacheTime,
+            timeout = if (timeout != Duration.ZERO) timeout else builder.timeout,
             interceptor = builder.interceptor, verify = builder.verify,
             responseParser = builder.responseParser, block = streamBlock,
         )
