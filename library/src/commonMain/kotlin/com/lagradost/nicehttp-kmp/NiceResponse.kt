@@ -94,7 +94,7 @@ class NiceResponse(
         ReplaceWith("this"),
         DeprecationLevel.WARNING,
     )
-    val okhttpResponse: NiceResponseCompat get() = resolveOkHttpResponseCompat()
+    val okhttpResponse: NiceResponseCompat by lazy { resolveOkHttpResponseCompat() }
 
     @Deprecated(
         "Use suspend fun body() instead.",
