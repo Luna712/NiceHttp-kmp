@@ -20,7 +20,7 @@ internal object OkHttpResponseCache {
 
     private class CachedEntry(
         val template: Response,
-        val bodyBytes: ByteArray?,
+        val bodyBytes: ByteArray,
         val contentType: MediaType?,
     )
 
@@ -31,14 +31,17 @@ internal object OkHttpResponseCache {
         }
     )
 
-    fun put(id: String, response: Response, bodyBytes: ByteArray?, contentType: MediaType?) {
-        map[id] = CachedEntry(response.newBuilder().body(null).build(), bodyBytes, contentType)
+    fun put(id: String, response: Response, bodyBytes: ByteArray, contentType: MediaType?) {
+        val template = response.newBuilder()
+            .body(ByteArray(0).toResponseBody(contentType))
+            .build()
+        map[id] = CachedEntry(template, bodyBytes, contentType)
     }
 
     fun take(id: String): Response? {
         val entry = map.remove(id) ?: return null
         return entry.template.newBuilder()
-            .body(entry.bodyBytes?.toResponseBody(entry.contentType))
+            .body(entry.bodyBytes.toResponseBody(entry.contentType))
             .build()
     }
 }
@@ -48,14 +51,14 @@ private object OkHttpResponseCaptureInterceptor : Interceptor {
         val id = UUID.randomUUID().toString()
         val networkResponse = chain.proceed(chain.request())
 
-        val bytes = networkResponse.body?.bytes()
-        val contentType = networkResponse.body?.contentType()
+        val bytes = networkResponse.body.bytes()
+        val contentType = networkResponse.body.contentType()
 
         OkHttpResponseCache.put(id, networkResponse, bytes, contentType)
 
         return networkResponse.newBuilder()
             .header(NICEHTTP_OKHTTP_ID_HEADER, id)
-            .body(bytes?.toResponseBody(contentType))
+            .body(bytes.toResponseBody(contentType))
             .build()
     }
 }
